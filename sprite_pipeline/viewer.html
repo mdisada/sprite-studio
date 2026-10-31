@@ -37,6 +37,7 @@
 "use strict";
 const QS = new URLSearchParams(location.search);
 const CHAR = QS.get('char') || 'stormshield';
+const DEBUG = QS.has('debug');   // ?debug=1 brings back the state readout
 const FOCUS = QS.get('focus') || null;  // loop one animation for study/tuning
 // a second character standing alongside for size / style comparison
 const COMPARE = QS.get('compare') || null;
@@ -327,6 +328,9 @@ function buildControls(){
   const bar=document.getElementById('help');
   bar.innerHTML='';
   allButtons().forEach(def=>{
+    // a move this character doesn't have at all gets no button - a greyed
+    // "2 · AoE" on a barbarian only invites the question "why is it off?"
+    if(!ANIMS[def.needs]&&!(SPEC.animations||{})[def.needs])return;
     const b=document.createElement('button');
     b.id='btn_'+def.id; b.className='ctl'; b.textContent=def.label;
     const q=animQuality(def.needs);
@@ -581,6 +585,7 @@ function tick(now){
     ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,cv.height);ctx.stroke();
     ctx.beginPath();ctx.moveTo(0,groundY());ctx.lineTo(cv.width,groundY());ctx.stroke();
   }
+  if(!DEBUG){hud.textContent='';return;}   // the studio shows frame/speed itself
   const held=Object.keys(keys).filter(k=>keys[k]).map(k=>k===' '?'space':k);
   hud.innerHTML='<b>'+CHAR+'</b> · '+P.anim+' '+(P.frame+1)+'/'+(a?a.frames.length:0)+
     ' · '+((a?a.meta.fps:12)*fpsMul)+'fps'+(P.locked?' · <b>locked</b>':'')+

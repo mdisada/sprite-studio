@@ -140,25 +140,78 @@
         align-items:center;justify-content:center}
   #modalback.show{display:flex}
   #modal{background:var(--panel);border:1px solid var(--accent);border-radius:10px;
-        padding:20px 22px;max-width:540px;width:92%;max-height:85vh;overflow-y:auto}
+        padding:20px 22px;max-width:560px;width:92%;max-height:85vh;
+        display:flex;flex-direction:column;overflow:hidden}
+  #modal h3{margin:0 0 12px}
+  #modal .mbody{overflow-y:auto;min-height:0}
+  #modal .mfoot{display:flex;gap:8px;justify-content:flex-end;align-items:center;
+        padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+  #modal label{margin-top:10px}
+  #modal input:not([type=radio]):not([type=checkbox]),#modal textarea,#modal select{width:100%}
+  #modal textarea{font-family:inherit;font-size:13px}
   #modal .est{background:#12131a;border:1px solid var(--line);border-radius:6px;
         padding:8px 12px;margin:10px 0;font-size:13px}
   #modal .warn{color:var(--warn);font-size:12px;margin:8px 0}
+  /* "⋯" overflow menu: rarely-needed actions, out of the way but findable */
+  .menuwrap{position:relative;display:inline-block}
+  .menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--panel);border:1px solid var(--line);
+       border-radius:8px;padding:4px;min-width:220px;z-index:15;display:none;box-shadow:0 6px 20px #0008}
+  .menuwrap.open .menu{display:block}
+  .menu button{display:block;width:100%;text-align:left;border:none;background:none;padding:7px 10px;border-radius:6px}
+  .menu button:hover{background:var(--panel2)}
+  .menu small{display:block;color:var(--dim);font-size:11.5px}
+  .tog{display:inline-flex;align-items:center;gap:6px;margin:0;color:var(--dim);
+       font-size:12.5px;cursor:pointer;user-select:none}
+  .tog input{margin:0}
+  details.more{margin-top:6px}
+  details.more summary{cursor:pointer;color:var(--accent);font-size:12.5px;list-style:none;display:inline}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more[open] summary{color:var(--dim)}
+  details.more .muted{margin-top:4px}
+  .banner{background:#54401f;color:var(--warn);padding:8px 26px;font-size:13px;
+       border-bottom:1px solid var(--line)}
+  /* image tiles: status badge + selection box sit ON the picture */
+  .tile{position:relative}
+  .badge{position:absolute;top:8px;right:8px;padding:2px 9px;border-radius:10px;font-size:11.5px;
+       background:#3a3d52;color:var(--text);pointer-events:none}
+  .badge.ok{background:#1e4230;color:var(--ok)}.badge.mid{background:#134b66;color:var(--accent)}
+  .badge.warn{background:#54401f;color:var(--warn)}
+  .badge.left{right:auto;left:8px}
+  .selbox{position:absolute;top:8px;left:8px;margin:0;background:#12131acc;border-radius:6px;
+       padding:4px 6px;cursor:pointer;line-height:1}
+  .selbox input{width:16px;height:16px;margin:0;cursor:pointer;vertical-align:middle}
+  .acard select{max-width:100%;min-width:0}
+  .empty{height:210px;display:flex;align-items:center;justify-content:center;color:var(--dim);
+       border:1px dashed var(--line);border-radius:6px}
+  .skel{height:210px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+       color:var(--dim);background:linear-gradient(90deg,#1d1f2a,#2a2d3f,#1d1f2a);
+       background-size:200% 100%;animation:skel 1.4s linear infinite}
+  @keyframes skel{to{background-position:-200% 0}}
+  .prog{height:4px;background:#2a2d3f;border-radius:2px;overflow:hidden;margin-top:8px}
+  .prog i{display:block;height:100%;background:var(--ok)}
+  .bar{display:inline-block;width:120px;height:5px;background:#2a2d3f;border-radius:3px;
+       overflow:hidden;vertical-align:middle}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .thumbs{display:flex;gap:4px;margin-top:10px;min-height:56px}
+  .thumbs img{width:48px;height:56px;object-fit:contain;background:#12131a;border-radius:5px}
+  .hvgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:300px;overflow-y:auto}
+  .hvgrid .fr{width:84px}
+  .hvgrid .fr img{height:84px}
+  .hvgrid .fr.sel{border-color:var(--ok)}
 </style>
 </head>
 <body>
 <header class="top">
-  <span id="dot" title="ComfyUI connection"></span>
   <h1><a onclick="location.hash='#/'">Sprite Studio</a></h1>
   <span id="crumb" class="muted"></span>
   <span style="flex:1"></span>
-  <span id="jobsummary" class="muted" style="cursor:pointer"
-        onclick="document.getElementById('jobs').classList.toggle('open')"></span>
+  <span id="comfy" class="chip">…</span>
 </header>
+<div id="offline" class="banner" hidden>⚠ ComfyUI is off — start it to generate images and animations.</div>
 <div class="wrap" id="main"><div class="muted">Loading…</div></div>
 
-<div id="jobs"><header onclick="this.parentElement.classList.toggle('open')">
-  <b>Jobs</b><span id="jobsummary2" class="muted"></span><span class="muted">(click to expand)</span>
+<div id="jobs"><header onclick="this.parentElement.classList.toggle('open');if(STATE)renderJobs()">
+  <b>Jobs</b><span id="jobsummary" class="muted"></span><span style="flex:1"></span><span id="jobchev">▴</span>
 </header><div id="joblist"></div></div>
 <div id="modalback" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
 <div id="toast"></div>
@@ -258,7 +311,72 @@ addEventListener('pointerdown',e=>{if(e.target&&e.target.type==='range')dragging
 addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;
   if(missedRender){missedRender=false;render();}});
 
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ---- one modal shape for everything: scrolling body, footer always visible
+function showModal(body,foot){
+  document.getElementById('modal').innerHTML=
+    '<div class="mbody">'+body+'</div>'+(foot?'<div class="mfoot">'+foot+'</div>':'');
+  document.getElementById('modalback').classList.add('show');
+  const f=document.querySelector('#modal input:not([type=radio]):not([type=checkbox]),#modal textarea');
+  if(f)setTimeout(()=>f.focus(),30);
+}
+function modalOpen(){return document.getElementById('modalback').classList.contains('show');}
+addEventListener('keydown',e=>{
+  if(!modalOpen())return;
+  if(e.key==='Escape'){e.preventDefault();closeModal();}
+  else if(e.key==='Enter'&&e.target&&e.target.tagName==='INPUT'){
+    // Enter in a one-line field = the primary button
+    const b=document.querySelector('#modal .mfoot button.primary');
+    if(b&&!b.disabled){e.preventDefault();b.click();}
+  }
+});
+// a small text-entry dialog in place of the browser's prompt()
+function askText(title,label,value,placeholder,ok){
+  window._askOk=ok;
+  showModal(`<h3>${esc(title)}</h3><label>${esc(label)}</label>
+    <input id="ask_v" value="${esc(value||'')}" placeholder="${esc(placeholder||'')}">`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" onclick="const v=document.getElementById('ask_v').value.trim();if(v){closeModal();window._askOk(v);}">OK</button>`);
+}
+
+// ---- "⋯" menus: rarely-needed actions live next to the thing they act on
+function menu(btn){
+  const w=btn.parentElement, was=w.classList.contains('open');
+  closeMenus(); if(was)return;
+  w.classList.add('open');
+  // opens leftward from the button; flip when that would leave the window
+  const m=w.querySelector('.menu'); m.style.left='';m.style.right='';
+  if(m.getBoundingClientRect().left<8){m.style.left='0';m.style.right='auto';}
+}
+function closeMenus(){document.querySelectorAll('.menuwrap.open').forEach(m=>m.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.menuwrap')))closeMenus();});
+
+// ---- collapsible sections remember being open: a finished job re-renders
+// the page, and a section snapping shut under you reads as "it broke"
+const OPEN=new Set();
+document.addEventListener('toggle',e=>{
+  const d=e.target; if(d.tagName!=='DETAILS'||!d.dataset.k)return;
+  if(d.open)OPEN.add(d.dataset.k); else OPEN.delete(d.dataset.k);
+},true);
+function dk(k,force){return `data-k="${esc(k)}" ${force||OPEN.has(k)?'open':''}`;}
+
+// ---- ComfyUI status: a labelled chip, a banner, and GPU buttons that can't
+// be pressed while it is off (instead of failing after a confirm dialog)
+function applyComfy(lost){
+  const ok=!lost&&!!(STATE&&STATE.comfy_ok);
+  const c=document.getElementById('comfy');
+  c.className='chip '+(ok?'ok':'err');
+  c.textContent=lost?'● Studio not responding':(ok?'● ComfyUI ready':'● ComfyUI off');
+  document.getElementById('offline').hidden=ok||lost;
+  document.querySelectorAll('button.gpu').forEach(b=>{
+    if(b.dataset.tip==null)b.dataset.tip=b.title||'';
+    // data-none / data-busy: disabled for its own reason (nothing selected,
+    // already rendering) - ComfyUI coming back must not re-enable it
+    b.disabled=!ok||b.dataset.none==='1'||b.dataset.busy==='1';
+    b.title=ok?b.dataset.tip:'Start ComfyUI first';
+  });
+}
 function minutes(s){return Math.max(1,Math.round(s/60));}
 async function api(p,body){
   const o=body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{};
@@ -273,7 +391,7 @@ function route(){
   const m=h.match(/^#\/char\/([a-z0-9_-]+)(?:\/(\w+))?/);
   const mp=h.match(/^#\/proj\/([a-z0-9_-]+)/);
   if(m){if(cur!==m[1]){flushPending();window.LIVE_TUNE=null;cur=m[1];spec=null;CANDS=null;dirty=false;
-          labMode='play';labAnim=null;plStop();_plLoadSeq++;
+          labMode='play';labAnim=null;plStop();_plLoadSeq++;SEL=new Set();CAND_ALL=false;
           if(COMPARE_WITH===cur)COMPARE_WITH=null;}
         tab=m[2]||tab||'ref';}
   else if(mp){flushPending();window.LIVE_TUNE=null;curProj=mp[1];cur=null;spec=null;CANDS=null;}
@@ -294,7 +412,7 @@ async function loadCands(){
 async function poll(){
   try{
     STATE=await api('/api/state');
-    document.getElementById('dot').className=STATE.comfy_ok?'ok':'';
+    applyComfy();
     renderJobs();
     const fin=Math.max(0,...STATE.jobs.filter(j=>j.finished).map(j=>j.finished));
     if(fin>lastFin){lastFin=fin;imgV=Date.now();
@@ -305,7 +423,7 @@ async function poll(){
       if(dragging)missedRender=true; else render();
       if(cur)loadCands();}
     else if(!document.getElementById('main').dataset.rendered){render();}
-  }catch(e){document.getElementById('dot').className='';}
+  }catch(e){applyComfy(true);}
   setTimeout(poll,2500);
 }
 
@@ -317,13 +435,22 @@ function charStatus(id){
   const approved=done.filter(n=>(ap.anims||{})[n]);
   const busy=STATE.jobs.some(j=>j.char===id&&(j.status==='running'||j.status==='queued'));
   let txt, cls='';
-  if(busy){txt='⏳ rendering…';cls='mid';}
-  else if(!a.ref){txt='start here: needs a reference';cls='warn';}
-  else if(!ap.ref){txt='👀 pick / approve the reference';cls='warn';}
-  else if(done.length<anims.length){txt=(anims.length-done.length)+' animations not rendered';}
-  else if(approved.length<done.length){txt='👀 '+(done.length-approved.length)+' animations await your review';cls='warn';}
-  else {txt='✓ complete';cls='ok';}
+  if(busy){txt='⏳ Working…';cls='mid';}
+  else if(!a.ref){txt='Start here';cls='warn';}
+  else if(!ap.ref){txt='Pick a reference';cls='warn';}
+  else if(done.length<anims.length){txt=(anims.length-done.length)+' to make';}
+  else if(approved.length<done.length){txt=(done.length-approved.length)+' to approve';cls='warn';}
+  else {txt='✓ Done';cls='ok';}
   return {txt,cls,done:done.length,total:anims.length};
+}
+// best picture of a sprite: its idle playing, else the cut-out reference
+function spriteThumb(id,w){
+  const a=assets(id);
+  if((a.anims.idle||{}).done)return '/files/'+id+'/idle/preview.webp?v='+imgV;
+  return a.ref?'/files/'+id+'/ref_sprite.png?w='+w+'&v='+imgV:'';
+}
+async function refresh(){
+  try{STATE=await api('/api/state');applyComfy();renderJobs();render();}catch(e){}
 }
 
 // -------------------------------------------------------------------- render
@@ -338,63 +465,62 @@ function render(){
           else renderChar(m);}
   else if(curProj){renderRoster(m);}
   else renderProjects(m);
+  applyComfy();
 }
 
 function renderProjects(m){
   const ps=STATE.projects||{}, t=STATE.templates;
   const card=pid=>{
     const p=ps[pid];
-    const n=Object.keys(STATE.characters).filter(c=>projOf(c)===pid).length;
-    const needy=Object.keys(STATE.characters).filter(c=>projOf(c)===pid&&
-      charStatus(c).cls==='warn').length;
+    const ids=Object.keys(STATE.characters).filter(c=>projOf(c)===pid).sort();
+    const needy=ids.filter(c=>charStatus(c).cls==='warn').length;
     const kit=(t.game_kits||{})[p.game_type]||{};
     const st=projStyle(pid);
-    return `<div class="card" onclick="location.hash='#/proj/${pid}'">
+    const withPic=ids.filter(c=>STATE.characters[c].sprite_type!=='vfx'&&assets(c).ref);
+    const pics=withPic.slice(0,4)
+      .map(c=>`<img src="/files/${c}/ref_sprite.png?w=96&v=${imgV}" alt="" loading="lazy">`).join('')
+      +(withPic.length>4?`<span class="chip" style="align-self:center">+${withPic.length-4}</span>`:'');
+    return `<div class="card tile" onclick="location.hash='#/proj/${pid}'">
+      ${needy?`<span class="badge warn">${needy} need you</span>`:''}
       <div class="nm" style="font-size:16px">${esc(p.display_name||pid)}</div>
       <div style="margin:7px 0"><span class="chip mid">${esc(st.chip)}</span>
         <span class="chip">${esc(kit.label||p.game_type||'?')}</span></div>
-      <div class="muted">${n} sprite${n===1?'':'s'}${needy?' · ⚠ '+needy+' need you':''}</div>
+      <div class="thumbs">${pics||'<span class="muted">No sprites yet</span>'}</div>
     </div>`;};
   m.innerHTML=`
     <div class="row" style="justify-content:space-between;margin-bottom:14px">
-      <div><h2 style="margin:0">Your projects</h2>
-      <div class="muted">A project locks the art direction — style, pixel density, game type —
-      so every sprite inside it matches.</div></div>
+      <h2 style="margin:0">Your projects</h2>
       <button class="primary" onclick="newProject()">+ New project</button>
     </div>
-    <div class="cards">${Object.keys(ps).sort().map(card).join('')||'<div class="muted">No projects yet — create one to start.</div>'}</div>`;
+    <div class="cards">${Object.keys(ps).sort().map(card).join('')
+      ||'<div class="muted">No projects yet.</div>'}</div>`;
 }
 
 function newProject(){
   const t=STATE.templates, pp=t.pixel_presets||{}, gk=t.game_kits||{};
-  document.getElementById('modal').innerHTML=`
-    <h3 style="margin-top:0">New project</h3>
-    <label>project name</label>
-    <input id="np_name" style="width:100%" placeholder="my pixel roguelike">
-    <label style="margin-top:12px">art style</label>
+  showModal(`
+    <h3>New project</h3>
+    <label>Name</label>
+    <input id="np_name" placeholder="My pixel roguelike">
+    <label>Art style</label>
     <div class="row">
-      <label style="margin:0;color:var(--text)"><input type="radio" name="np_style" value="pixel" checked onchange="npStyle()"> Pixel art</label>
-      <label style="margin:0;color:var(--text)"><input type="radio" name="np_style" value="painted" onchange="npStyle()"> 2D painted / line art</label>
-      <label style="margin:0"><input type="radio" disabled> 3D <i>(soon)</i></label>
-      <label style="margin:0"><input type="radio" disabled> Voxel <i>(soon)</i></label>
+      <label class="tog" style="color:var(--text)"><input type="radio" name="np_style" value="pixel" checked onchange="npStyle()"> Pixel art</label>
+      <label class="tog" style="color:var(--text)"><input type="radio" name="np_style" value="painted" onchange="npStyle()"> Painted 2D</label>
     </div>
-    <div id="np_bits_row" style="margin-top:10px">
-      <label>pixel density (the size of the pixel squares — fixed for the whole project)</label>
-      <select id="np_bits" style="width:100%" onchange="npBits()">
+    <div id="np_bits_row">
+      <label>Pixel size</label>
+      <select id="np_bits" onchange="npBits()">
         ${Object.keys(pp).map(b=>`<option value="${b}" ${b==='32'?'selected':''}>${esc(pp[b].label)}</option>`).join('')}
       </select>
       <div id="np_bits_hint" class="muted" style="margin-top:4px"></div>
     </div>
-    <label style="margin-top:12px">game type (decides the default movement kit)</label>
-    <select id="np_game" style="width:100%" onchange="npGame()">
+    <label>Game type</label>
+    <select id="np_game" onchange="npGame()">
       ${Object.keys(gk).map(g=>`<option value="${g}" ${g==='platformer'?'selected':''}>${esc(gk[g].label)}</option>`).join('')}
     </select>
-    <div id="np_kit" class="muted" style="margin-top:4px"></div>
-    <div class="row" style="justify-content:flex-end;margin-top:16px">
-      <button onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="createProject()">Create project</button>
-    </div>`;
-  document.getElementById('modalback').classList.add('show');
+    <div id="np_kit" class="muted" style="margin-top:4px"></div>`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" onclick="createProject()">Create project</button>`);
   npStyle();npBits();npGame();
 }
 function npStyle(){
@@ -405,30 +531,30 @@ function npBits(){
   const pp=STATE.templates.pixel_presets||{};
   const p=pp[document.getElementById('np_bits').value]||{};
   document.getElementById('np_bits_hint').textContent=
-    (p.blurb||'')+' — sprites come out '+(p.sprite_h||'?')+'px tall, '+(p.colors||'?')+' colors';
+    (p.sprite_h||'?')+'px tall · '+(p.colors||'?')+' colors';
 }
 function npGame(){
   const gk=STATE.templates.game_kits||{};
   const g=gk[document.getElementById('np_game').value]||{};
   document.getElementById('np_kit').textContent=
-    (g.blurb?g.blurb+' — ':'')+'default kit: '+((g.anims||[]).map(a=>a.key).join(', ')||'?');
+    'Includes: '+((g.anims||[]).map(a=>a.key.replace(/_/g,' ')).join(', ')||'?');
 }
 async function createProject(){
   const name=(document.getElementById('np_name').value||'').trim();
-  if(!name)return toast('give the project a name',true);
+  if(!name)return toast('Give the project a name',true);
   const id=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
-  if(!id)return toast('invalid name',true);
-  if((STATE.projects||{})[id])return toast('a project with that name exists',true);
+  if(!id)return toast('Use letters or numbers in the name',true);
+  if((STATE.projects||{})[id])return toast('A project with that name already exists',true);
   const style=(document.querySelector('input[name=np_style]:checked')||{}).value||'pixel';
   const proj={display_name:name,style,game_type:document.getElementById('np_game').value};
   if(style==='pixel')proj.pixel_bits=document.getElementById('np_bits').value;
   await api('/api/project/save',{id,proj});
-  closeModal();toast('Project created — add your first sprite');
+  closeModal();toast('Project created ✓');
   STATE.projects=STATE.projects||{};STATE.projects[id]=proj;
   location.hash='#/proj/'+id;
 }
 async function delProject(){
-  if(!confirm('Delete this (empty) project?'))return;
+  if(!confirm('Delete this empty project?'))return;
   await api('/api/project/delete',{id:curProj});
   location.hash='#/';
 }
@@ -439,33 +565,33 @@ function renderRoster(m){
   const st=projStyle(curProj), kit=(STATE.templates.game_kits||{})[p.game_type]||{};
   const ids=Object.keys(STATE.characters).filter(i=>projOf(i)===curProj).sort();
   const card=id=>{
-    const c=STATE.characters[id], cst=charStatus(id), a=assets(id);
-    const img=a.ref?'/files/'+id+'/ref.png?v='+imgV:'';
-    return `<div class="card" onclick="location.hash='#/char/${id}'">
-      ${img?'<img src="'+img+'">':'<div style="height:190px;display:flex;align-items:center;justify-content:center;color:var(--dim)">no image yet</div>'}
+    const c=STATE.characters[id], cst=charStatus(id);
+    const img=spriteThumb(id,256);
+    const pct=cst.total?Math.round(cst.done/cst.total*100):0;
+    return `<div class="card tile" onclick="location.hash='#/char/${id}'">
+      ${img?'<img src="'+img+'" alt="" loading="lazy">':'<div class="empty" style="height:190px">No image yet</div>'}
+      <span class="badge ${cst.cls}">${cst.txt}</span>
       <div class="nm">${esc(c.display_name||id)}</div>
-      <div class="muted">${cst.done}/${cst.total} animations</div>
-      <div style="margin-top:5px"><span class="chip ${cst.cls}">${cst.txt}</span></div>
+      <div class="prog" title="${cst.done} of ${cst.total} animations made"><i style="width:${pct}%"></i></div>
     </div>`;};
   const heroes=ids.filter(i=>STATE.characters[i].sprite_type!=='vfx');
   const fx=ids.filter(i=>STATE.characters[i].sprite_type==='vfx');
   m.innerHTML=`
     <div class="row" style="justify-content:space-between;margin-bottom:14px">
-      <div><div class="row"><a onclick="location.hash='#/'">← all projects</a>
+      <div class="row"><a onclick="location.hash='#/'">← Projects</a>
         <h2 style="margin:0">${esc(p.display_name||curProj)}</h2>
         <span class="chip mid">${esc(st.chip)}</span>
         <span class="chip">${esc(kit.label||p.game_type||'')}</span></div>
-      <div class="muted">Click a card to work on it. ⚠ chips mean something needs you.</div></div>
       <div class="row">
         <button class="primary" onclick="newSprite('char')">+ New character</button>
         <button onclick="newSprite('vfx')">+ New effect</button>
         ${heroes.length?`<button onclick="exportGodot('${esc(curProj)}')"
-          title="every finished character in this project as Godot-ready sheets - free and instant">📦 Export for Godot</button>`:''}
-        ${ids.length?'':'<button class="small" onclick="delProject()">🗑</button>'}
+          title="All finished characters as Godot-ready sprite sheets">📦 Export for Godot</button>`:''}
+        ${ids.length?'':'<button class="small" onclick="delProject()" title="Delete project">🗑</button>'}
       </div>
     </div>
     <div class="cards">${heroes.map(card).join('')||'<div class="muted">No characters yet.</div>'}</div>
-    ${fx.length?'<h2>Effects (overlaid on characters in-engine)</h2><div class="cards">'+fx.map(card).join('')+'</div>':''}`;
+    ${fx.length?'<h2>Effects</h2><div class="cards">'+fx.map(card).join('')+'</div>':''}`;
 }
 
 function stepState(){
@@ -474,10 +600,10 @@ function stepState(){
   const done=anims.filter(n=>(a.anims[n]||{}).done);
   const approved=done.filter(n=>(ap.anims||{})[n]);
   return {
-    ref: !a.ref?['not started','attn']:(!ap.ref?['awaiting your pick/approval','attn']:['approved ✓','']),
-    anims: done.length<anims.length?[done.length+'/'+anims.length+' rendered','']
-           :(approved.length<done.length?[(done.length-approved.length)+' await review','attn']:['all approved ✓','']),
-    test: [done.length?'ready to test':'render animations first',''],
+    ref: !a.ref?['Start here','attn']:(!ap.ref?['Pick one','attn']:['✓ Approved','']),
+    anims: done.length<anims.length?[done.length+' of '+anims.length+' made','']
+           :(approved.length<done.length?[(done.length-approved.length)+' to approve','attn']:['✓ All approved','']),
+    test: [done.length?'Ready':'Nothing to play yet',''],
   };
 }
 
@@ -485,19 +611,17 @@ function renderChar(m){
   if(!spec)spec=JSON.parse(JSON.stringify(STATE.characters[cur]));
   const ss=stepState();
   const stepBtn=(id,n,t)=>`<div class="step ${tab===id?'active':''} ${ss[id][1]}"
-      onclick="tab='${id}';render()">
+      onclick="location.hash='#/char/${cur}/${id}'">
       <div class="t">${n}</div><div class="s">${ss[id][0]}</div></div>`;
-  const chip=spec.style==='pixel'&&spec.pixel_bits
-    ?('pixel '+spec.pixel_bits+'-bit'):(spec.style||'pixel');
+  const pid=projOf(cur)||'', pname=((STATE.projects||{})[pid]||{}).display_name||'Project';
   m.innerHTML=`
     <div class="row" style="justify-content:space-between">
-      <div class="row"><a onclick="location.hash='#/proj/${esc(projOf(cur)||'')}'">← project</a>
-        <h2 style="margin:0">${esc(spec.display_name||cur)}</h2>
-        <span class="chip">${esc(chip)}</span></div>
-      <button class="small" onclick="delSprite()">🗑 delete</button>
+      <div class="row"><a onclick="location.hash='#/proj/${esc(pid)}'">← ${esc(pname)}</a>
+        <h2 style="margin:0">${esc(spec.display_name||cur)}</h2></div>
+      <button class="small" onclick="delSprite()" title="Remove from this project">🗑 Delete</button>
     </div>
     <div class="stepper">
-      ${stepBtn('ref','1 · Look & Reference','')}
+      ${stepBtn('ref','1 · Reference','')}
       ${stepBtn('anims','2 · Animations','')}
       ${stepBtn('test','3 · Test & Tune','')}
     </div>
@@ -509,101 +633,165 @@ function renderChar(m){
 }
 
 // ---------------------------------------------------------------- tab 1: ref
-function candGrid(kind,files){
-  if(!files||!files.length)return '';
-  return `<h2 style="font-size:13px">${{seeds:'Seed variations',styles:'Art-style variations',designs:'Design variations'}[kind]}</h2>
-  <div class="grid">${files.map(f=>`
-    <div class="acard cand" onclick="pickRef('${kind}','${esc(f)}')" title="click to make this THE reference">
-      <img src="/files/${cur}/${{seeds:'ref_candidates',styles:'style_candidates',designs:'design_candidates'}[kind]}/${esc(f)}?v=${imgV}">
-      <div class="row"><span class="muted">${esc(f.replace('.png',''))}</span>
-      <span style="flex:1"></span><button class="small primary">use this ✓</button></div>
-    </div>`).join('')}</div>`;
+const CAND_DIR={seeds:'ref_candidates',styles:'style_candidates',designs:'design_candidates'};
+let CAND_ALL=false;   // "Show older" pressed
+function candGrid(){
+  // every kind in ONE grid, newest first: a batch you just generated is on
+  // top, not scattered through the pile by its seed number
+  const list=[];
+  for(const kind of ['seeds','styles','designs'])
+    (CANDS[kind]||[]).forEach(c=>list.push({kind,file:c.file,mtime:c.mtime}));
+  list.sort((x,y)=>y.mtime-x.mtime);
+  const curC=CANDS.current||{};
+  const gen=STATE.jobs.filter(j=>j.char===cur&&j.type==='variations'
+    &&(j.status==='running'||j.status==='queued')).length;
+  if(!list.length&&!gen)return '';
+  const LIMIT=12, shown=CAND_ALL?list:list.slice(0,LIMIT);
+  const skel=Array.from({length:gen*6},()=>
+    '<div class="acard"><div class="skel">Generating…</div></div>').join('');
+  return `<h2>Pick a reference</h2>
+  <div class="grid">${skel}${shown.map(c=>{
+    const isCur=c.kind===curC.kind&&c.file===curC.file;
+    const isNew=!isCur&&c.mtime>(CANDS.ref_time||0)+1;
+    return `<div class="acard cand tile ${isCur?'current':''}"
+      ${isCur?'':`onclick="pickRef('${c.kind}','${esc(c.file)}')"`}>
+      <img src="/files/${cur}/${CAND_DIR[c.kind]}/${esc(c.file)}?w=320&v=${Math.round(c.mtime)}" alt="" loading="lazy">
+      ${isCur?'<span class="badge ok">Current ✓</span>':isNew?'<span class="badge mid">NEW</span>':''}
+      ${isCur?'':'<div class="row"><span style="flex:1"></span><button class="small primary">Use this</button></div>'}
+    </div>`;}).join('')}</div>
+  ${list.length>LIMIT?`<div style="margin-top:10px"><button class="small" onclick="CAND_ALL=!CAND_ALL;render()">
+    ${CAND_ALL?'Show fewer':'Show '+(list.length-LIMIT)+' older'}</button></div>`:''}`;
+}
+function placeholderPrompt(){return /DESCRIBE THE/.test(spec.ref_prompt||'');}
+function genVariations(kind){
+  // a brand-new sprite still carries the template's placeholder text - running
+  // it would draw "DESCRIBE THE CHARACTER" literally and waste a batch
+  if(placeholderPrompt()){
+    const d=document.getElementById('desc_box'); if(d)d.open=true;
+    const t=document.getElementById('f_ref'); if(t)t.focus();
+    return toast('Describe your character first',true);
+  }
+  job('variations',{kind});
 }
 
 function renderRefTab(p){
   const a=assets(cur), ap=spec.approved||{};
+  const views=Object.keys(spec.views||{});
   p.innerHTML=`
-    <div class="muted" style="margin-bottom:10px">The reference is the single image every
-    animation copies. Generate variations, click one to make it official, then move to
-    step 2. Re-rolling is cheap (~1 min) — never settle.</div>
-    <div class="row" style="align-items:flex-start">
-      <div>
-        <label>current reference ${ap.ref?'<span class="chip ok">approved ✓</span>':'<span class="chip warn">not approved yet</span>'}</label>
-        ${a.ref?`<img class="bigimg" src="/files/${cur}/ref.png?v=${imgV}">`
-               :'<div class="muted" style="padding:40px 20px">none yet — generate variations below and pick one</div>'}
-        ${a.ref&&!ap.ref?`<div style="margin-top:8px"><button class="primary" onclick="approve(null,true)">✓ approve this reference</button></div>`:''}
+    <div class="row" style="align-items:flex-start;gap:22px">
+      <div class="tile">
+        ${a.ref?`<img class="bigimg" src="/files/${cur}/ref.png?v=${imgV}" alt="Current reference">
+                 ${ap.ref?'<span class="badge ok">Approved ✓</span>':''}`
+               :'<div class="empty" style="width:300px;height:300px">No reference yet</div>'}
+        ${a.ref&&!ap.ref?`<div style="margin-top:8px"><button class="primary" onclick="approve(null,true)">👍 Approve</button></div>`:''}
       </div>
       <div style="flex:1;min-width:280px">
-        <label>generate candidates</label>
         <div class="row">
-          <button onclick="job('variations',{kind:'seeds'})">🎲 6 seed variations</button>
-          <button onclick="job('variations',{kind:'styles'})">🎨 6 art-style variations</button>
-          <span class="muted">≈1 min each, queued on the GPU</span>
-        </div>
-        <label style="margin-top:10px">or use your own image</label>
-        <div class="row">
-          <button class="small" onclick="document.getElementById('f_refupload').click()">📤 upload a reference image</button>
+          <button class="primary gpu" onclick="genVariations('seeds')" title="About 1 minute each">🎲 Generate 6 versions</button>
+          <button class="gpu" onclick="genVariations('styles')" title="Same character in 6 different art styles">🎨 Try 6 art styles</button>
+          <button onclick="document.getElementById('f_refupload').click()"
+            title="A plain green background works best">📤 Upload image</button>
           <input type="file" id="f_refupload" accept="image/*" style="display:none" onchange="uploadRef(this)">
         </div>
-        <div class="muted" style="margin-top:4px">Best results: a flat solid-green (chroma-key)
-        background like the generated candidates — animation needs to key the backdrop out.
-        A busy background will carry through as visible pixels.</div>
-        <details class="adv"><summary>edit the design prompt & identity (advanced)</summary>
-          <label>reference image prompt <span class="muted">(Krea-2: keep under ~300 words — it fails silently past its budget; say what you want to see, never what you don't)</span></label>
-          <textarea id="f_ref" rows="8" oninput="promptEdit();refWords()">${esc(spec.ref_prompt)}</textarea>
-          <div class="muted" id="f_refwords" style="margin-top:2px"></div>
-          ${spec.sprite_type!=='vfx'?`<label style="margin-top:8px">identity feature list <span class="muted">(what the video model keeps exactly, every frame — name every distinguishing mark)</span></label>
-          <textarea id="f_identity" rows="4" oninput="promptEdit()">${esc(spec.identity||'')}</textarea>`:''}
-          <div class="row" style="margin-top:6px"><button class="small" onclick="flushPending()">💾 save now</button>
-          <span class="muted" id="prompt_saved">saves automatically</span>
-          <span class="muted">keep the green-field sentence — it makes transparency possible</span></div>
+        <details class="more"><summary>See more</summary>
+          <div class="muted">Every animation copies the reference, so pick one you love — generating more costs about a minute.
+          Uploading your own? Use a plain, solid green background so it can be cut out cleanly.</div>
+        </details>
+        <details class="adv" id="desc_box" ${dk('desc:'+cur,placeholderPrompt())}>
+          <summary>Edit description</summary>
+          <label>Description <span class="muted" id="f_refwords"></span></label>
+          <textarea id="f_ref" rows="7" oninput="promptEdit();refWords()">${esc(spec.ref_prompt)}</textarea>
+          ${spec.sprite_type!=='vfx'?`<label style="margin-top:8px">Features to keep identical in every frame</label>
+          <textarea id="f_identity" rows="3" oninput="promptEdit()">${esc(spec.identity||'')}</textarea>`:''}
+          <div class="row" style="margin-top:6px"><span class="muted" id="prompt_saved"></span></div>
+          <details class="more"><summary>See more</summary>
+            <div class="muted">Say what you want to see, never what you don't — naming a thing tends to add it.
+            Keep it under ~300 words, and keep the green-background sentence: it is what makes transparency possible.</div>
+          </details>
         </details>
       </div>
     </div>
-    <h2 style="font-size:13px">Pose library</h2>
-    <div class="muted" style="margin-bottom:8px">Reusable poses for animation start/end
-    frames. <b>Generated</b> poses (image-edit of the reference) are safe as START poses.
-    <b>Harvested</b> poses (a frame lifted from a rendered clip, free) are the only safe
-    END poses — a from-scratch image makes the character slide toward its framing.</div>
-    <div class="grid">${Object.keys(spec.views||{}).map(v=>{
-      const src=spec.views[v]||{};
-      const kind=src.from_anim?('harvested: '+src.from_anim+' #'+src.frame):'generated';
-      const ok=(a.views||[]).includes(v);
-      return `<div class="acard">
-        ${ok?`<img src="/files/${cur}/ref_${esc(v)}.png?v=${imgV}">`
-            :'<div style="height:210px;display:flex;align-items:center;justify-content:center;color:var(--dim)">not built yet</div>'}
-        <div class="row"><b>${esc(v)}</b>
-          <span class="chip ${src.from_anim?'ok':'mid'}">${kind}</span>
-          <span style="flex:1"></span>
-          <button class="small" onclick="rmView('${esc(v)}')">✕</button></div>
-      </div>`;}).join('')||'<div class="muted">no poses yet</div>'}</div>
-    <div class="row" style="margin-top:8px">
-      <button class="small" onclick="addGenPose()">+ generated pose…</button>
-      <button class="small" onclick="addHarvestPose()">+ harvest from clip… (free)</button>
-      <button onclick="job('views')">🔄 build poses (~2 min per generated)</button>
-    </div>
-    ${CANDS?candGrid('designs',CANDS.designs)+candGrid('styles',CANDS.styles)+candGrid('seeds',CANDS.seeds):'<div class="muted">loading candidates…</div>'}`;
+    ${CANDS?candGrid():'<div class="muted" style="margin-top:14px">Loading…</div>'}
+    <details class="adv" style="margin-top:18px" ${dk('poses:'+cur)}>
+      <summary title="Optional start and end poses for animations">Poses (optional)${views.length?' · '+views.length:''}</summary>
+      <div class="grid" style="margin-top:10px">${views.map(v=>{
+        const src=spec.views[v]||{};
+        const ok=(a.views||[]).includes(v);
+        return `<div class="acard tile">
+          ${ok?`<img src="/files/${cur}/ref_${esc(v)}.png?w=320&v=${imgV}" alt="">`
+              :'<div class="empty">Not built yet</div>'}
+          <span class="badge ${src.from_anim?'ok':'mid'}" title="${src.from_anim?'from '+esc(src.from_anim)+' frame '+src.frame:'image edit'}">${src.from_anim?'from a frame':'generated'}</span>
+          <div class="row"><b>${esc(v)}</b><span style="flex:1"></span>
+            <button class="small" onclick="rmView('${esc(v)}')" title="Delete pose">🗑</button></div>
+        </div>`;}).join('')||'<div class="muted">No poses yet</div>'}</div>
+      <div class="row" style="margin-top:8px">
+        <button class="small" onclick="addHarvestPose()">+ Pose from a frame</button>
+        <button class="small" onclick="addGenPose()">+ New pose…</button>
+        ${views.some(v=>!(a.views||[]).includes(v))?
+          '<button class="gpu" onclick="job(\'views\')" title="About 2 minutes per new pose">🔄 Build poses</button>':''}
+      </div>
+      <details class="more"><summary>See more</summary>
+        <div class="muted">Poses can be used as an animation's start or end pose. For end poses, use
+        "Pose from a frame" — a generated pose makes the character slide toward it.</div>
+      </details>
+    </details>`;
+  refWords();
 }
 
 function addGenPose(){
-  const name=prompt('Pose name (e.g. "guard_brace", "charge_up"):'); if(!name)return;
-  const instr=prompt('Describe the pose change (everything else stays identical):',
-    'Change the pose so she is bracing low behind the oversized shield, knees bent, only her eyes visible over the rim.');
-  if(!instr)return;
+  showModal(`<h3>New pose</h3>
+    <label>Name</label><input id="gp_name" placeholder="guard_brace">
+    <label>Describe the pose</label>
+    <textarea id="gp_desc" rows="3" placeholder="Bracing low behind the shield, knees bent, eyes just visible over the rim"></textarea>`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" onclick="saveGenPose()">Add pose</button>`);
+}
+function saveGenPose(){
+  const name=document.getElementById('gp_name').value.trim(),
+        desc=document.getElementById('gp_desc').value.trim();
+  if(!name||!desc)return toast('Give the pose a name and a description',true);
   const key=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_');
   spec.views=spec.views||{};
-  spec.views[key]={edit_prompt:instr+' Keep the exact same character, outfit, colors, hairstyle, proportions, hand-painted art style, full body visible with a margin, and the exact same flat solid bright green background. Change nothing else.'};
-  dirty=true; savePrompts().then(()=>render());
+  spec.views[key]={edit_prompt:'Change the pose: '+desc+'. Keep the exact same character, outfit, colors, hairstyle, proportions, art style, full body visible with a margin, and the exact same flat solid bright green background. Change nothing else.'};
+  closeModal();dirty=true;savePrompts().then(()=>{render();toast('Pose added — press Build poses to make it');});
 }
-async function addHarvestPose(){
+// "Pose from a frame": pick a clip, click a frame - no typing frame numbers
+const HV={anim:null,frame:null,total:0};
+function addHarvestPose(){
   const anims=Object.keys(spec.animations||{}).filter(n=>(assets(cur).anims[n]||{}).frames>0);
-  if(!anims.length)return toast('no rendered clips to harvest from yet',true);
-  const src=prompt('Harvest from which animation? ('+anims.join(', ')+')',anims[0]);
-  if(!src)return;
-  const fr=prompt('Which frame? (number, or -1 for the last frame)','-1');
-  const name=prompt('Pose name:',src+'_end'); if(!name)return;
-  await api('/api/view/harvest',{id:cur,name,from_anim:src.trim(),frame:parseInt(fr)});
-  spec=null;imgV=Date.now();render();toast('Pose harvested ✓ (no GPU used)');
+  if(!anims.length)return toast('Make an animation first',true);
+  showModal(`<h3>Pose from a frame</h3>
+    <div class="row">${anims.map(n=>`<span class="pill" data-a="${esc(n)}" onclick="hvLoad('${esc(n)}')">${esc(n)}</span>`).join('')}</div>
+    <div class="hvgrid" id="hv_grid"></div>
+    <label>Name</label><input id="hv_name">`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" id="hv_save" disabled onclick="saveHarvest()">Save pose</button>`);
+  hvLoad(anims[0]);
+}
+async function hvLoad(anim){
+  HV.anim=anim;HV.frame=null;
+  document.querySelectorAll('#modal .pill').forEach(p=>p.classList.toggle('on',p.dataset.a===anim));
+  const g=document.getElementById('hv_grid'); g.innerHTML='<span class="muted">Loading…</span>';
+  document.getElementById('hv_save').disabled=true;
+  const info=await api('/api/frames/'+cur+'/'+encodeURIComponent(anim));
+  if(HV.anim!==anim)return;
+  const n=info.frames.length; HV.total=n;
+  const idx=[]; for(let i=0;i<n;i+=4)idx.push(i); if(n&&idx[idx.length-1]!==n-1)idx.push(n-1);
+  g.innerHTML=idx.map(i=>`<div class="fr" data-i="${i}" onclick="hvPick(${i})">
+      <img src="/files/${info.dir}/${info.frames[i]}?w=96&v=${imgV}" alt="" loading="lazy">
+      <div class="n">${i===n-1?'last':i}</div></div>`).join('');
+}
+function hvPick(i){
+  HV.frame=i;
+  document.querySelectorAll('#hv_grid .fr').forEach(f=>f.classList.toggle('sel',+f.dataset.i===i));
+  document.getElementById('hv_name').value=HV.anim+(i===HV.total-1?'_end':'_f'+i);
+  document.getElementById('hv_save').disabled=false;
+}
+async function saveHarvest(){
+  const name=document.getElementById('hv_name').value.trim();
+  if(!name||HV.frame==null)return toast('Pick a frame',true);
+  await api('/api/view/harvest',{id:cur,name,from_anim:HV.anim,frame:HV.frame});
+  closeModal();spec=null;imgV=Date.now();render();toast('Pose saved ✓');
 }
 
 async function uploadRef(input){
@@ -616,119 +804,146 @@ async function uploadRef(input){
   try{
     await api('/api/char/upload_ref',{id:cur,data:dataUrl});
     imgV=Date.now();spec=null;input.value='';
-    toast('Reference uploaded & approved ✓ — go to step 2');
-    render();
+    toast('Reference set ✓ — next: Animations');
+    await refresh();loadCands();
   }catch(e){/* api() already toasted the error */}
 }
+function hasRenders(){
+  const a=assets(cur);
+  return Object.keys(spec.animations||{}).some(n=>(a.anims[n]||{}).done);
+}
 async function pickRef(kind,file){
-  if(!confirm('Use this image as the official reference?\n\nEvery animation will copy it exactly.'))return;
+  // switching is reversible (the old one stays in the grid), so only ask when
+  // it makes existing animations out of date
+  if(hasRenders()&&!confirm('Switch reference?\n\nAnimations you already made keep the old look until you re-render them.'))return;
   await api('/api/char/pick_ref',{id:cur,kind,file});
-  imgV=Date.now();spec=null;toast('Reference set & approved ✓ — go to step 2');
-  render();
+  imgV=Date.now();spec=null;toast('Reference set ✓ — next: Animations');
+  await refresh();loadCands();
 }
 async function approve(anim,val){
   await api('/api/char/approve',{id:cur,anim,approved:val});
-  spec=null;render();toast(anim?('"'+anim+'" '+(val?'approved ✓':'approval removed')):'reference approved ✓');
+  spec=null;await refresh();toast(val?'Approved ✓':'Approval removed');
 }
 
 // -------------------------------------------------------------- tab 2: anims
+let RENDER_MODE='test';     // Draft by default: a wrong click costs 2 min, not 10
+function animBusy(k){
+  return STATE.jobs.some(j=>j.char===cur&&j.type==='anim'&&(j.anims||[]).includes(k)
+    &&(j.status==='running'||j.status==='queued'));
+}
 function renderAnimsTab(p){
   const a=assets(cur), ap=(spec.approved||{}).anims||{};
   const anims=spec.animations||{};
   const isVfx=spec.sprite_type==='vfx';
+  const presets=(isVfx?['vfx']:CORE_PRESETS).filter(x=>!anims[x]);
+  const keyframed=!isVfx&&(spec.style==='pixel'||(spec.style==='painted'&&spec.keyframes));
+  const px=(STATE.templates.pixel_presets||{})[String(spec.pixel_bits||'')]||{};
   p.innerHTML=`
-    <div class="muted" style="margin-bottom:10px">Each card is one animation. Render in
-    <b>test</b> first (~2 min each) to sanity-check motion, then <b>final</b> (~10 min each).
-    Watch the live preview, then <b>approve</b> or re-render. Click <b>test ▶</b> to try it in
-    the play area.</div>
     <div class="row" style="margin-bottom:12px">
-      <span class="muted">add:</span>
-      ${(isVfx?['vfx']:CORE_PRESETS).map(x=>
-        '<button class="small" onclick="addAnim(\''+x+'\')">+'+x+'</button>').join('')}
-      <button class="small" onclick="addAnim('custom')">+custom…</button>
-      <button class="small" onclick="addKit()" title="add the standard animation set in one click">+full kit</button>
+      <label class="tog" style="color:var(--text)"><input type="checkbox" id="selall" onchange="selAll(this.checked)"> Select all</label>
+      <select id="f_mode" onchange="RENDER_MODE=this.value"
+        title="Draft is quick, for checking the motion. Only High quality can be approved.">
+        <option value="test" ${RENDER_MODE==='test'?'selected':''}>Draft · ~2 min each</option>
+        <option value="final" ${RENDER_MODE==='final'?'selected':''}>High quality · ~10 min each</option></select>
+      <button class="primary gpu" id="rendersel" onclick="job('anim')" disabled data-none="1">🎬 Render selected</button>
+      <span class="muted" id="prompt_saved"></span>
       <span style="flex:1"></span>
-      <button class="small" onclick="selAll(true)">☑ all</button>
-      <button class="small" onclick="selAll(false)">☐ none</button>
-      <select id="f_mode"><option value="test">test mode (~2 min/clip)</option>
-        <option value="final" selected>final mode (~10 min/clip)</option></select>
-      <button class="primary" onclick="job('anim')"
-        title="generates NEW video on the GPU - the expensive step">🎬 Render video (GPU)</button>
-      <button onclick="job('post')"
-        title="re-extracts sprites from the video already on disk with current settings - free and instant">✨ Rebuild sheets (free)</button>
-      <button onclick="exportGodot()"
-        title="one sheet + Godot 4 resources, every animation on a shared feet anchor - free and instant">📦 Export for Godot</button>
+      <select onchange="addAnimSel(this)" title="Add an animation">
+        <option value="">+ Add animation</option>
+        ${presets.map(x=>`<option value="${x}">${x.replace(/_/g,' ')}</option>`).join('')}
+        <option value="custom">Custom…</option>
+        ${isVfx?'':'<option value="kit">All standard animations</option>'}
+      </select>
+      ${isVfx?'':`<button onclick="exportGodot()" title="One sprite sheet + Godot 4 files">📦 Export for Godot</button>`}
+      <span class="menuwrap"><button onclick="menu(this)" title="More actions">⋯</button>
+        <div class="menu">
+          <button onclick="closeMenus();job('post')">✨ Reprocess selected
+            <small>Re-cut sprites from the video you already have · free</small></button>
+        </div></span>
     </div>
-    <div class="muted" style="margin-bottom:10px">${(()=>{
-      if(spec.style==='pixel'&&!isVfx){
-        const px=(STATE.templates.pixel_presets||{})[String(spec.pixel_bits||'')]||{};
-        return 'ℹ Every clip renders at 24fps, then pixel sprites are <b>collapsed to classic keyframe counts</b> — loops get '
-          +(px.frames_loop||8)+' frames sampled across one detected cycle, one-shots get '
-          +(px.frames_once||12)+', played at '+(px.fps||10)+'fps like real '
-          +(spec.pixel_bits||32)+'-bit games. Longer clips do not add smoothness. "Rebuild sheets" never touches the GPU.';
-      }
-      return 'ℹ Every clip renders at 24fps and the sheet samples every 2nd frame → <b>5.2s clip = 124 video frames = 61 sprites at 12fps</b>. Making a clip longer does not make motion smoother — it spreads the same sprite rate over more action. Keep loops at ~5.2s; give big one-shots the seconds they need, then trim with the action window. "Rebuild sheets" never touches the GPU.';
-    })()}</div>
     <div class="grid">${Object.keys(anims).map(k=>{
       const st=a.anims[k]||{}; const appd=!!ap[k]; const isTest=st.quality==='test';
-      const chip=st.done
-        ?(isTest?'<span class="chip mid">TEST render — finalize to approve</span>'
-          :(appd?'<span class="chip ok">approved ✓ (final)</span>'
-                :'<span class="chip warn">👀 final — awaiting your review</span>'))
-        :(st.frames>0?'<span class="chip mid">rendered — needs post</span>'
-                     :'<span class="chip">not rendered</span>');
-      return `<div class="acard">
-        ${st.done?`<img src="/files/${cur}/${k}/preview.webp?v=${imgV}"
+      const busy=animBusy(k);
+      const badge=busy?'<span class="badge mid">⏳ Rendering</span>'
+        :st.done?(isTest?'<span class="badge mid" title="Render in High quality to approve">Draft</span>'
+          :(appd?'<span class="badge ok">✓ Approved</span>':'<span class="badge warn">To approve</span>'))
+        :(st.frames>0?'<span class="badge mid" title="Select it, then ⋯ → Reprocess selected">Needs reprocess</span>'
+                     :'<span class="badge">Not made yet</span>');
+      return `<div class="acard tile">
+        ${st.done?`<img src="/files/${cur}/${k}/preview.webp?v=${imgV}" alt=""
             onerror="if(!this.dataset.f){this.dataset.f=1;this.src='/files/${cur}/${k}/preview.gif?v=${imgV}'}else{this.style.display='none'}">`
-          :'<div style="height:210px;display:flex;align-items:center;justify-content:center;color:var(--dim)">not rendered yet</div>'}
-        ${st.takes?`<div class="row" style="margin-top:6px">
-          <label style="margin:0">take</label>
-          <select class="a_take" data-anim="${esc(k)}" onchange="pickTake('${esc(k)}',this.value)"
-                  title="every render of this animation is kept - switch back to an earlier one any time">
-            <option value="">loading…</option>
-          </select>
-          <span class="muted">${st.takes} earlier render${st.takes>1?'s':''} kept</span>
-        </div>`:''}
-        <div class="row"><input type="checkbox" class="a_sel" data-anim="${esc(k)}" ${st.done&&appd&&!isTest?'':'checked'}>
-          <b>${esc(k)}</b>${chip}<span style="flex:1"></span>
-          ${st.done?`<button class="small" onclick="openTest('${esc(k)}')">test ▶</button>`:''}
-          ${st.done&&!appd&&!isTest?`<button class="small primary" onclick="approve('${esc(k)}',true)">✓</button>`:''}
-          ${appd&&!isTest?`<button class="small" onclick="approve('${esc(k)}',false)" title="remove approval">↺</button>`:''}
+          :'<div class="empty">'+(busy?'Rendering…':'Not made yet')+'</div>'}
+        ${badge}
+        <label class="selbox" title="Select"><input type="checkbox" class="a_sel" data-anim="${esc(k)}" ${SEL.has(k)?'checked':''} onchange="selCount()"></label>
+        <div class="row"><b>${esc(k.replace(/_/g,' '))}</b><span style="flex:1"></span>
+          ${st.done?`<button class="small" onclick="openTest('${esc(k)}')" title="Play it in Test & Tune">▶ Preview</button>`:''}
+          <button class="small gpu" onclick="job('anim',null,['${esc(k)}'])" ${busy?'disabled data-busy="1"':''}
+            title="${st.done?'Make a new version (the current one is kept)':'Make this animation'}">🎬 ${st.done?'Re-render':'Render'}</button>
+          ${st.done&&!appd&&!isTest?`<button class="small primary" onclick="approve('${esc(k)}',true)">👍 Approve</button>`:''}
+          ${appd&&!isTest?`<button class="small" onclick="approve('${esc(k)}',false)" title="Undo approval">↺</button>`:''}
         </div>
-        <details class="adv"><summary>${anims[k].action!=null?'action timeline & settings':'prompt & settings'}</summary>
+        ${st.takes?`<div class="row" style="margin-top:6px;gap:6px">
+          <span class="muted">Version</span>
+          <select class="a_take" data-anim="${esc(k)}" style="flex:1" onchange="pickTake('${esc(k)}',this.value)"
+                  title="Every render is kept — switch back any time"><option value="">…</option></select>
+        </div>`:''}
+        <details class="adv" ${dk('motion:'+cur+':'+k)}><summary>Edit motion</summary>
           ${anims[k].action!=null
-            ?`<div class="muted" style="margin-bottom:4px">Describe only WHAT SHE DOES over the ${anims[k].seconds||5.2}s, as a timeline of beats (the identity, camera lock, green screen and style are added automatically in the official H3 brief format). Say what you want to see, never what you don't.</div>
-              <textarea class="a_action" data-anim="${esc(k)}" rows="4" oninput="promptEdit()">${esc(anims[k].action)}</textarea>`
+            ?`<textarea class="a_action" data-anim="${esc(k)}" rows="4" oninput="promptEdit()">${esc(anims[k].action)}</textarea>
+              <details class="more"><summary>See more</summary><div class="muted">Describe only what the character
+              does, beat by beat, within the clip length. Say what you want to see, never what you don't.</div></details>`
             :`<textarea class="a_prompt" data-anim="${esc(k)}" rows="5" oninput="promptEdit()">${esc(anims[k].prompt)}</textarea>`}
           <div class="row" style="margin-top:6px">
-            <label style="margin:0">sec</label><input class="a_secs" data-anim="${esc(k)}" type="number" step="0.1" value="${anims[k].seconds||5.2}" style="width:64px" oninput="promptEdit()">
-            <label style="margin:0">canvas</label>
+            <label style="margin:0">Length</label><input class="a_secs" data-anim="${esc(k)}" type="number" step="0.1" min="1" max="15" value="${anims[k].seconds||5.2}" style="width:64px" oninput="promptEdit()"><span class="muted">s</span>
+            <label style="margin:0">Shape</label>
             <select class="a_canvas" data-anim="${esc(k)}" onchange="promptEdit()">
               ${['square','portrait','wide'].map(c=>'<option '+((anims[k].canvas||'square')===c?'selected':'')+'>'+c+'</option>').join('')}
             </select>
-            <button class="small" onclick="rmAnim('${esc(k)}')">✕ remove</button>
+            <span style="flex:1"></span>
+            <button class="small" onclick="rmAnim('${esc(k)}')">🗑 Delete</button>
           </div>
           <div class="row" style="margin-top:6px">
-            <label style="margin:0">start pose</label>
+            <label style="margin:0">Start pose</label>
             <select class="a_view" data-anim="${esc(k)}" onchange="promptEdit()">
               <option value="">reference</option>
               ${Object.keys(spec.views||{}).map(v=>'<option '+((anims[k].view||'')===v?'selected':'')+'>'+esc(v)+'</option>').join('')}
             </select>
-            <label style="margin:0">end pose</label>
+            <label style="margin:0">End pose</label>
             <select class="a_endview" data-anim="${esc(k)}" onchange="promptEdit()"
-              title="only harvested poses are safe here - a generated pose makes the character drift">
-              <option value="">none (loop / prompt-driven)</option>
+              title="Use a pose saved from a frame - a generated pose makes the character drift">
+              <option value="">none</option>
               ${Object.keys(spec.views||{}).map(v=>{
                 const harv=(spec.views[v]||{}).from_anim;
                 return '<option '+((anims[k].end_view||'')===v?'selected':'')+' value="'+esc(v)+'">'+esc(v)+(harv?'':' ⚠ drifts')+'</option>';}).join('')}
             </select>
           </div>
         </details>
-      </div>`;}).join('')}</div>
-    <div class="row" style="margin-top:10px"><button class="small" onclick="flushPending()">💾 save now</button>
-      <span class="muted" id="prompt_saved">prompt edits save automatically</span></div>`;
+      </div>`;}).join('')||'<div class="muted">No animations yet — use + Add animation.</div>'}</div>
+    <details class="more" style="margin-top:12px"><summary>See more</summary><div class="muted">${keyframed
+      ?'Clips render at 24fps, then get cut down to classic sprite frame counts: '+(px.frames_loop||8)
+        +' frames for loops, '+(px.frames_once||12)+' for one-shots, played at '+(px.fps||10)
+        +'fps. A longer clip does not make motion smoother.'
+      :'Clips render at 24fps; the sprite sheet keeps every 2nd frame (12fps). A longer clip does not make motion smoother — it spreads the same frames over more action.'}
+      Every render is kept as a version you can switch back to.</div></details>`;
   // fill the take dropdowns (one request per animation that has history)
   document.querySelectorAll('.a_take').forEach(sel=>loadTakes(sel.dataset.anim));
+  selCount();
+}
+// ticked cards survive the re-render a finished job triggers
+let SEL=new Set();
+function selCount(){
+  if(document.querySelector('.a_sel'))SEL=new Set(selectedAnims());
+  const n=SEL.size, b=document.getElementById('rendersel');
+  if(!b)return;
+  b.textContent='🎬 Render selected'+(n?' ('+n+')':'');
+  b.dataset.none=n?'':'1';
+  b.disabled=!n||!(STATE&&STATE.comfy_ok);
+  const all=document.getElementById('selall');
+  if(all){const t=document.querySelectorAll('.a_sel').length;all.checked=!!n&&n===t;}
+}
+function addAnimSel(sel){
+  const v=sel.value; sel.value=''; if(!v)return;
+  if(v==='kit')addKit(); else addAnim(v);
 }
 
 // ---- takes: every render of an animation is kept and switchable ----------
@@ -738,24 +953,24 @@ async function loadTakes(anim){
   try{
     const d=await (await fetch('/api/takes/'+id+'/'+encodeURIComponent(anim))).json();
     if(cur!==id)return;        // these takes belong to the sprite you left
+    const when=s=>{const m=/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d:\d\d)/.exec(s||'');
+      return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+m[4]:(s||'?');};
     sel.innerHTML=(d.takes||[]).map(t=>{
-      const bits=[t.when||'?', (t.frames!=null?t.frames+'f':'')+(t.quality?' '+t.quality:''),
-                  t.seed?'seed '+t.seed:'', t.active?'← in use':''].filter(Boolean).join(' · ');
-      return `<option value="${t.id}" ${t.active?'selected':''}>${bits}</option>`;
+      const bits=when(t.when)+(t.quality==='test'?' · draft':'')+(t.active?' (current)':'');
+      return `<option value="${t.id}" ${t.active?'selected':''}>${esc(bits)}</option>`;
     }).join('')||'<option value="">none</option>';
   }catch(e){sel.innerHTML='<option value="">unavailable</option>';}
 }
 async function pickTake(anim, take){
   if(!take||take==='active')return;
-  if(!confirm('Use this earlier take of "'+anim+'"?\n\nThe one in use now is kept as a take, so you can switch back.'))
-    {loadTakes(anim);return;}
+  // switching is reversible - the current one becomes a version too
   await api('/api/take/activate',{id:cur,anim,take});
   imgV=Date.now();spec=null;
-  toast('Switched "'+anim+'" to the earlier take');
-  render();
+  toast('Switched version ✓');
+  await refresh();
 }
 
-function selAll(v){document.querySelectorAll('.a_sel').forEach(c=>c.checked=v);}
+function selAll(v){document.querySelectorAll('.a_sel').forEach(c=>c.checked=v);selCount();}
 function specRulesFor(s){
   const t=STATE.templates;
   if(s.sprite_type==='vfx')return t.vfx_rules;
@@ -776,7 +991,7 @@ function scaffoldKit(s,pid){
     if(briefStyle(s)){
       // brief-style: action timeline only; one square canvas for everything
       // (VFX are separate sprites, so no animation needs extra headroom)
-      an={action:ACTION_PRESETS[a.preset]||ACTION_PRESETS[a.key]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',seconds:5.2};
+      an={action:pronounize(ACTION_PRESETS[a.preset]||ACTION_PRESETS[a.key]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',s),seconds:5.2};
       const f=ACTION_FACING[a.preset]||ACTION_FACING[a.key]; if(f)an.facing=f;
     }else{
       const body=ANIM_PRESETS[a.preset]||ANIM_PRESETS[a.key]||'Describe the motion: start, peak, end.';
@@ -797,23 +1012,47 @@ function scaffoldKit(s,pid){
 function briefStyle(s){return s.sprite_type!=='vfx';}   // VFX keep the legacy free-text prompt
 function addAnim(preset){
   collectPrompts();
-  const name=preset==='custom'?(prompt('Animation name:')||''):preset;
-  const key=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_'); if(!key)return;
+  if(preset==='custom')
+    return askText('New animation','Name','','e.g. dance, spin_attack',v=>addAnimNamed('custom',v));
+  addAnimNamed(preset,preset);
+}
+function addAnimNamed(preset,name){
+  const key=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,''); if(!key)return;
+  if(spec.animations[key])return toast('“'+key+'” already exists',true);
   if(briefStyle(spec)){
-    const an={action:ACTION_PRESETS[preset]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',seconds:5.2};
+    const an={action:pronounize(ACTION_PRESETS[preset]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',spec),seconds:5.2};
     if(ACTION_FACING[preset])an.facing=ACTION_FACING[preset];
     spec.animations[key]=an;
   }else{
     spec.animations[key]={prompt:kitRules(specRules(),preset)+(ANIM_PRESETS[preset]||'Describe the motion: start, peak, end.'),seconds:5.2};
   }
-  dirty=true;render();
+  // saved right away - an added card that vanishes when you click away is a trap
+  dirty=true;render();savePrompts().then(()=>toast('Added “'+key.replace(/_/g,' ')+'” ✓'));
 }
-function rmAnim(k){collectPrompts();delete spec.animations[k];dirty=true;render();savePrompts();}
+function rmAnim(k){
+  if(!confirm('Delete the “'+k.replace(/_/g,' ')+'” animation?'))return;
+  collectPrompts();delete spec.animations[k];SEL.delete(k);dirty=true;render();savePrompts();
+}
+// the action presets are written about "she"; follow the character's own
+// pronoun (spec.pronoun, which the server's brief also uses). New characters
+// get 'they', which swaps in their name - older ones keep what they have.
+function pronounize(text,s){
+  const p=((s||{}).pronoun||'she').toLowerCase();
+  if(p==='she')return text;
+  const name=(s.display_name||'The character').trim();
+  const subj=p==='he'?['He','he']:[name,name];
+  const poss=p==='he'?['His','his']:['Their','their'];
+  return text.replace(/\bShe\b/g,subj[0]).replace(/\bshe\b/g,subj[1])
+    .replace(/\bherself\b/g,p==='he'?'himself':'themself')
+    .replace(/\bcarries her\b/g,'carries '+(p==='he'?'him':'them'))   // the one object use
+    .replace(/\bHer\b/g,poss[0]).replace(/\bher\b/g,poss[1]);
+}
 function refWords(){
   const rp=document.getElementById('f_ref'), o=document.getElementById('f_refwords'); if(!rp||!o)return;
+  // silent unless it matters: past ~300 words the image model returns noise
   const n=rp.value.trim().split(/\s+/).filter(Boolean).length;
-  o.textContent=n+' words'+(n>300?' — TOO LONG, Krea-2 will fail silently':n>250?' — near the limit':'');
-  o.style.color=n>300?'var(--err)':n>250?'var(--warn)':'var(--dim)';
+  o.textContent=n>300?'— too long, shorten it':n>250?'— almost too long':'';
+  o.style.color=n>300?'var(--err)':'var(--warn)';
 }
 function collectPrompts(){
   const rp=document.getElementById('f_ref'); if(rp)spec.ref_prompt=rp.value;
@@ -838,11 +1077,12 @@ function collectPrompts(){
 function addKit(){
   collectPrompts();
   const added=scaffoldKit(spec,projOf(cur));
-  dirty=true;render();
-  toast(added?added+' animations scaffolded from the project\'s movement kit - review the prompts, then render in test mode':'full kit already present');
+  if(!added)return toast('All standard animations are already here');
+  dirty=true;render();savePrompts();
+  toast('Added '+added+' animations ✓');
 }
 function rmView(key){
-  if(!confirm('Remove pose "'+key+'" from the library?'))return;
+  if(!confirm('Delete the pose “'+key+'”?'))return;
   collectPrompts();delete spec.views[key];dirty=true;savePrompts().then(()=>render());
 }
 async function savePrompts(){
@@ -861,58 +1101,82 @@ function promptEdit(){
   dirty=true;
   const id=cur;
   const el=document.getElementById('prompt_saved');
-  if(el){el.textContent='saving…';el.style.color='var(--dim)';}
+  if(el){el.textContent='Saving…';el.style.color='var(--dim)';}
   schedule('prompts:'+id,900,async()=>{
     if(cur!==id)return;                 // flushed on the way out, or stale
     const rp=document.getElementById('f_ref');
     if(rp&&!rp.value.trim()){
       const e0=document.getElementById('prompt_saved');
-      if(e0){e0.textContent='not saved — the reference prompt cannot be empty';
+      if(e0){e0.textContent='Not saved — the description can\'t be empty';
              e0.style.color='var(--warn)';}
       return;
     }
     try{ await savePrompts();
          const e2=document.getElementById('prompt_saved');
-         if(e2&&cur===id){e2.textContent='saved ✓';e2.style.color='var(--ok)';}
+         if(e2&&cur===id){e2.textContent='Saved ✓';e2.style.color='var(--ok)';}
     }catch(e){
       const e2=document.getElementById('prompt_saved');
-      if(e2&&cur===id){e2.textContent='save failed';e2.style.color='var(--err)';}
+      if(e2&&cur===id){e2.textContent='Save failed';e2.style.color='var(--err)';}
     }
   });
 }
 async function delSprite(){
-  if(!confirm('Delete "'+cur+'" from the roster? Generated files stay on disk.'))return;
+  if(!confirm('Delete “'+(spec.display_name||cur)+'”?\n\nIts image files stay on disk.'))return;
   const pid=projOf(cur);
   await api('/api/char/delete',{id:cur});
   location.hash=pid?('#/proj/'+pid):'#/';
 }
+// A short form instead of a name prompt + a template full of "DESCRIBE THE
+// CHARACTER" placeholders you had to find and replace in an advanced editor
 function newSprite(kind){
-  const raw=prompt('Name for the new '+(kind==='vfx'?'effect':'character')+':'); if(!raw)return;
+  const vfx=kind==='vfx';
+  showModal(`<h3>New ${vfx?'effect':'character'}</h3>
+    <label>Name</label><input id="ns_name" placeholder="${vfx?'Lightning ring':'Fire knight'}">
+    ${vfx?`<label>What does it look like?</label>
+      <textarea id="ns_desc" rows="3" placeholder="A ring of crackling blue lightning with bright white sparks"></textarea>`
+    :`<label>Who are they?</label>
+      <textarea id="ns_desc" rows="2" placeholder="A young knight, sturdy build, freckles, short red hair"></textarea>
+      <label>Outfit, colors and gear</label>
+      <textarea id="ns_outfit" rows="2" placeholder="Silver plate armor with a red tabard, a longsword on the hip"></textarea>`}`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" onclick="createSprite('${kind}')">Create</button>`);
+}
+function createSprite(kind){
+  const vfx=kind==='vfx';
+  const raw=document.getElementById('ns_name').value.trim();
+  const desc=document.getElementById('ns_desc').value.trim().replace(/[.\s]+$/,'');
+  const outfit=vfx?'':document.getElementById('ns_outfit').value.trim().replace(/[.\s]+$/,'');
+  if(!raw)return toast('Give it a name',true);
+  if(!desc)return toast(vfx?'Describe the effect':'Describe the character',true);
   const id=raw.toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
-  if(!id)return toast('invalid name',true);
+  if(!id)return toast('Use letters or numbers in the name',true);
+  if(STATE.characters[id])return toast('That name is taken',true);
   const t=STATE.templates, st=projStyle(curProj);
   let s;
-  if(kind==='vfx'){
-    s={display_name:'VFX - '+raw,sprite_type:'vfx',project:curProj,
-       ref_prompt:t.vfx_pixel+'DESCRIBE THE EFFECT HERE - a COMPLETE self-contained effect, every endpoint visible, touching no edge. '+t.vfx_stage,
+  if(vfx){
+    s={display_name:raw,sprite_type:'vfx',project:curProj,
+       ref_prompt:t.vfx_pixel+desc+' - a COMPLETE self-contained effect, every endpoint visible, touching no edge. '+t.vfx_stage,
        animations:{loop:{prompt:t.vfx_rules+ANIM_PRESETS.vfx,seconds:5.2}}};
   }else{
-    s={display_name:raw,style:st.pixel?'pixel':'painted',project:curProj,
+    // pronoun 'they': the motion text names the character ("Nova walks...
+    // their arms") and the server's brief says "their", so it reads right for
+    // anyone without asking
+    s={display_name:raw,style:st.pixel?'pixel':'painted',project:curProj,pronoun:'they',
        // reference prompt: subject+pose first, framing early, the backdrop named
        // as a hex-coded object, everything phrased as what you WANT to see
        ref_prompt:(st.pixel?'A '+(st.bits||32)+'-bit pixel art game sprite of ':'A hand-painted 2D game sprite of ')
-         +'DESCRIBE THE CHARACTER (who they are, build, face, hair) standing in a calm ready stance, full body from head to toe, centered and small in frame with empty green margin above the head and below the feet, seen in three-quarter view angled toward the right with the chest open to the viewer and the face, eyes and feet all pointing right. DESCRIBE THE OUTFIT, COLORS AND HELD ITEMS; hands empty and relaxed. '
+         +desc+', standing in a calm ready stance, full body from head to toe, centered and small in frame with empty green margin above the head and below the feet, seen in three-quarter view angled toward the right with the chest open to the viewer and the face, eyes and feet all pointing right. '
+         +(outfit?outfit+'; ':'')+'hands empty and relaxed. '
          +(st.pixel?'Crisp square pixels, hard clean edges, flat cel shading, matte non-reflective surfaces, dark outlines, a limited palette, flat even shadowless studio lighting. ':'Clean bold outlines, painterly cel shading, matte surfaces, flat even shadowless studio lighting. ')
          +'The background is a flat, uniform chroma-key green field, color #00FF00, smooth edge to edge; the figure floats on the green with a hard clean edge and is the only element in the image.',
        // identity: the verbatim feature list the video model keeps fully preserved
-       identity:'DESCRIBE THE CHARACTER AS A FEATURE LIST: hair, eyes, face, outfit pieces and colors, held items, art style',
+       identity:desc+(outfit?'; '+outfit:'')+'; '+(st.pixel?(st.bits||32)+'-bit pixel art':'hand-painted 2D art'),
        animations:{}};
     if(st.pixel)s.pixel_bits=st.bits;
     scaffoldKit(s,curProj);
   }
-  api('/api/char/save',{id,spec:s}).then(()=>{location.hash='#/char/'+id+'/ref';
-    toast(kind==='vfx'?'Created — describe the effect in step 1'
-      :'Created — the movement kit is pre-scaffolded; give them a look in step 1');});
+  api('/api/char/save',{id,spec:s}).then(()=>{closeModal();location.hash='#/char/'+id+'/ref';
+    toast('Created ✓ — now generate a look');});
 }
 
 // ------------------------------------------------------------------ export
@@ -920,43 +1184,36 @@ function newSprite(kind){
 // animation lands on one cell with one anchor (the feet), so an
 // AnimatedSprite2D can switch clips without the character jumping.
 async function exportGodot(project){
-  const label=project?('project "'+project+'"'):(spec.display_name||cur);
-  toast('Packing '+label+' for Godot…');
+  toast('Exporting…');
   try{
     const body=project?{project}:{id:cur};
     body.height=EXPORT_H; body.res_dir=EXPORT_DIR;
     const r=await api('/api/export',body);
     showExport(r);
-  }catch(e){ toast('Export failed: '+e.message,true); }
+  }catch(e){ /* api() already showed the reason */ }
 }
 let EXPORT_H=128, EXPORT_DIR='sprites';
 function showExport(r){
   const one=r.exports.length===1?r.exports[0]:null;
-  const rows=r.exports.map(x=>`<tr><td>${esc(x.id)}</td>
-      <td class="mono">${x.animations} anims · ${x.frames} frames</td>
-      <td class="mono">${x.cell[0]}×${x.cell[1]}</td>
-      <td><a href="${x.zip_url}" download>${esc(x.id)}.zip</a>
+  const rows=r.exports.map(x=>`<tr><td style="padding:3px 0">${esc(x.id)}</td>
+      <td class="muted">${x.animations} animations</td>
+      <td><a href="${x.zip_url}" download>⬇ ${esc(x.id)}.zip</a>
           <span class="muted">${Math.round(x.bytes/1024)} KB</span></td></tr>`).join('');
-  document.getElementById('modal').innerHTML=`
-    <h3>Exported for Godot</h3>
-    <div class="muted">Standing height ${r.height}px × each character's own size ·
-      resources point at <span class="mono">res://${esc(r.res_dir)}/&lt;name&gt;/</span></div>
-    <table style="width:100%;margin:10px 0;font-size:12.5px;border-collapse:collapse">${rows}</table>
-    ${r.bundle_url?`<div class="row"><a class="mono" href="${r.bundle_url}" download>⬇ everything in one zip
-      (${Math.round(r.bundle_bytes/1024/1024*10)/10} MB)</a></div>`:''}
-    ${r.errors.length?`<div class="warn">skipped — ${r.errors.map(esc).join('; ')}</div>`:''}
-    <div class="est" style="line-height:1.6">
-      <b>In Godot 4</b><br>
-      1. Unzip into your project so it lands at <span class="mono">res://${esc(r.res_dir)}/</span><br>
-      2. Drag <span class="mono">&lt;name&gt;.tscn</span> into a scene — it is an AnimatedSprite2D
-         already wired up, anchored at the feet, filtered to Nearest<br>
-      3. Play a clip by name: <span class="mono">$Ninja.play("walk")</span>
-    </div>
-    <div class="row" style="justify-content:space-between;margin-top:10px">
-      <span class="muted">files are also on disk under sprites_out/_export/</span>
-      <button class="primary" onclick="closeModal()">Done</button>
-    </div>`;
-  document.getElementById('modalback').classList.add('show');
+  showModal(`
+    <h3>Ready for Godot ✓</h3>
+    ${r.bundle_url?`<button class="primary" style="margin-bottom:8px" onclick="location.href='${r.bundle_url}'">
+      ⬇ Download all (${Math.round(r.bundle_bytes/1024/1024*10)/10} MB)</button>`:''}
+    <table style="width:100%;margin:6px 0;font-size:12.5px;border-collapse:collapse">${rows}</table>
+    ${r.errors.length?`<div class="warn">Skipped: ${r.errors.map(esc).join('; ')}</div>`:''}
+    <details class="more"><summary>How to use in Godot</summary>
+      <div class="est" style="line-height:1.6">
+        1. Unzip into your project at <span class="mono">res://${esc(r.res_dir)}/</span><br>
+        2. Drag <span class="mono">&lt;name&gt;.tscn</span> into a scene — it's a ready AnimatedSprite2D<br>
+        3. Play an animation: <span class="mono">$Ninja.play("walk")</span><br>
+        <span class="muted">Also saved in sprites_out/_export/</span>
+      </div>
+    </details>`,
+    `<button class="primary" onclick="closeModal()">Done</button>`);
 }
 
 // --------------------------------------------------------------- tab 3: test
@@ -972,7 +1229,7 @@ function charScale(v){
   document.getElementById('charscalev').textContent=val.toFixed(2)+'×';
   window.LIVE_TUNE={char:id,anim:labAnim||'idle',sprite_scale:val,ts:Date.now()};
   const msg=document.getElementById('char_scale_msg');
-  if(msg){msg.textContent='saving…';}
+  if(msg){msg.textContent='Saving…';msg.style.color='var(--dim)';}
   schedule('charscale:'+id,600,async()=>{
     saving++;
     try{
@@ -982,10 +1239,10 @@ function charScale(v){
       if(STATE.characters[id])STATE.characters[id].sprite_scale=val;
       holdSpec=Date.now()+3000;
       const m2=document.getElementById('char_scale_msg');
-      if(m2&&cur===id)m2.textContent='saved ✓ — applies to every animation of this character';
+      if(m2&&cur===id){m2.textContent='Saved ✓';m2.style.color='var(--ok)';}
     }catch(e){
       const m2=document.getElementById('char_scale_msg');
-      if(m2&&cur===id)m2.textContent='save failed';
+      if(m2&&cur===id){m2.textContent='Save failed';m2.style.color='var(--err)';}
     }finally{saving--;}
   });
 }
@@ -1032,7 +1289,7 @@ function renderPixelLab(p,anims){
           `<option value="${v}" ${PL.stride===v?'selected':''}>${l}</option>`).join('')}</select>
       <span class="muted" id="pl_status">loading…</span>
       <span style="flex:1"></span>
-      <span class="muted">raw render frames, re-pixelized live · nothing is saved to the sprite</span>
+      <span class="muted">Experiments only — nothing here is saved</span>
     </div>
     <div class="plview">
       <div><div class="muted" style="margin-bottom:3px">pixelized <span class="mono" id="pl_grid"></span></div>
@@ -1096,10 +1353,10 @@ function renderPixelLab(p,anims){
         <span style="flex:1"></span>
         <button class="small" onclick="plReset()">reset to defaults</button>
       </div>
-      <div class="muted" style="margin-top:6px">nearest = point-sample the cell centre like the shader (crisp, but crawls between
+      <details class="more"><summary>See more</summary><div class="muted">nearest = point-sample the cell centre like the shader (crisp, but crawls between
         frames) · average = box mean (soft) · dominant = the larger of two luminance clusters per cell (k-centroid; keeps outlines
         and highlights) · "pixel grid" edges are measured between output pixels; "source pixels" measures the 640px image under
-        each cell like the original shader · edges tint only the character, never the keyed backdrop</div>
+        each cell like the original shader · edges tint only the character, never the keyed backdrop</div></details>
     </div>`;
   plLoad();
 }
@@ -1375,10 +1632,9 @@ function renderTestTab(p){
   const a=assets(cur);
   const done=Object.keys(spec.animations||{}).filter(n=>(a.anims[n]||{}).done);
   if(!done.length){
-    p.innerHTML=`<div class="muted">Nothing to test yet — this sprite has no finished
-      animations.<br><br>1. Pick/approve a reference in <a onclick="tab='ref';render()">step 1</a><br>
-      2. Render animations in <a onclick="tab='anims';render()">step 2</a><br>
-      3. Then come back here to play and tune them.</div>`;
+    p.innerHTML=`<div class="empty" style="height:160px;flex-direction:column;gap:10px">
+      Nothing to play yet
+      <button class="primary" onclick="location.hash='#/char/${cur}/anims'">Go to Animations →</button></div>`;
     return;
   }
   if(!labAnim||!done.includes(labAnim))labAnim=null;
@@ -1388,12 +1644,16 @@ function renderTestTab(p){
   plStop();
   p.innerHTML=`
     <div class="row" style="margin-bottom:10px">
-      <span class="pill ${anim||pixel?'':'on'}" onclick="labMode='play';labAnim=null;render()" title="all animations, WASD / keys">🎮 free play</span>
+      <span class="pill ${anim||pixel?'':'on'}" onclick="labMode='play';labAnim=null;render()" title="Play with the keyboard">🎮 Free play</span>
       ${done.map(n=>`<span class="pill ${n===anim&&!pixel?'on':''} ${q(n)}" onclick="labMode='play';labAnim='${esc(n)}';render()"
-          title="${q(n)==='test'?'TEST render':'final'}">${esc(n)}</span>`).join('')}
+          title="${q(n)==='test'?'Draft':''}">${esc(n.replace(/_/g,' '))}</span>`).join('')}
+      ${pixel?'<span class="pill on">🔬 Pixel lab</span>':''}
       <span style="flex:1"></span>
-      <span class="pill ${pixel?'on':''}" onclick="labMode='pixel';render()"
-          title="re-pixelize the raw frames live: fixed pixel size, Sobel outlines, palette, dither">🔬 pixel lab</span>
+      <span class="menuwrap"><button class="small" onclick="menu(this)" title="More tools">⋯</button>
+        <div class="menu">
+          <button onclick="closeMenus();labMode='pixel';render()">🔬 Pixel lab
+            <small>Try pixel size, outlines and palettes · nothing is saved</small></button>
+        </div></span>
     </div>`;
   if(pixel){
     clearInterval(TL.sync);TL.anim=null;
@@ -1402,117 +1662,123 @@ function renderTestTab(p){
     renderPixelLab(lab,withFrames);
     return;
   }
+  const moveDef={walk:120,run:260,leap:280,jump:0};
   p.innerHTML+=`
-    <div class="row" style="margin-bottom:8px">
-      <label style="margin:0">size of ${esc(spec.display_name||cur)}</label>
-      <input id="char_scale" type="range" min="0.4" max="2.5" step="0.05" style="width:170px"
-        value="${spec.sprite_scale||1}" oninput="charScale(this.value)">
-      <span class="mono" id="charscalev" style="width:52px">${(spec.sprite_scale||1).toFixed(2)}×</span>
-      <button class="small" onclick="charScale(1);document.getElementById('char_scale').value=1">reset</button>
-      <span class="muted" id="char_scale_msg">applies to every animation of this character only · saves automatically</span>
-    </div>
-    <div class="row" style="margin-bottom:8px">
-      <label style="margin:0">compare with</label>
-      <select id="cmpsel" onchange="setCompare(this.value)">
-        <option value="">nobody (just this sprite)</option>
-        ${Object.keys(STATE.characters).filter(id=>id!==cur
-            &&STATE.characters[id].sprite_type!=='vfx'
-            &&Object.values((STATE.assets[id]||{}).anims||{}).some(a=>a.done))
-          .sort().map(id=>`<option value="${id}" ${COMPARE_WITH===id?'selected':''}>${esc(STATE.characters[id].display_name||id)}</option>`).join('')}
-      </select>
-      <span class="muted">stands on the same ground line and mirrors this animation — for checking relative size and style</span>
+    <div class="row" style="margin-bottom:8px;gap:16px">
+      <span class="row" style="gap:8px">
+        <label style="margin:0">Size</label>
+        <input id="char_scale" type="range" min="0.4" max="2.5" step="0.05" style="width:150px"
+          value="${spec.sprite_scale||1}" oninput="charScale(this.value)" title="Size of ${esc(spec.display_name||cur)} in every animation">
+        <span class="mono" id="charscalev" style="width:46px">${(spec.sprite_scale||1).toFixed(2)}×</span>
+        <button class="small" onclick="charScale(1);document.getElementById('char_scale').value=1" title="Reset size">↺</button>
+        <span class="muted" id="char_scale_msg"></span>
+      </span>
+      <span class="row" style="gap:8px">
+        <label style="margin:0">Compare with</label>
+        <select id="cmpsel" onchange="setCompare(this.value)" title="Show another character beside this one to check size and style">
+          <option value="">nobody</option>
+          ${Object.keys(STATE.characters).filter(id=>id!==cur
+              &&STATE.characters[id].sprite_type!=='vfx'
+              &&Object.values((STATE.assets[id]||{}).anims||{}).some(a=>a.done))
+            .sort().map(id=>`<option value="${id}" ${COMPARE_WITH===id?'selected':''}>${esc(STATE.characters[id].display_name||id)}</option>`).join('')}
+        </select>
+      </span>
     </div>
     <iframe id="lab" src="/viewer?char=${cur}${anim?'&focus='+anim:''}${COMPARE_WITH?'&compare='+COMPARE_WITH:''}"></iframe>
     ${anim?`
     <div class="tl" id="tl">
       <div class="row" style="gap:10px">
         <div class="transport">
-          <button class="tb" onclick="tlStep(-1)" title="previous frame (←)">⏮</button>
-          <button class="tb" id="tl_play" onclick="tlToggle()" title="play / pause (space)">⏸</button>
-          <button class="tb" onclick="tlStep(1)" title="next frame (→)">⏭</button>
+          <button class="tb" onclick="tlStep(-1)" title="Previous frame (←)">⏮</button>
+          <button class="tb" id="tl_play" onclick="tlToggle()" title="Play / pause (Space)">⏸</button>
+          <button class="tb" onclick="tlStep(1)" title="Next frame (→)">⏭</button>
         </div>
-        <span class="mono" id="tl_pos">frame – / –</span>
+        <span class="mono" id="tl_pos">– / –</span>
         <span class="muted" id="tl_fps"></span>
         <span style="flex:1"></span>
-        <label style="margin:0">speed</label>
-        <input id="tune_rate" type="range" min="0.25" max="4" step="0.05" style="width:150px"
-          value="${sp.rate||1}" oninput="tlRate(this.value)">
-        <span class="mono" id="ratev" style="width:48px">${(sp.rate||1).toFixed(2)}×</span>
-        <button class="tb" id="tl_ghost" onclick="tlGhost()" title="onion skin: ghost of previous frames (t)">👻</button>
-        <button class="tb" id="tl_guides" onclick="tlGuides()" title="ground line & center guides (g)">📐</button>
+        <label style="margin:0">Speed</label>
+        <input id="tune_rate" type="range" min="0.25" max="4" step="0.05" style="width:140px"
+          value="${sp.rate||1}" oninput="tlRate(this.value)" title="Playback speed">
+        <span class="mono" id="ratev" style="width:46px">${(sp.rate||1).toFixed(2)}×</span>
+        <button class="tb" id="tl_ghost" onclick="tlGhost()" title="Onion skin (T)">👻</button>
+        <button class="tb" id="tl_guides" onclick="tlGuides()" title="Ground line and center (G)">📐</button>
       </div>
       <div class="stripwrap" id="stripwrap"><div class="strip" id="strip"></div></div>
-      <div class="row" style="gap:10px;margin-top:6px">
-        <span class="muted">playback window</span>
-        <input id="tune_s" class="mono" type="number" style="width:60px" oninput="tlRangeInput()">
-        <span class="muted">to</span>
-        <input id="tune_e" class="mono" type="number" style="width:60px" oninput="tlRangeInput()">
+      <div class="row" style="gap:8px;margin-top:6px">
+        <label style="margin:0" title="Play only these frames. Drag the [ ] handles on the strip.">Trim</label>
+        <input id="tune_s" class="mono" type="number" style="width:56px" oninput="tlRangeInput()">
+        <span class="muted">–</span>
+        <input id="tune_e" class="mono" type="number" style="width:56px" oninput="tlRangeInput()">
         <span class="muted" id="tune_hint"></span>
-        <button class="small" onclick="tlResetRange()">use auto-detected</button>
+        <button class="small" onclick="tlResetRange()" title="Use the automatically detected frames">Auto</button>
+        <span class="muted" id="tl_cuts"></span>
         <span style="flex:1"></span>
-        <span class="muted">drag the [ ] handles or click a frame to scrub · hover a frame for ✂</span>
+        <span class="muted" id="tl_autosave"></span>
+        <button class="small" id="tl_undo" onclick="tlReset()" disabled
+          title="Put every setting back the way it was when you opened this animation">↶ Undo changes</button>
       </div>
       <div class="shape">
-        <div class="row" style="gap:14px">
-          <div><label>${esc(anim)} size <span class="muted">(this animation only)</span></label>
-            <input id="tune_ascale" type="range" min="0.5" max="2" step="0.02" style="width:150px;vertical-align:middle"
-              value="${sp.scale??1}" oninput="tlAScale(this.value)">
-            <span class="mono" id="ascalev">${(sp.scale??1).toFixed(2)}×</span>
-            <button class="small" onclick="tlAScaleAuto()" title="scale so this animation's first frame matches idle's height">match idle</button>
-            <button class="small" onclick="tlAScale(1);document.getElementById('tune_ascale').value=1">reset</button></div>
-          ${['walk','run','leap','jump'].includes(anim)?`
-          <div><label>${anim} speed <span class="muted">(px/sec across the ground)</span></label>
+        <div class="row" style="gap:18px">
+          ${anim in moveDef?`
+          <div><label>Move speed</label>
             <input id="tune_move" type="range" min="0" max="600" step="10" style="width:150px;vertical-align:middle"
-              value="${sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim])}" oninput="tlMove(this.value)">
-            <span class="mono" id="movev">${sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim])}</span></div>`:''}
-          <span style="flex:1"></span>
-          <span class="muted" id="tl_autosave">saved automatically</span>
+              value="${sp.move_speed??moveDef[anim]}" oninput="tlMove(this.value)" title="How fast the character travels across the ground (px/sec)">
+            <span class="mono" id="movev">${sp.move_speed??moveDef[anim]}</span></div>`:''}
         </div>
         <div style="margin-top:10px">
-          <label>effect sprites <span class="muted">(overlaid in-engine; each fires once during the animation)</span></label>
+          <label>Effects</label>
           <div id="fxlist"></div>
           <div class="row" style="margin-top:6px">
             <select id="fxpick">${vfxOptions()}</select>
-            <button class="small" onclick="tlFxAdd()">+ attach effect</button>
-            <button class="small" onclick="tlFxTest()">▶ replay with effects</button>
-            ${(sp.fx||[]).length?'<button class="small" onclick="tlFxClear()">✕ remove all</button>':''}
+            <button class="small" onclick="tlFxAdd()">+ Add effect</button>
+            <span id="fxbtns"></span>
           </div>
         </div>
       </div>
+      <details class="adv" style="margin-top:10px" ${dk('tlmore')}>
+        <summary>More settings</summary>
+        <div class="row" style="gap:14px;margin-top:8px">
+          <div><label title="Only needed if this animation looks bigger or smaller than the others">Size of this animation</label>
+            <input id="tune_ascale" type="range" min="0.5" max="2" step="0.02" style="width:150px;vertical-align:middle"
+              value="${sp.scale??1}" oninput="tlAScale(this.value)">
+            <span class="mono" id="ascalev">${(sp.scale??1).toFixed(2)}×</span>
+            <button class="small" onclick="tlAScaleAuto()" title="Match idle's height">Match idle</button>
+            <button class="small" onclick="tlAScale(1);document.getElementById('tune_ascale').value=1" title="Reset">↺</button></div>
+        </div>
       ${sp.action!=null?`
-      <div class="shape">
-        <div class="row" style="gap:14px">
-          <div><label>keyframes</label>
+        <div class="row" style="gap:14px;margin-top:10px">
+          <div><label>Frame count</label>
             <div class="seg" id="seg_px">${[['','auto'],['6','6'],['8','8'],['12','12'],['16','16'],['24','24'],['0','all']].map(([v,l])=>
               `<span data-v="${v}" class="${String(sp.px_frames??'')===v?'on':''}" onclick="tlSeg('px','${v}',this)">${l}</span>`).join('')}</div></div>
-          <div><label>loop style</label>
+          <div><label>Loop style</label>
             <div class="seg" id="seg_loop">
-              <span data-v="cycle" class="${(sp.loop_mode||'cycle')==='cycle'?'on':''}" onclick="tlSeg('loop','cycle',this)">full cycle</span>
-              <span data-v="pingpong" class="${sp.loop_mode==='pingpong'?'on':''}" onclick="tlSeg('loop','pingpong',this)">subtle ping-pong</span>
+              <span data-v="cycle" class="${(sp.loop_mode||'cycle')==='cycle'?'on':''}" onclick="tlSeg('loop','cycle',this)">Full cycle</span>
+              <span data-v="pingpong" class="${sp.loop_mode==='pingpong'?'on':''}" onclick="tlSeg('loop','pingpong',this)">Back and forth</span>
             </div></div>
-          <div id="quiet_wrap" style="${sp.loop_mode==='pingpong'?'':'display:none'}"><label>subtlety <span class="muted">(smaller = calmer)</span></label>
+          <div id="quiet_wrap" style="${sp.loop_mode==='pingpong'?'':'display:none'}"><label>Calmness</label>
             <input id="tune_quiet" type="range" min="0.1" max="1" step="0.05" style="width:130px;vertical-align:middle"
-              value="${sp.quiet??0.35}" oninput="TL.quiet=parseFloat(this.value);document.getElementById('quietv').textContent=Math.round(this.value*100)+'%';tlDirty()">
+              value="${sp.quiet??0.35}" title="Smaller = calmer"
+              oninput="TL.quiet=parseFloat(this.value);document.getElementById('quietv').textContent=Math.round(this.value*100)+'%';tlDirty()">
             <span class="mono" id="quietv">${Math.round((sp.quiet??0.35)*100)}%</span></div>
-          <span style="flex:1"></span>
-          <span class="muted" id="tl_cuts"></span>
-          <span class="muted" id="tl_shape_msg">saves automatically</span>
-          <button class="small" onclick="tlReset()">reset</button>
-          <button class="small primary" id="tl_save" onclick="saveTune()">💾 save now</button>
-        </div>
-        <div class="muted" style="margin-top:4px">everything here saves itself · keyframes, loop style, subtlety and cuts also rebuild the sheet (free, ~30s), so those wait a moment for you to finish</div>
-      </div>`:`
-      <div class="row" style="margin-top:8px;justify-content:flex-end">
-        <span class="muted" id="tl_shape_msg">saves automatically</span>
-        <button class="small primary" id="tl_save" onclick="saveTune()">💾 save now</button></div>`}
-    </div>`:`<div class="muted" style="margin-top:8px">Pick an animation above to open its timeline editor.</div>`}`;
+        </div>`:''}
+      </details>
+    </div>`:`<div class="muted" style="margin-top:8px">Pick an animation above to edit it.</div>`}`;
   clearInterval(TL.sync);
   if(anim){
     TL.anim=anim;TL.rate=sp.rate||1;TL.drop=new Set(sp.drop||[]);TL.dirty=false;
     TL.px=String(sp.px_frames??'');TL.loop=sp.loop_mode||'cycle';TL.quiet=sp.quiet??0.35;
     TL.ascale=sp.scale??1;
-    TL.move=sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim]??null);
+    TL.move=sp.move_speed??(moveDef[anim]??null);
     TL.fx=JSON.parse(JSON.stringify(sp.fx||[]));
+    // what "Undo changes" goes back to: the settings as they were when this
+    // animation was opened (a re-render from a finished job keeps the snapshot)
+    const key=cur+'|'+anim;
+    if(TL.snapKey!==key){
+      TL.snapKey=key;TL.changed=false;
+      TL.snap={rate:TL.rate,range:sp.range?sp.range.slice():null,ascale:TL.ascale,move:TL.move,
+               fx:JSON.parse(JSON.stringify(TL.fx)),px:TL.px,loop:TL.loop,quiet:TL.quiet,drop:[...TL.drop]};
+    }
+    const u=document.getElementById('tl_undo'); if(u)u.disabled=!TL.changed;
     loadTimeline(anim);renderFx();
     TL.sync=setInterval(tlSync,100);
   }
@@ -1527,24 +1793,29 @@ function vfxOptions(){
     Object.keys(c.animations||{}).forEach(an=>{ if((st[an]||{}).done)
       out.push(`<option value="${id}|${an}">${esc(c.display_name||id)}${Object.keys(c.animations).length>1?' · '+esc(an):''}</option>`);});
   });
-  return out.length?out.join(''):'<option value="">(no effect sprites rendered yet)</option>';
+  return out.length?out.join(''):'<option value="">No effects made yet</option>';
 }
 function renderFx(){
   const el=document.getElementById('fxlist'); if(!el)return;
-  if(!TL.fx.length){el.innerHTML='<div class="muted" style="padding:4px 0">none — this animation plays with no effects</div>';return;}
+  const fb=document.getElementById('fxbtns');
+  if(fb)fb.innerHTML=TL.fx.length?'<button class="small" onclick="tlFxTest()">▶ Replay</button> '
+    +'<button class="small" onclick="tlFxClear()">Remove all</button>':'';
+  if(!TL.fx.length){el.innerHTML='';return;}
+  // sliders, not number boxes: drag and watch the effect move in the preview
   el.innerHTML=TL.fx.map((f,i)=>{
     const c=STATE.characters[f.char]||{};
+    const sl=(k,lab,min,max,step,tip)=>`<label title="${tip}">${lab}</label><input type="range" min="${min}" max="${max}" step="${step}"
+      value="${f[k]}" style="width:80px" title="${tip}" oninput="tlFxSet(${i},'${k}',this.value)">`;
     return `<div class="fxrow">
-      <img src="/files/${f.char}/${f.anim}/frames/sprite_002.png?v=${imgV}"
+      <img src="/files/${f.char}/${f.anim}/frames/sprite_002.png?v=${imgV}" alt=""
            onerror="this.src='/files/${f.char}/${f.anim}/frames/sprite_000.png?v=${imgV}'">
-      <b>${esc(c.display_name||f.char)}</b><span class="muted">${esc(f.anim)}</span>
-      <label>at</label><input type="range" min="0" max="1" step="0.05" value="${f.at}"
-        oninput="tlFxSet(${i},'at',this.value)" style="width:90px"><span class="mono">${Math.round(f.at*100)}%</span>
-      <label>x</label><input type="number" step="0.1" value="${f.dx}" style="width:56px" oninput="tlFxSet(${i},'dx',this.value)">
-      <label>y</label><input type="number" step="0.1" value="${f.dy}" style="width:56px" oninput="tlFxSet(${i},'dy',this.value)">
-      <label>size</label><input type="number" step="0.1" min="0.1" value="${f.scale}" style="width:56px" oninput="tlFxSet(${i},'scale',this.value)">
+      <b>${esc(c.display_name||f.char)}</b>
+      ${sl('at','When',0,1,0.05,'When it fires during the animation')}
+      ${sl('dx','Left–right',-3,3,0.05,'Horizontal position')}
+      ${sl('dy','Up–down',-3,3,0.05,'Vertical position')}
+      ${sl('scale','Size',0.1,3,0.05,'Effect size')}
       <span style="flex:1"></span>
-      <button class="small" onclick="tlFxDel(${i})" title="remove this effect">✕</button>
+      <button class="small" onclick="tlFxDel(${i})" title="Remove effect">🗑</button>
     </div>`;}).join('');
 }
 function tlAScale(v){TL.ascale=parseFloat(v);document.getElementById('ascalev').textContent=TL.ascale.toFixed(2)+'×';liveTune();autoSave();}
@@ -1556,12 +1827,14 @@ function tlAScaleAuto(){
 }
 function tlMove(v){TL.move=parseFloat(v);document.getElementById('movev').textContent=TL.move;liveTune();autoSave();}
 function tlFxAdd(){
-  const v=(document.getElementById('fxpick')||{}).value; if(!v)return toast('no effect sprites available yet',true);
+  const v=(document.getElementById('fxpick')||{}).value; if(!v)return toast('Make an effect first (+ New effect in the project)',true);
   const [char,anim]=v.split('|');
   TL.fx.push({char,anim,at:0.45,dx:1.0,dy:-0.5,scale:1.0});
   renderFx();liveTune();autoSave();tlFxTest();
 }
-function tlFxSet(i,k,v){TL.fx[i][k]=parseFloat(v);renderFx();liveTune();autoSave();}
+// no renderFx() here: rebuilding the row would yank the slider out from
+// under the pointer mid-drag
+function tlFxSet(i,k,v){TL.fx[i][k]=parseFloat(v);liveTune();autoSave();}
 function tlFxDel(i){TL.fx.splice(i,1);renderFx();liveTune();autoSave();}
 function tlFxClear(){TL.fx=[];renderFx();liveTune();autoSave();}
 function tlFxTest(){const E=lab(); if(E&&E.testFx)E.testFx();}
@@ -1590,19 +1863,18 @@ async function loadTimeline(anim){
     TL.auto=[TL.allIndex[ar[0]]!=null?TL.allIndex[ar[0]]:0,
              TL.allIndex[ar[1]]!=null?TL.allIndex[ar[1]]:total];
     TL.range=(spec.animations[anim].range)||TL.auto.slice();
-    document.getElementById('tl_fps').textContent=meta.fps+'fps'+(meta.collapsed?' · '+meta.frames+' keyframes':'')
-      +(cutSet.size?' · '+cutSet.size+' cut':'');
-    document.getElementById('tune_hint').textContent='of '+total+' (auto '+TL.auto.join('–')+')';
+    document.getElementById('tl_fps').textContent=Math.round(meta.fps)+' fps';
+    document.getElementById('tune_hint').textContent='of '+total;
     const src=meta.all_frames?'all_frames':'frames';
     const strip=document.getElementById('strip');
     strip.innerHTML=Array.from({length:total},(_,i)=>
-      `<div class="fr ${TL.drop.has(i)?'off':''}" data-i="${i}" onclick="tlScrub(${TL.playIndex[i]!=null?TL.playIndex[i]:0})" title="frame ${i} — click to scrub">
-         <img src="/files/${id}/${anim}/${src}/sprite_${String(i).padStart(3,'0')}.png?v=${imgV}" draggable="false">
+      `<div class="fr ${TL.drop.has(i)?'off':''}" data-i="${i}" onclick="tlScrub(${TL.playIndex[i]!=null?TL.playIndex[i]:0})" title="Frame ${i}">
+         <img src="/files/${id}/${anim}/${src}/sprite_${String(i).padStart(3,'0')}.png?v=${imgV}" draggable="false" alt="">
          <div class="n">${i}</div>
-         <span class="cut" onclick="event.stopPropagation();tlCut(${i})" title="cut / restore this frame">✂</span>
+         <span class="cut" onclick="event.stopPropagation();tlCut(${i})" title="${TL.drop.has(i)?'Restore this frame':'Remove this frame'}">✂</span>
        </div>`).join('')
-      +'<div class="hd in" id="hd_in" title="drag: window start"><span>[</span></div>'
-      +'<div class="hd out" id="hd_out" title="drag: window end"><span>]</span></div>';
+      +'<div class="hd in" id="hd_in" title="Drag to trim the start"><span>[</span></div>'
+      +'<div class="hd out" id="hd_out" title="Drag to trim the end"><span>]</span></div>';
     ['hd_in','hd_out'].forEach(id=>{
       const h=document.getElementById(id);
       h.addEventListener('pointerdown',e=>{TL.drag=id;h.setPointerCapture(e.pointerId);e.preventDefault();});
@@ -1617,7 +1889,7 @@ async function loadTimeline(anim){
 function lab(){const f=document.getElementById('lab');return f&&f.contentWindow&&f.contentWindow.EDIT;}
 function tlSync(){
   const E=lab(); if(!E||E.anim!==TL.anim)return;
-  const pos=document.getElementById('tl_pos'); if(pos)pos.textContent='frame '+E.frame+' / '+TL.frames;
+  const pos=document.getElementById('tl_pos'); if(pos)pos.textContent=(E.frame+1)+' / '+TL.frames;
   const pl=document.getElementById('tl_play'); if(pl)pl.textContent=E.paused?'▶':'⏸';
   // the playhead runs over PLAYING frames; map it back to strip indices
   document.querySelectorAll('#strip .fr').forEach(el=>{
@@ -1697,21 +1969,20 @@ function tlCut(i){
   const el=document.querySelector('#strip .fr[data-i="'+i+'"]'); if(el)el.classList.toggle('off',TL.drop.has(i));
   tlCutsLabel();tlDirty();
 }
-function tlCutsLabel(){const c=document.getElementById('tl_cuts'); if(c)c.textContent=TL.drop.size?TL.drop.size+' frame(s) cut':'';}
+function tlCutsLabel(){const c=document.getElementById('tl_cuts'); if(c)c.textContent=TL.drop.size?'· '+TL.drop.size+' removed':'';}
 function tlDirty(){
   TL.dirty=true;
   // these settings change WHICH frames exist, so saving them rebuilds the
   // sheet (free, ~30s). Autosaved like everything else - an edit you can see
   // in the preview must never be lost by clicking away - but on a longer
   // delay so a burst of cuts becomes one rebuild instead of one each.
-  tlStatus('saving…','var(--dim)');
+  tlStatus('Saving…','var(--dim)');
   scheduleTuneSave(1600);
 }
 function tlStatus(txt,color){
-  for(const id of ['tl_autosave','tl_shape_msg']){
-    const el=document.getElementById(id);
-    if(el){el.textContent=txt;el.style.color=color||'var(--dim)';}
-  }
+  const el=document.getElementById('tl_autosave');
+  if(el){el.textContent=txt;el.style.color=color||'var(--dim)';}
+  if(txt==='Saving…'){TL.changed=true;const u=document.getElementById('tl_undo');if(u)u.disabled=false;}
 }
 // One writer for every Test & Tune setting of one animation. The sprite, the
 // animation and the values are snapshotted HERE, never read when the timer
@@ -1732,7 +2003,7 @@ function scheduleTuneSave(ms){
   }
   const pr=tlPlayRange();
   if(pr[1]-pr[0]<2){            // an empty window would be saved as unplayable
-    tlStatus('not saved — that window has fewer than 2 playing frames','var(--warn)');
+    tlStatus('Not saved — keep at least 2 frames','var(--warn)');
     return;
   }
   schedule('tune:'+id+':'+anim,ms,async()=>{
@@ -1753,32 +2024,41 @@ function scheduleTuneSave(ms){
       holdSpec=Date.now()+3000;
       if(cur===id&&TL.anim===anim){
         TL.dirty=false;
-        tlStatus(r.job_id?'saved ✓ — rebuilding the sheet (free, ~30s)':'saved ✓','var(--ok)');
+        tlStatus(r.job_id?'Saved ✓ — updating frames…':'Saved ✓','var(--ok)');
       }
-      if(r.job_id)document.getElementById('jobs').classList.add('open');
     }catch(e){
-      if(cur===id&&TL.anim===anim)tlStatus('save failed','var(--err)');
+      if(cur===id&&TL.anim===anim)tlStatus('Save failed','var(--err)');
     }finally{saving--;}
   });
 }
-function tlReset(){render();}
+// Undo = back to the settings this animation had when you opened it. It used
+// to just redraw the panel, which undid nothing (the autosave had already
+// stored every change).
+function tlReset(){
+  const s=TL.snap, anim=TL.anim; if(!s||!anim)return;
+  TL.rate=s.rate; TL.range=s.range?s.range.slice():TL.auto.slice(); TL.ascale=s.ascale;
+  TL.move=s.move; TL.fx=JSON.parse(JSON.stringify(s.fx));
+  TL.px=s.px; TL.loop=s.loop; TL.quiet=s.quiet; TL.drop=new Set(s.drop);
+  TL.dirty=true;                       // send the frame-shaping fields too
+  liveTune(); scheduleTuneSave(0); flushPending();
+  const a=spec.animations[anim];
+  a.rate=s.rate; a.scale=s.ascale===1?undefined:s.ascale; a.fx=JSON.parse(JSON.stringify(s.fx));
+  if(s.move!=null)a.move_speed=s.move;
+  if(s.range)a.range=s.range.slice(); else delete a.range;
+  if(s.px==='')delete a.px_frames; else a.px_frames=parseInt(s.px);
+  a.loop_mode=s.loop; a.quiet=s.quiet;
+  if(s.drop.length)a.drop=s.drop.slice(); else delete a.drop;
+  TL.changed=false;
+  render();
+  toast('Changes undone ✓');
+}
 
 // Size, speed and effects need no re-processing, so they SAVE THEMSELVES a
 // moment after you stop dragging - a slider that previews live but silently
-// forgets on reload is the worst of both worlds. Only the settings that
-// rebuild the sheet (keyframes, loop style, cut frames) wait for 💾.
+// forgets on reload is the worst of both worlds.
 function autoSave(){
-  tlStatus('saving…','var(--dim)');
+  tlStatus('Saving…','var(--dim)');
   scheduleTuneSave(600);       // no shape fields pending = no rebuild
-}
-// Everything in this panel saves itself; the button only means "now".
-async function saveTune(){
-  const pr=tlPlayRange();
-  if(pr[1]-pr[0]<2)return toast(TL.range[1]-TL.range[0]<2
-    ? 'window end must be at least 2 frames after start'
-    : 'that window is empty once the cut frames are removed',true);
-  scheduleTuneSave(0);
-  flushPending();
 }
 
 // ------------------------------------------------------------- jobs & modal
@@ -1789,71 +2069,101 @@ function estimateJob(type,anims,p){
   if(type==='ref'){sec+=E.ref_final||100;lines.push('1 reference — ≈'+minutes(sec)+' min');}
   if(type==='variations'){sec=6*(E.ref_final||100);lines.push('6 candidates — ≈'+minutes(E.ref_final||100)+' min each');}
   if(type==='anim'){sec=anims.length*clip;lines.push(anims.length+' clip(s) — ≈'+minutes(clip)+' min each');}
-  if(type==='post')lines.push('post only — seconds, no GPU');
+  if(type==='views'){const n=Object.keys(spec.views||{}).filter(v=>!(spec.views[v]||{}).from_anim).length;
+    sec=Math.max(1,n)*(E.view_edit||120);}
+  if(type==='post'){sec=30;lines.push('post only — seconds, no GPU');}
   return {sec,lines,note:'Add ≈'+minutes(E.cold_load||300)+' min once if the needed model is not loaded.'};
 }
 function selectedAnims(){
   return [...document.querySelectorAll('.a_sel')].filter(c=>c.checked).map(c=>c.dataset.anim);
 }
-async function job(type,extra){
+async function job(type,extra,only){
   try{if(dirty)await savePrompts();}catch(e){return;}
   const a=assets(cur);
-  const anims=type==='anim'||type==='post'?selectedAnims():[];
-  if((type==='anim'||type==='post')&&!anims.length)return toast('tick at least one animation card',true);
-  if(type==='anim'&&!a.ref)return toast('this sprite needs an approved reference first (step 1)',true);
-  if(type==='anim'&&!(spec.approved||{}).ref&&!confirm('The reference is not approved yet — animate anyway?'))return;
-  const modeSel=document.getElementById('f_mode');
+  const anims=only||(type==='anim'||type==='post'?selectedAnims():[]);
+  if((type==='anim'||type==='post')&&!anims.length)return toast('Select an animation first',true);
+  if(type==='anim'&&!a.ref)return toast('Pick a reference first (step 1)',true);
+  if(type==='anim'&&!(spec.approved||{}).ref&&!confirm('The reference isn\'t approved yet. Animate anyway?'))return;
   // every render gets a fresh seed (0 = the server rolls one), or re-rolling
   // returns the identical output and overwrites nothing but the timestamp
-  const p={mode:modeSel?modeSel.value:'final',
+  const p={mode:type==='anim'?RENDER_MODE:'final',
            seed:(type==='variations'?Math.floor(Math.random()*900000)+1000:0),
            ...(extra||{})};
   if(type==='post')return queueJob(type,anims,p);
+  if(type==='variations')return queueJob(type,anims,p);   // ~1 min each: no need to ask
   const est=estimateJob(type,anims,p);
-  const warns=[];
-  if(type==='anim'&&p.mode==='final')warns.push('FINAL quality: ≈'+minutes(est.sec)+' min of GPU. If you have not seen these motions in test mode, consider test first.');
-  if(STATE.comfy_busy>0||STATE.jobs.some(j=>j.status!=='done'&&j.status!=='error'))warns.push('The GPU is busy — this queues behind current work.');
-  if(type==='anim')anims.forEach(n=>{const st=(assets(cur).anims[n]||{});
-    if(st.done)warns.push('"'+n+'" already has finished sprites — re-rendering REPLACES them.');});
+  const redo=anims.filter(n=>(a.anims[n]||{}).done).length;
+  const queued=STATE.comfy_busy>0||STATE.jobs.some(j=>j.status==='running'||j.status==='queued');
   pendingJob={type,anims,p};
-  document.getElementById('modal').innerHTML=
-    '<h3>'+({ref:'Generate reference?',variations:'Generate candidates?',anim:'Render animations?'}[type]||type)+'</h3>'+
-    '<div>'+esc(spec.display_name||cur)+' · mode '+p.mode+(p.kind?' · '+p.kind:'')+'</div>'+
-    (anims.length?'<ul>'+anims.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+
-    '<div class="est">⏱ ≈'+minutes(est.sec)+' min GPU<br>'+est.lines.join('<br>')+
-    '<br><span class="muted">'+est.note+'</span></div>'+
-    warns.map(w=>'<div class="warn">⚠ '+w+'</div>').join('')+
-    '<div class="row" style="justify-content:flex-end;margin-top:10px">'+
-    '<button onclick="closeModal()">Cancel</button>'+
-    '<button class="primary" onclick="confirmJob()">Start</button></div>';
-  document.getElementById('modalback').classList.add('show');
+  const what=type==='anim'
+    ?(anims.length===1?'Render “'+anims[0].replace(/_/g,' ')+'”?':'Render '+anims.length+' animations?')
+    :({views:'Build poses?',ref:'Generate reference?'}[type]||'Start?');
+  showModal(`<h3>${esc(what)}</h3>
+    ${anims.length>1?'<div class="row" style="gap:6px">'+anims.map(x=>'<span class="chip">'+esc(x.replace(/_/g,' '))+'</span>').join('')+'</div>':''}
+    <div class="est">⏱ about ${minutes(est.sec)} min${type==='anim'?' · '+(p.mode==='final'?'High quality':'Draft'):''}</div>
+    ${type==='anim'&&p.mode==='final'&&anims.length>2?'<div class="warn">That\'s a long run. A Draft first shows you the motion in a few minutes.</div>':''}
+    ${queued?'<div class="muted">Starts after the current job.</div>':''}
+    ${redo?'<div class="muted">The current version'+(redo>1?'s are':' is')+' kept — you can switch back.</div>':''}`,
+    `<button onclick="closeModal()">Cancel</button>
+     <button class="primary" onclick="confirmJob()">Start</button>`);
 }
 function closeModal(){document.getElementById('modalback').classList.remove('show');pendingJob=null;}
 async function confirmJob(){const j=pendingJob;closeModal();if(j)await queueJob(j.type,j.anims,j.p);}
 async function queueJob(type,anims,p){
-  await api('/api/job',{type,char:cur,anims,params:p});
-  toast(type+' queued ✓ — progress in the Jobs bar below');
+  try{await api('/api/job',{type,char:cur,anims,params:p});}catch(e){return;}
+  toast({anim:'Rendering started',variations:'Generating 6 images…',post:'Reprocessing…',views:'Building poses…'}[type]||'Started');
   document.getElementById('jobs').classList.add('open');
+  await refresh();
 }
 
 function fmtDur(j){if(!j.started)return'';const e=(j.finished||Date.now()/1000)-j.started;
   return e>=90?Math.round(e/60)+'m':Math.round(e)+'s';}
+const JOB_NAME={anim:'Render',variations:'Generate images',post:'Reprocess',views:'Build poses',ref:'Generate reference',all:'Render all'};
+const JOB_STATUS={queued:'Waiting',running:'Running',done:'Done',error:'Failed',cancelled:'Cancelled'};
+// a rough expected duration from the same estimates the confirm dialog shows
+function jobEstimate(j){
+  const E=STATE.estimates||{}, n=Math.max(1,(j.anims||[]).length);
+  const clip=(j.params||{}).mode==='final'?(E.clip_final||600):(E.clip_test||130);
+  return {anim:n*clip,variations:6*(E.ref_test||60),views:2*(E.view_edit||120),
+          post:30,ref:E.ref_final||100}[j.type]||120;
+}
+function fmtLeft(s){return s>=90?'~'+Math.round(s/60)+' min left':s>5?'~'+Math.round(s)+' s left':'almost done';}
 function renderJobs(){
   const jl=document.getElementById('joblist');
   const open=new Set([...jl.querySelectorAll('.job.open')].map(x=>x.dataset.id));
-  const r=STATE.jobs.filter(j=>j.status==='running').length,
+  const run=STATE.jobs.find(j=>j.status==='running'),
         q=STATE.jobs.filter(j=>j.status==='queued').length;
-  const s=r+' running / '+q+' queued';
-  document.getElementById('jobsummary').textContent='Jobs: '+s;
-  document.getElementById('jobsummary2').textContent=s;
-  jl.innerHTML=STATE.jobs.map(j=>`
-    <div class="job ${open.has(j.id)?'open':''}" data-id="${j.id}">
-      <div class="head" onclick="this.parentElement.classList.toggle('open')">
-        <span class="status ${j.status}">${j.status}</span><b>${j.type}</b>
-        <span>${j.char}</span><span class="muted">${(j.anims||[]).join(', ')}</span>
-        <span class="muted" style="margin-left:auto">${fmtDur(j)}</span></div>
+  const prog=j=>{const el=Date.now()/1000-j.started, est=jobEstimate(j);
+    return {pct:Math.min(95,Math.round(el/est*100)),left:Math.max(0,est-el)};};
+  let s='';
+  if(run){const p=prog(run);
+    s=`<span class="bar"><i style="width:${p.pct}%"></i></span> ${JOB_NAME[run.type]||run.type}
+       · ${esc(run.char)}${(run.anims||[]).length===1?' · '+esc(run.anims[0]):''} · ${fmtLeft(p.left)}`;}
+  else s='Nothing running';
+  if(q)s+=' · '+q+' waiting';
+  document.getElementById('jobsummary').innerHTML=s;
+  document.getElementById('jobchev').textContent=document.getElementById('jobs').classList.contains('open')?'▾':'▴';
+  jl.innerHTML=STATE.jobs.map(j=>{
+    const live=j.status==='running'||j.status==='queued';
+    const err=(j.error||'').split('\n')[0].slice(0,160);
+    return `<div class="job ${open.has(j.id)?'open':''}" data-id="${j.id}">
+      <div class="head">
+        <span class="status ${j.status==='cancelled'?'queued':j.status}">${JOB_STATUS[j.status]||j.status}</span>
+        <b>${JOB_NAME[j.type]||esc(j.type)}</b>
+        <span>${esc(j.char)}</span><span class="muted">${esc((j.anims||[]).join(', '))}</span>
+        ${j.status==='running'?`<span class="bar"><i style="width:${prog(j).pct}%"></i></span>`:''}
+        ${err?`<span style="color:var(--err)">${esc(err)}</span>`:''}
+        <span class="muted" style="margin-left:auto">${fmtDur(j)}</span>
+        ${live?`<button class="small" onclick="cancelJob('${j.id}')">Cancel</button>`:''}
+        <a class="muted" onclick="this.closest('.job').classList.toggle('open')">Details</a></div>
       <pre>${esc(j.log||'(no log yet)')}${j.error?'\n\nERROR: '+esc(j.error):''}</pre>
-    </div>`).join('')||'<div class="muted" style="padding:8px 0">No jobs yet.</div>';
+    </div>`;}).join('')||'<div class="muted" style="padding:8px 0">No jobs yet.</div>';
+}
+async function cancelJob(id){
+  const j=STATE.jobs.find(x=>x.id===id); if(!j)return;
+  if(j.status==='running'&&!confirm('Cancel this job? The work done so far is lost.'))return;
+  try{await api('/api/job/cancel',{id});toast('Cancelling…');}catch(e){return;}
+  await refresh();
 }
 
 route(); poll();

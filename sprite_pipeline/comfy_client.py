@@ -18,6 +18,11 @@ class ComfyError(RuntimeError):
     pass
 
 
+class JobCancelled(BaseException):
+    """Raised inside a running job when the user cancels it. A BaseException
+    so no broad `except Exception` in a pipeline stage can swallow it."""
+
+
 def _fmt_error(entry):
     """Extract a readable error out of a history entry's status messages."""
     lines = []
@@ -39,6 +44,26 @@ class ComfyClient:
         self.base = "http://" + host
         self.client_id = str(uuid.uuid4())
         self.output_dir = output_dir
+        # set by the UI worker per job: a callable that returns True once the
+        # user pressed Cancel; checked before submitting and while waiting
+        self.should_cancel = None
+        self._submitted = []    # this job's prompt ids, so cancel removes only ours
+
+    def _check_cancel(self):
+        if not (self.should_cancel and self.should_cancel()):
+            return
+        mine = set(self._submitted)
+        try:
+            q = requests.get(self.base + "/queue", timeout=10).json()
+            running = {item[1] for item in q.get("queue_running", [])}
+            if mine:
+                requests.post(self.base + "/queue",
+                              json={"delete": sorted(mine)}, timeout=10)
+            if running & mine:    # never interrupt someone else's prompt
+                requests.post(self.base + "/interrupt", timeout=10)
+        except requests.RequestException as exc:
+            print("  (cancel cleanup failed: %s)" % exc, flush=True)
+        raise JobCancelled("cancelled")
 
     # ------------------------------------------------------------- server info
     def stats(self):
@@ -50,6 +75,7 @@ class ComfyClient:
 
     # ------------------------------------------------------------------- jobs
     def submit(self, graph):
+        self._check_cancel()
         payload = {"prompt": graph, "client_id": self.client_id}
         r = requests.post(self.base + "/prompt", json=payload, timeout=60)
         if r.status_code != 200:
@@ -61,12 +87,14 @@ class ComfyClient:
         data = r.json()
         if data.get("node_errors"):
             raise ComfyError("validation errors:\n" + json.dumps(data["node_errors"], indent=2)[:4000])
+        self._submitted.append(data["prompt_id"])
         return data["prompt_id"]
 
     def wait(self, prompt_id, timeout=3600, poll=2.0, label=""):
         t0 = time.time()
         last_report = 0.0
         while True:
+            self._check_cancel()
             hist = requests.get(self.base + "/history/" + prompt_id, timeout=30).json()
             if prompt_id in hist:
                 entry = hist[prompt_id]
