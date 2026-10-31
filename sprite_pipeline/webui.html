@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sprite Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#14151c; --panel:#1d1f2a; --panel2:#232636; --line:#31354a;
+    --text:#e6e8f2; --dim:#9aa0b8; --accent:#5ac8fa; --ok:#7bd88f;
+    --warn:#f5a97f; --err:#ed8796; --mono:Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.5 "Segoe UI",system-ui,sans-serif;padding-bottom:70px}
+  a{color:var(--accent);text-decoration:none;cursor:pointer}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+         border-radius:7px;padding:7px 14px;cursor:pointer;font-size:13px}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button.primary{background:#134b66;border-color:var(--accent)}
+  button.small{padding:3px 9px;font-size:12px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input,select,textarea{background:#12131a;color:var(--text);border:1px solid var(--line);
+         border-radius:6px;padding:6px 8px;font-size:13px}
+  textarea{width:100%;font-family:var(--mono);font-size:12px;resize:vertical}
+  label{color:var(--dim);font-size:12px;display:block;margin-bottom:2px}
+  h1{font-size:18px;margin:0}
+  h2{font-size:15px;margin:22px 0 8px}
+  .muted{color:var(--dim);font-size:12.5px}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 26px}
+  header.top{display:flex;align-items:center;gap:12px;padding:14px 26px;
+       border-bottom:1px solid var(--line);background:var(--panel)}
+  #dot{width:10px;height:10px;border-radius:50%;background:var(--err)}
+  #dot.ok{background:var(--ok)}
+  .chip{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11.5px;background:#3a3d52}
+  .chip.ok{background:#1e4230;color:var(--ok)}
+  .chip.mid{background:#134b66;color:var(--accent)}
+  .chip.warn{background:#54401f;color:var(--warn)}
+  .chip.err{background:#57272f;color:var(--err)}
+  /* roster */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:14px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:var(--accent)}
+  .card img{width:100%;height:190px;object-fit:contain;image-rendering:auto;
+        background:repeating-conic-gradient(#20222e 0 25%,#181a24 0 50%) 0 0/16px 16px;
+        border-radius:7px}
+  .card .nm{font-weight:600;margin:8px 0 3px}
+  /* stepper */
+  .stepper{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+  .step{flex:1;min-width:170px;background:var(--panel);border:1px solid var(--line);
+        border-radius:9px;padding:10px 14px;cursor:pointer}
+  .step.active{border-color:var(--accent);background:#182636}
+  .step .t{font-weight:600}
+  .step .s{font-size:12px;color:var(--dim)}
+  .step.attn .s{color:var(--warn)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+  /* previews */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .acard{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px}
+  .acard img{width:100%;height:210px;object-fit:contain;
+        background:repeating-conic-gradient(#20222e 0 25%,#181a24 0 50%) 0 0/16px 16px;
+        border-radius:6px}
+  .acard .row{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .cand{cursor:pointer;border:2px solid transparent;border-radius:9px}
+  .cand:hover{border-color:var(--accent)}
+  .cand.current{border-color:var(--ok)}
+  details.adv{margin-top:10px;background:#12131a;border:1px solid var(--line);
+        border-radius:7px;padding:8px 12px}
+  details.adv summary{cursor:pointer;color:var(--dim);font-size:12.5px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .bigimg{max-width:340px;max-height:340px;object-fit:contain;border-radius:8px;
+        background:repeating-conic-gradient(#20222e 0 25%,#181a24 0 50%) 0 0/16px 16px}
+  iframe#lab{width:100%;height:560px;border:1px solid var(--line);border-radius:9px;background:#101218}
+  /* Test & Tune: animation pills, timeline editor */
+  .pill{display:inline-block;padding:4px 12px;border-radius:14px;border:1px solid var(--line);
+        background:var(--panel2);cursor:pointer;font-size:12.5px;user-select:none}
+  .pill:hover{border-color:var(--accent)}
+  .pill.on{background:#134b66;border-color:var(--accent);color:#fff}
+  .pill.test{border-style:dashed}
+  .mono{font-family:var(--mono);font-size:12px;color:var(--text)}
+  .tl{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-top:8px}
+  .transport{display:flex;gap:2px}
+  .tb{padding:3px 9px;font-size:14px;line-height:1}
+  .tb.on{background:#134b66;border-color:var(--accent)}
+  .stripwrap{overflow-x:auto;padding:14px 8px 6px;margin-top:8px;background:#101218;border-radius:7px}
+  .strip{position:relative;display:flex;gap:4px;width:max-content;padding:0 6px}
+  .fr{position:relative;width:64px;text-align:center;cursor:pointer;border:2px solid transparent;border-radius:6px;padding:2px;user-select:none}
+  .fr img{width:100%;height:64px;object-fit:contain;image-rendering:auto;pointer-events:none;
+        background:repeating-conic-gradient(#20222e 0 25%,#181a24 0 50%) 0 0/8px 8px;border-radius:4px}
+  .fr .n{font-size:10.5px;color:var(--dim);margin-top:1px}
+  .fr:hover{border-color:var(--accent)}
+  .fr.now{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+  .fr.now .n{color:var(--ok);font-weight:600}
+  .fr.out{opacity:.35}
+  .fr.off img{opacity:.25;outline:2px solid var(--err);outline-offset:-2px}
+  .fr.off .n{color:var(--err);text-decoration:line-through}
+  .fr .cut{position:absolute;top:2px;right:4px;display:none;font-size:12px;padding:0 4px;border-radius:4px;background:#1d1f2a;border:1px solid var(--line)}
+  .fr:hover .cut,.fr.off .cut{display:block}
+  .fr .cut:hover{border-color:var(--err);color:var(--err)}
+  .hd{position:absolute;top:-12px;bottom:14px;width:12px;cursor:ew-resize;z-index:2;touch-action:none}
+  .hd span{position:absolute;top:0;left:1px;color:var(--warn);font-weight:700;font-size:15px;line-height:1}
+  .hd::after{content:'';position:absolute;top:14px;bottom:0;left:5px;width:2px;background:var(--warn)}
+  .shape{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg span{padding:4px 11px;cursor:pointer;font-size:12.5px;border-right:1px solid var(--line);user-select:none}
+  .seg span:last-child{border-right:none}
+  .seg span:hover{background:#2a2d3f}
+  .seg span.on{background:#134b66;color:#fff}
+  .fxrow{display:flex;align-items:center;gap:7px;padding:5px 7px;margin-top:4px;
+        background:#101218;border:1px solid var(--line);border-radius:7px;font-size:12.5px}
+  .fxrow img{width:34px;height:34px;object-fit:contain;background:#0b0d13;border-radius:4px}
+  .fxrow label{margin:0;display:inline}
+  /* Pixel Lab */
+  .plview{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding:10px;background:#101218;border-radius:9px}
+  .plc{image-rendering:pixelated;image-rendering:crisp-edges;display:block;
+       background:repeating-conic-gradient(#20222e 0 25%,#181a24 0 50%) 0 0/16px 16px;border-radius:4px}
+  .plgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px 18px;margin-top:10px;
+       padding-top:10px;border-top:1px solid var(--line)}
+  .plsw{display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid var(--line);
+       vertical-align:middle;margin-left:4px;cursor:pointer}
+  .plsw:hover{border-color:var(--accent)}
+  /* jobs drawer */
+  #jobs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);
+        border-top:1px solid var(--line);max-height:45vh;display:flex;flex-direction:column;z-index:5}
+  #jobs header{padding:7px 22px;cursor:pointer;display:flex;gap:14px;font-size:12.5px;color:var(--dim);border:none;background:none}
+  #joblist{overflow-y:auto;padding:0 22px 10px;display:none}
+  #jobs.open #joblist{display:block}
+  .job{border-top:1px solid var(--line);padding:6px 0;font-size:12px}
+  .job .head{display:flex;gap:12px;align-items:center;cursor:pointer}
+  .status{padding:1px 8px;border-radius:10px;font-size:11px}
+  .status.queued{background:#3a3d52}.status.running{background:#134b66;color:var(--accent)}
+  .status.done{background:#1e4230;color:var(--ok)}.status.error{background:#57272f;color:var(--err)}
+  .job pre{background:#101116;border:1px solid var(--line);border-radius:6px;padding:8px;
+        font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;display:none}
+  .job.open pre{display:block}
+  #toast{position:fixed;top:14px;right:16px;background:#134b66;border:1px solid var(--accent);
+        border-radius:8px;padding:10px 16px;display:none;z-index:30;max-width:440px}
+  #modalback{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:20;
+        align-items:center;justify-content:center}
+  #modalback.show{display:flex}
+  #modal{background:var(--panel);border:1px solid var(--accent);border-radius:10px;
+        padding:20px 22px;max-width:540px;width:92%;max-height:85vh;overflow-y:auto}
+  #modal .est{background:#12131a;border:1px solid var(--line);border-radius:6px;
+        padding:8px 12px;margin:10px 0;font-size:13px}
+  #modal .warn{color:var(--warn);font-size:12px;margin:8px 0}
+</style>
+</head>
+<body>
+<header class="top">
+  <span id="dot" title="ComfyUI connection"></span>
+  <h1><a onclick="location.hash='#/'">Sprite Studio</a></h1>
+  <span id="crumb" class="muted"></span>
+  <span style="flex:1"></span>
+  <span id="jobsummary" class="muted" style="cursor:pointer"
+        onclick="document.getElementById('jobs').classList.toggle('open')"></span>
+</header>
+<div class="wrap" id="main"><div class="muted">Loading…</div></div>
+
+<div id="jobs"><header onclick="this.parentElement.classList.toggle('open')">
+  <b>Jobs</b><span id="jobsummary2" class="muted"></span><span class="muted">(click to expand)</span>
+</header><div id="joblist"></div></div>
+<div id="modalback" onclick="if(event.target===this)closeModal()"><div id="modal"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+let STATE=null, cur=null, curProj=null, spec=null, CANDS=null, tab='ref',
+    imgV=Date.now(), lastFin=0, pendingJob=null, dirty=false;
+
+const ANIM_PRESETS={
+  idle:"Idle animation loop: subtle breathing, clothing and gear swaying gently, small ambient effects flickering close to the body. Small calm movement; the final pose matches the first frame.",
+  walk:"Walk cycle animation: steady rhythmic steps toward the right like a side-scrolling hero, torso open toward the viewer, loopable, staying centered in frame.",
+  run:"Run cycle animation: fast strides with a forward lean, loopable, staying centered in frame.",
+  jump:"Jump animation performed in place: crouch, leap to a strong readable airborne pose, fall, springy landing back to the reference stance. Whole body far from every frame edge at the peak.",
+  fall:"Falling animation: airborne descending pose with clothes and hair streaming upward, legs braced for impact, loopable while airborne. Whole body far from every frame edge.",
+  attack:"Basic attack animation: quick anticipation, compact strike flash close to the body, short recoil, back to guard. Big effects are separate overlay sprites.",
+  skill:"Skill-cast animation: bright compact charge-up close to the body, flash at release, settle back to ready. The outgoing effect is a separate overlay sprite.",
+  hit:"Hit-reaction animation: flinch backward, brief stagger, recover to idle. Loop-friendly start and end.",
+  death:"Defeat animation: stagger, collapse, remain still, fully inside the frame.",
+  victory:"Victory animation: a triumphant flourish true to the character's personality, then settle into a proud held pose. Fully inside the frame.",
+  idle_down:"Idle animation loop facing straight toward the viewer: subtle breathing and gentle sway, small calm movement, the final pose matches the first frame.",
+  walk_down:"Walk cycle animation stepping in place facing straight toward the viewer, arms swinging naturally, even loopable rhythm, staying centered in frame.",
+  idle_up:"Idle animation loop seen directly from behind: subtle breathing and gentle sway of the back of the outfit and hair, small calm movement, the final pose matches the first frame.",
+  walk_up:"Walk cycle animation stepping in place seen directly from behind, arms swinging naturally, even loopable rhythm, staying centered in frame.",
+  idle_side:"Idle animation loop in strict side profile facing the right: subtle breathing and sway, small calm movement, the final pose matches the first frame.",
+  walk_side:"Walk cycle animation in strict side profile, stepping in place toward the right, clear leg strides, even loopable rhythm, staying centered in frame.",
+  vfx:"Describe how the effect moves: birth flash, peak, and end (loops seamlessly or completes and leaves the frame empty). The COMPLETE effect stays fully inside the frame with every endpoint visible."
+};
+// Action timelines for brief-style animations (the H3 official brief is
+// assembled server-side around these). Rules: only what the character DOES,
+// beats that fit ~5s, positive phrasing, cyclic verbs for loops.
+const ACTION_PRESETS={
+  idle:"She holds her relaxed ready stance and breathes slowly, chest and shoulders rising and falling in an even rhythm of about one breath per second, while her hair and clothing sway very slightly with each breath; her gear stays steady and her free hand stays open at her side. The motion is small and even from beginning to end.",
+  walk:"She walks in place, treadmill-style, at a brisk even pace of two full strides per second: her legs alternate clearly, her arms and hair bob with each step, and she carries her gear steady, while her body stays at the same spot and size in the frame throughout. The stride cycle is even from beginning to end.",
+  run:"She runs in place with a forward lean, about three fast strides per second, arms pumping, clothing streaming behind. The stride cycle repeats evenly on the same ground line.",
+  jump:"She crouches, then springs straight up into the air, knees tucked, rises to the top of her jump and hangs there for a moment, then falls and lands with a springy knee-bend back into her starting stance and holds it.",
+  fall:"She is airborne and descending, arms slightly raised, clothing and hair streaming upward, legs braced for impact, bobbing gently in the air. The falling pose cycle repeats evenly.",
+  leap:"She is already sprinting in mid-stride. She drives off her back foot and springs up into the air in a high running-jump arc, front knee tucked up and back leg trailing, rises to the top of the arc and hangs there for a moment, then falls and lands on her front foot with a braced knee-bend that carries her back into a running stride.",
+  guard:"She braces low behind her guard, knees bent, and holds steady with a subtle tense sway. The bracing cycle repeats evenly.",
+  attack:"She performs one strike with her weapon toward the front: she begins in her ready stance, then over the first second draws back and crouches slightly, then in a fast snap of under half a second shifts her weight forward and delivers the strike, recoils slightly, and finally settles back into the exact ready stance she started in and holds it for the rest of the clip. Her whole body and weapon stay inside the frame edges at the fullest extent of the swing.",
+  skill:"She performs a casting gesture with empty hands: she begins in her ready stance, then over the first second raises her open hand high above her head with fingers spread, then holds that raised pose firmly for about two seconds with her hand open and empty and the air around it clear, then lowers the hand and settles back into her ready stance by the end.",
+  hit:"She begins in her ready stance, then her head and upper body snap backward in one sharp jolt, her arms flying up, and she rocks half a step back onto her heels with her eyes squeezed shut. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame at every moment and the background stays completely empty from edge to edge.",
+  death:"She is defeated: she begins in her ready stance, then over the first second her knees buckle and she drops to one knee, then she collapses forward onto the ground and lies along the ground line, and finally she stays down for the last two seconds with only her clothing and hair settling gently. Her whole body stays completely inside the frame edges.",
+  victory:"She celebrates: she begins in her ready stance, then hops once on the spot with both feet leaving the ground line for a moment and landing back on it, then thrusts a fist straight up with a wide grin, and finally settles into a proud held pose with her chest out and her fist still raised, holding it for the last two seconds.",
+  idle_down:"She stands facing the viewer and breathes calmly: two slow gentle breaths across the clip, shoulders rising and settling, clothing swaying lightly. The breathing cycle repeats evenly.",
+  walk_down:"She walks in place facing the viewer at a steady pace, about two full strides per second, arms swinging naturally. The stride cycle repeats evenly.",
+  idle_up:"Seen from behind, she stands and breathes calmly: two slow gentle breaths across the clip, the back of her outfit and hair swaying lightly. The breathing cycle repeats evenly.",
+  walk_up:"Seen from behind, she walks in place at a steady pace, about two full strides per second, arms swinging naturally. The stride cycle repeats evenly.",
+  idle_side:"In strict side profile she stands and breathes calmly: two slow gentle breaths across the clip, clothing swaying lightly. The breathing cycle repeats evenly.",
+  walk_side:"In strict side profile she walks in place at a steady pace, about two full strides per second, clear leg strides. The stride cycle repeats evenly.",
+};
+const ACTION_FACING={idle_down:'viewer',walk_down:'viewer',idle_up:'away',walk_up:'away'};
+// preset chips offered on the animations tab (directional ones come via kits)
+const CORE_PRESETS=['idle','walk','run','jump','fall','guard','attack','skill','hit','death','victory'];
+
+// The pixel/painted anim rules bake in "faces right"; directional kit
+// animations (top-down up/down) need that clause swapped, not fought.
+function kitRules(rules,preset){
+  const f=/The character's face[\s\S]*?head never turns to the left\.\s*/;
+  if(/_down$/.test(preset))return rules.replace(f,"The character faces straight toward the viewer in every frame and never turns away. ");
+  if(/_up$/.test(preset))return rules.replace(f,"The character faces directly away from the viewer in every frame, back to the camera, and never turns around. ");
+  return rules;
+}
+function projOf(id){const c=STATE.characters[id]||{};return c.project||Object.keys(STATE.projects||{})[0]||null;}
+function projStyle(pid){
+  const p=(STATE.projects||{})[pid]||{}, t=STATE.templates;
+  if(p.style==='pixel'){
+    const px=t.pixel_presets[String(p.pixel_bits)]||t.pixel_presets['32'];
+    return {pixel:true,bits:String(p.pixel_bits||'32'),preset:px,
+            styleBlock:px.style,rules:px.anim_rules,
+            chip:'pixel '+(p.pixel_bits||32)+'-bit · '+px.sprite_h+'px'};
+  }
+  return {pixel:false,styleBlock:t.painted_style,rules:t.painted_anim_rules,
+          chip:'painted / 2D'};
+}
+
+function toast(m,err){const t=document.getElementById('toast');t.textContent=m;
+  t.style.borderColor=err?'var(--err)':'var(--accent)';t.style.display='block';
+  clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',5000);}
+// Debounced autosaves must remember WHICH sprite/animation they belong to.
+// `cur` and `TL.anim` are globals that change the instant you open another
+// sprite, so a save that read them when its timer fired wrote the sprite you
+// just left onto the one you just opened - and the edit you made was never
+// stored on its own sprite. Everything scheduled here captures its target, and
+// leaving a sprite FLUSHES what is still pending instead of dropping it.
+const PENDING=new Map();
+let saving=0, holdSpec=0, dragging=false, missedRender=false;
+function schedule(key,ms,run){
+  const prev=PENDING.get(key); if(prev)clearTimeout(prev.t);
+  PENDING.set(key,{run,t:setTimeout(()=>{PENDING.delete(key);run();},ms)});
+}
+function flushPending(){
+  for(const [k,p] of [...PENDING]){clearTimeout(p.t);PENDING.delete(k);p.run();}
+}
+// a re-render replaces the slider you are holding, so defer it until you let go
+addEventListener('pointerdown',e=>{if(e.target&&e.target.type==='range')dragging=true;});
+addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;
+  if(missedRender){missedRender=false;render();}});
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function minutes(s){return Math.max(1,Math.round(s/60));}
+async function api(p,body){
+  const o=body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{};
+  const r=await fetch(p,o); const d=await r.json().catch(()=>({}));
+  if(!r.ok){toast(d.error||('HTTP '+r.status),true);throw new Error(d.error||r.status);}
+  return d;
+}
+
+// ------------------------------------------------------------------- routing
+function route(){
+  const h=location.hash||'#/';
+  const m=h.match(/^#\/char\/([a-z0-9_-]+)(?:\/(\w+))?/);
+  const mp=h.match(/^#\/proj\/([a-z0-9_-]+)/);
+  if(m){if(cur!==m[1]){flushPending();window.LIVE_TUNE=null;cur=m[1];spec=null;CANDS=null;dirty=false;
+          labMode='play';labAnim=null;plStop();_plLoadSeq++;
+          if(COMPARE_WITH===cur)COMPARE_WITH=null;}
+        tab=m[2]||tab||'ref';}
+  else if(mp){flushPending();window.LIVE_TUNE=null;curProj=mp[1];cur=null;spec=null;CANDS=null;}
+  else {flushPending();window.LIVE_TUNE=null;cur=null;curProj=null;spec=null;CANDS=null;}
+  render();
+  if(cur&&!CANDS)loadCands();
+}
+addEventListener('hashchange',route);
+addEventListener('beforeunload',flushPending);
+async function loadCands(){
+  const id=cur;
+  try{const c=await api('/api/candidates/'+id);
+      if(cur!==id)return;      // candidates of the sprite you left
+      CANDS=c;render();}
+  catch(e){if(cur===id)CANDS={seeds:[],styles:[],designs:[]};}
+}
+
+async function poll(){
+  try{
+    STATE=await api('/api/state');
+    document.getElementById('dot').className=STATE.comfy_ok?'ok':'';
+    renderJobs();
+    const fin=Math.max(0,...STATE.jobs.filter(j=>j.finished).map(j=>j.finished));
+    if(fin>lastFin){lastFin=fin;imgV=Date.now();
+      // a tune that is still debouncing or in flight is NEWER than this
+      // snapshot - discarding the local spec here is what made a size change
+      // look unsaved: the slider snapped back and the stale copy got re-saved
+      if(!dirty&&!saving&&!PENDING.size&&Date.now()>holdSpec){spec=null;CANDS=null;}
+      if(dragging)missedRender=true; else render();
+      if(cur)loadCands();}
+    else if(!document.getElementById('main').dataset.rendered){render();}
+  }catch(e){document.getElementById('dot').className='';}
+  setTimeout(poll,2500);
+}
+
+function assets(id){return (STATE.assets&&STATE.assets[id])||{ref:false,views:[],anims:{}};}
+function charStatus(id){
+  const c=STATE.characters[id], a=assets(id), ap=(c.approved||{});
+  const anims=Object.keys(c.animations||{});
+  const done=anims.filter(n=>(a.anims[n]||{}).done);
+  const approved=done.filter(n=>(ap.anims||{})[n]);
+  const busy=STATE.jobs.some(j=>j.char===id&&(j.status==='running'||j.status==='queued'));
+  let txt, cls='';
+  if(busy){txt='⏳ rendering…';cls='mid';}
+  else if(!a.ref){txt='start here: needs a reference';cls='warn';}
+  else if(!ap.ref){txt='👀 pick / approve the reference';cls='warn';}
+  else if(done.length<anims.length){txt=(anims.length-done.length)+' animations not rendered';}
+  else if(approved.length<done.length){txt='👀 '+(done.length-approved.length)+' animations await your review';cls='warn';}
+  else {txt='✓ complete';cls='ok';}
+  return {txt,cls,done:done.length,total:anims.length};
+}
+
+// -------------------------------------------------------------------- render
+function render(){
+  const m=document.getElementById('main');
+  if(!STATE){return;}
+  m.dataset.rendered='1';
+  document.getElementById('crumb').textContent=cur?('› '+(STATE.characters[cur]?
+    STATE.characters[cur].display_name||cur:cur))
+    :(curProj?('› '+(((STATE.projects||{})[curProj]||{}).display_name||curProj)):'');
+  if(cur){if(!STATE.characters[cur]){m.innerHTML='<div class="muted">Unknown sprite.</div>';}
+          else renderChar(m);}
+  else if(curProj){renderRoster(m);}
+  else renderProjects(m);
+}
+
+function renderProjects(m){
+  const ps=STATE.projects||{}, t=STATE.templates;
+  const card=pid=>{
+    const p=ps[pid];
+    const n=Object.keys(STATE.characters).filter(c=>projOf(c)===pid).length;
+    const needy=Object.keys(STATE.characters).filter(c=>projOf(c)===pid&&
+      charStatus(c).cls==='warn').length;
+    const kit=(t.game_kits||{})[p.game_type]||{};
+    const st=projStyle(pid);
+    return `<div class="card" onclick="location.hash='#/proj/${pid}'">
+      <div class="nm" style="font-size:16px">${esc(p.display_name||pid)}</div>
+      <div style="margin:7px 0"><span class="chip mid">${esc(st.chip)}</span>
+        <span class="chip">${esc(kit.label||p.game_type||'?')}</span></div>
+      <div class="muted">${n} sprite${n===1?'':'s'}${needy?' · ⚠ '+needy+' need you':''}</div>
+    </div>`;};
+  m.innerHTML=`
+    <div class="row" style="justify-content:space-between;margin-bottom:14px">
+      <div><h2 style="margin:0">Your projects</h2>
+      <div class="muted">A project locks the art direction — style, pixel density, game type —
+      so every sprite inside it matches.</div></div>
+      <button class="primary" onclick="newProject()">+ New project</button>
+    </div>
+    <div class="cards">${Object.keys(ps).sort().map(card).join('')||'<div class="muted">No projects yet — create one to start.</div>'}</div>`;
+}
+
+function newProject(){
+  const t=STATE.templates, pp=t.pixel_presets||{}, gk=t.game_kits||{};
+  document.getElementById('modal').innerHTML=`
+    <h3 style="margin-top:0">New project</h3>
+    <label>project name</label>
+    <input id="np_name" style="width:100%" placeholder="my pixel roguelike">
+    <label style="margin-top:12px">art style</label>
+    <div class="row">
+      <label style="margin:0;color:var(--text)"><input type="radio" name="np_style" value="pixel" checked onchange="npStyle()"> Pixel art</label>
+      <label style="margin:0;color:var(--text)"><input type="radio" name="np_style" value="painted" onchange="npStyle()"> 2D painted / line art</label>
+      <label style="margin:0"><input type="radio" disabled> 3D <i>(soon)</i></label>
+      <label style="margin:0"><input type="radio" disabled> Voxel <i>(soon)</i></label>
+    </div>
+    <div id="np_bits_row" style="margin-top:10px">
+      <label>pixel density (the size of the pixel squares — fixed for the whole project)</label>
+      <select id="np_bits" style="width:100%" onchange="npBits()">
+        ${Object.keys(pp).map(b=>`<option value="${b}" ${b==='32'?'selected':''}>${esc(pp[b].label)}</option>`).join('')}
+      </select>
+      <div id="np_bits_hint" class="muted" style="margin-top:4px"></div>
+    </div>
+    <label style="margin-top:12px">game type (decides the default movement kit)</label>
+    <select id="np_game" style="width:100%" onchange="npGame()">
+      ${Object.keys(gk).map(g=>`<option value="${g}" ${g==='platformer'?'selected':''}>${esc(gk[g].label)}</option>`).join('')}
+    </select>
+    <div id="np_kit" class="muted" style="margin-top:4px"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="createProject()">Create project</button>
+    </div>`;
+  document.getElementById('modalback').classList.add('show');
+  npStyle();npBits();npGame();
+}
+function npStyle(){
+  const px=(document.querySelector('input[name=np_style]:checked')||{}).value==='pixel';
+  document.getElementById('np_bits_row').style.display=px?'':'none';
+}
+function npBits(){
+  const pp=STATE.templates.pixel_presets||{};
+  const p=pp[document.getElementById('np_bits').value]||{};
+  document.getElementById('np_bits_hint').textContent=
+    (p.blurb||'')+' — sprites come out '+(p.sprite_h||'?')+'px tall, '+(p.colors||'?')+' colors';
+}
+function npGame(){
+  const gk=STATE.templates.game_kits||{};
+  const g=gk[document.getElementById('np_game').value]||{};
+  document.getElementById('np_kit').textContent=
+    (g.blurb?g.blurb+' — ':'')+'default kit: '+((g.anims||[]).map(a=>a.key).join(', ')||'?');
+}
+async function createProject(){
+  const name=(document.getElementById('np_name').value||'').trim();
+  if(!name)return toast('give the project a name',true);
+  const id=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
+  if(!id)return toast('invalid name',true);
+  if((STATE.projects||{})[id])return toast('a project with that name exists',true);
+  const style=(document.querySelector('input[name=np_style]:checked')||{}).value||'pixel';
+  const proj={display_name:name,style,game_type:document.getElementById('np_game').value};
+  if(style==='pixel')proj.pixel_bits=document.getElementById('np_bits').value;
+  await api('/api/project/save',{id,proj});
+  closeModal();toast('Project created — add your first sprite');
+  STATE.projects=STATE.projects||{};STATE.projects[id]=proj;
+  location.hash='#/proj/'+id;
+}
+async function delProject(){
+  if(!confirm('Delete this (empty) project?'))return;
+  await api('/api/project/delete',{id:curProj});
+  location.hash='#/';
+}
+
+function renderRoster(m){
+  const p=(STATE.projects||{})[curProj];
+  if(!p){m.innerHTML='<div class="muted">Unknown project. <a onclick="location.hash=\'#/\'">← all projects</a></div>';return;}
+  const st=projStyle(curProj), kit=(STATE.templates.game_kits||{})[p.game_type]||{};
+  const ids=Object.keys(STATE.characters).filter(i=>projOf(i)===curProj).sort();
+  const card=id=>{
+    const c=STATE.characters[id], cst=charStatus(id), a=assets(id);
+    const img=a.ref?'/files/'+id+'/ref.png?v='+imgV:'';
+    return `<div class="card" onclick="location.hash='#/char/${id}'">
+      ${img?'<img src="'+img+'">':'<div style="height:190px;display:flex;align-items:center;justify-content:center;color:var(--dim)">no image yet</div>'}
+      <div class="nm">${esc(c.display_name||id)}</div>
+      <div class="muted">${cst.done}/${cst.total} animations</div>
+      <div style="margin-top:5px"><span class="chip ${cst.cls}">${cst.txt}</span></div>
+    </div>`;};
+  const heroes=ids.filter(i=>STATE.characters[i].sprite_type!=='vfx');
+  const fx=ids.filter(i=>STATE.characters[i].sprite_type==='vfx');
+  m.innerHTML=`
+    <div class="row" style="justify-content:space-between;margin-bottom:14px">
+      <div><div class="row"><a onclick="location.hash='#/'">← all projects</a>
+        <h2 style="margin:0">${esc(p.display_name||curProj)}</h2>
+        <span class="chip mid">${esc(st.chip)}</span>
+        <span class="chip">${esc(kit.label||p.game_type||'')}</span></div>
+      <div class="muted">Click a card to work on it. ⚠ chips mean something needs you.</div></div>
+      <div class="row">
+        <button class="primary" onclick="newSprite('char')">+ New character</button>
+        <button onclick="newSprite('vfx')">+ New effect</button>
+        ${heroes.length?`<button onclick="exportGodot('${esc(curProj)}')"
+          title="every finished character in this project as Godot-ready sheets - free and instant">📦 Export for Godot</button>`:''}
+        ${ids.length?'':'<button class="small" onclick="delProject()">🗑</button>'}
+      </div>
+    </div>
+    <div class="cards">${heroes.map(card).join('')||'<div class="muted">No characters yet.</div>'}</div>
+    ${fx.length?'<h2>Effects (overlaid on characters in-engine)</h2><div class="cards">'+fx.map(card).join('')+'</div>':''}`;
+}
+
+function stepState(){
+  const a=assets(cur), c=STATE.characters[cur], ap=c.approved||{};
+  const anims=Object.keys(c.animations||{});
+  const done=anims.filter(n=>(a.anims[n]||{}).done);
+  const approved=done.filter(n=>(ap.anims||{})[n]);
+  return {
+    ref: !a.ref?['not started','attn']:(!ap.ref?['awaiting your pick/approval','attn']:['approved ✓','']),
+    anims: done.length<anims.length?[done.length+'/'+anims.length+' rendered','']
+           :(approved.length<done.length?[(done.length-approved.length)+' await review','attn']:['all approved ✓','']),
+    test: [done.length?'ready to test':'render animations first',''],
+  };
+}
+
+function renderChar(m){
+  if(!spec)spec=JSON.parse(JSON.stringify(STATE.characters[cur]));
+  const ss=stepState();
+  const stepBtn=(id,n,t)=>`<div class="step ${tab===id?'active':''} ${ss[id][1]}"
+      onclick="tab='${id}';render()">
+      <div class="t">${n}</div><div class="s">${ss[id][0]}</div></div>`;
+  const chip=spec.style==='pixel'&&spec.pixel_bits
+    ?('pixel '+spec.pixel_bits+'-bit'):(spec.style||'pixel');
+  m.innerHTML=`
+    <div class="row" style="justify-content:space-between">
+      <div class="row"><a onclick="location.hash='#/proj/${esc(projOf(cur)||'')}'">← project</a>
+        <h2 style="margin:0">${esc(spec.display_name||cur)}</h2>
+        <span class="chip">${esc(chip)}</span></div>
+      <button class="small" onclick="delSprite()">🗑 delete</button>
+    </div>
+    <div class="stepper">
+      ${stepBtn('ref','1 · Look & Reference','')}
+      ${stepBtn('anims','2 · Animations','')}
+      ${stepBtn('test','3 · Test & Tune','')}
+    </div>
+    <div class="panel" id="panel"></div>`;
+  const p=document.getElementById('panel');
+  if(tab==='ref')renderRefTab(p);
+  else if(tab==='anims')renderAnimsTab(p);
+  else renderTestTab(p);
+}
+
+// ---------------------------------------------------------------- tab 1: ref
+function candGrid(kind,files){
+  if(!files||!files.length)return '';
+  return `<h2 style="font-size:13px">${{seeds:'Seed variations',styles:'Art-style variations',designs:'Design variations'}[kind]}</h2>
+  <div class="grid">${files.map(f=>`
+    <div class="acard cand" onclick="pickRef('${kind}','${esc(f)}')" title="click to make this THE reference">
+      <img src="/files/${cur}/${{seeds:'ref_candidates',styles:'style_candidates',designs:'design_candidates'}[kind]}/${esc(f)}?v=${imgV}">
+      <div class="row"><span class="muted">${esc(f.replace('.png',''))}</span>
+      <span style="flex:1"></span><button class="small primary">use this ✓</button></div>
+    </div>`).join('')}</div>`;
+}
+
+function renderRefTab(p){
+  const a=assets(cur), ap=spec.approved||{};
+  p.innerHTML=`
+    <div class="muted" style="margin-bottom:10px">The reference is the single image every
+    animation copies. Generate variations, click one to make it official, then move to
+    step 2. Re-rolling is cheap (~1 min) — never settle.</div>
+    <div class="row" style="align-items:flex-start">
+      <div>
+        <label>current reference ${ap.ref?'<span class="chip ok">approved ✓</span>':'<span class="chip warn">not approved yet</span>'}</label>
+        ${a.ref?`<img class="bigimg" src="/files/${cur}/ref.png?v=${imgV}">`
+               :'<div class="muted" style="padding:40px 20px">none yet — generate variations below and pick one</div>'}
+        ${a.ref&&!ap.ref?`<div style="margin-top:8px"><button class="primary" onclick="approve(null,true)">✓ approve this reference</button></div>`:''}
+      </div>
+      <div style="flex:1;min-width:280px">
+        <label>generate candidates</label>
+        <div class="row">
+          <button onclick="job('variations',{kind:'seeds'})">🎲 6 seed variations</button>
+          <button onclick="job('variations',{kind:'styles'})">🎨 6 art-style variations</button>
+          <span class="muted">≈1 min each, queued on the GPU</span>
+        </div>
+        <label style="margin-top:10px">or use your own image</label>
+        <div class="row">
+          <button class="small" onclick="document.getElementById('f_refupload').click()">📤 upload a reference image</button>
+          <input type="file" id="f_refupload" accept="image/*" style="display:none" onchange="uploadRef(this)">
+        </div>
+        <div class="muted" style="margin-top:4px">Best results: a flat solid-green (chroma-key)
+        background like the generated candidates — animation needs to key the backdrop out.
+        A busy background will carry through as visible pixels.</div>
+        <details class="adv"><summary>edit the design prompt & identity (advanced)</summary>
+          <label>reference image prompt <span class="muted">(Krea-2: keep under ~300 words — it fails silently past its budget; say what you want to see, never what you don't)</span></label>
+          <textarea id="f_ref" rows="8" oninput="promptEdit();refWords()">${esc(spec.ref_prompt)}</textarea>
+          <div class="muted" id="f_refwords" style="margin-top:2px"></div>
+          ${spec.sprite_type!=='vfx'?`<label style="margin-top:8px">identity feature list <span class="muted">(what the video model keeps exactly, every frame — name every distinguishing mark)</span></label>
+          <textarea id="f_identity" rows="4" oninput="promptEdit()">${esc(spec.identity||'')}</textarea>`:''}
+          <div class="row" style="margin-top:6px"><button class="small" onclick="flushPending()">💾 save now</button>
+          <span class="muted" id="prompt_saved">saves automatically</span>
+          <span class="muted">keep the green-field sentence — it makes transparency possible</span></div>
+        </details>
+      </div>
+    </div>
+    <h2 style="font-size:13px">Pose library</h2>
+    <div class="muted" style="margin-bottom:8px">Reusable poses for animation start/end
+    frames. <b>Generated</b> poses (image-edit of the reference) are safe as START poses.
+    <b>Harvested</b> poses (a frame lifted from a rendered clip, free) are the only safe
+    END poses — a from-scratch image makes the character slide toward its framing.</div>
+    <div class="grid">${Object.keys(spec.views||{}).map(v=>{
+      const src=spec.views[v]||{};
+      const kind=src.from_anim?('harvested: '+src.from_anim+' #'+src.frame):'generated';
+      const ok=(a.views||[]).includes(v);
+      return `<div class="acard">
+        ${ok?`<img src="/files/${cur}/ref_${esc(v)}.png?v=${imgV}">`
+            :'<div style="height:210px;display:flex;align-items:center;justify-content:center;color:var(--dim)">not built yet</div>'}
+        <div class="row"><b>${esc(v)}</b>
+          <span class="chip ${src.from_anim?'ok':'mid'}">${kind}</span>
+          <span style="flex:1"></span>
+          <button class="small" onclick="rmView('${esc(v)}')">✕</button></div>
+      </div>`;}).join('')||'<div class="muted">no poses yet</div>'}</div>
+    <div class="row" style="margin-top:8px">
+      <button class="small" onclick="addGenPose()">+ generated pose…</button>
+      <button class="small" onclick="addHarvestPose()">+ harvest from clip… (free)</button>
+      <button onclick="job('views')">🔄 build poses (~2 min per generated)</button>
+    </div>
+    ${CANDS?candGrid('designs',CANDS.designs)+candGrid('styles',CANDS.styles)+candGrid('seeds',CANDS.seeds):'<div class="muted">loading candidates…</div>'}`;
+}
+
+function addGenPose(){
+  const name=prompt('Pose name (e.g. "guard_brace", "charge_up"):'); if(!name)return;
+  const instr=prompt('Describe the pose change (everything else stays identical):',
+    'Change the pose so she is bracing low behind the oversized shield, knees bent, only her eyes visible over the rim.');
+  if(!instr)return;
+  const key=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_');
+  spec.views=spec.views||{};
+  spec.views[key]={edit_prompt:instr+' Keep the exact same character, outfit, colors, hairstyle, proportions, hand-painted art style, full body visible with a margin, and the exact same flat solid bright green background. Change nothing else.'};
+  dirty=true; savePrompts().then(()=>render());
+}
+async function addHarvestPose(){
+  const anims=Object.keys(spec.animations||{}).filter(n=>(assets(cur).anims[n]||{}).frames>0);
+  if(!anims.length)return toast('no rendered clips to harvest from yet',true);
+  const src=prompt('Harvest from which animation? ('+anims.join(', ')+')',anims[0]);
+  if(!src)return;
+  const fr=prompt('Which frame? (number, or -1 for the last frame)','-1');
+  const name=prompt('Pose name:',src+'_end'); if(!name)return;
+  await api('/api/view/harvest',{id:cur,name,from_anim:src.trim(),frame:parseInt(fr)});
+  spec=null;imgV=Date.now();render();toast('Pose harvested ✓ (no GPU used)');
+}
+
+async function uploadRef(input){
+  const file=input.files&&input.files[0]; if(!file)return;
+  if(!file.type.startsWith('image/'))return toast('please choose an image file',true);
+  if(file.size>20*1024*1024)return toast('image too large (max 20MB)',true);
+  const dataUrl=await new Promise((res,rej)=>{
+    const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file);
+  });
+  try{
+    await api('/api/char/upload_ref',{id:cur,data:dataUrl});
+    imgV=Date.now();spec=null;input.value='';
+    toast('Reference uploaded & approved ✓ — go to step 2');
+    render();
+  }catch(e){/* api() already toasted the error */}
+}
+async function pickRef(kind,file){
+  if(!confirm('Use this image as the official reference?\n\nEvery animation will copy it exactly.'))return;
+  await api('/api/char/pick_ref',{id:cur,kind,file});
+  imgV=Date.now();spec=null;toast('Reference set & approved ✓ — go to step 2');
+  render();
+}
+async function approve(anim,val){
+  await api('/api/char/approve',{id:cur,anim,approved:val});
+  spec=null;render();toast(anim?('"'+anim+'" '+(val?'approved ✓':'approval removed')):'reference approved ✓');
+}
+
+// -------------------------------------------------------------- tab 2: anims
+function renderAnimsTab(p){
+  const a=assets(cur), ap=(spec.approved||{}).anims||{};
+  const anims=spec.animations||{};
+  const isVfx=spec.sprite_type==='vfx';
+  p.innerHTML=`
+    <div class="muted" style="margin-bottom:10px">Each card is one animation. Render in
+    <b>test</b> first (~2 min each) to sanity-check motion, then <b>final</b> (~10 min each).
+    Watch the live preview, then <b>approve</b> or re-render. Click <b>test ▶</b> to try it in
+    the play area.</div>
+    <div class="row" style="margin-bottom:12px">
+      <span class="muted">add:</span>
+      ${(isVfx?['vfx']:CORE_PRESETS).map(x=>
+        '<button class="small" onclick="addAnim(\''+x+'\')">+'+x+'</button>').join('')}
+      <button class="small" onclick="addAnim('custom')">+custom…</button>
+      <button class="small" onclick="addKit()" title="add the standard animation set in one click">+full kit</button>
+      <span style="flex:1"></span>
+      <button class="small" onclick="selAll(true)">☑ all</button>
+      <button class="small" onclick="selAll(false)">☐ none</button>
+      <select id="f_mode"><option value="test">test mode (~2 min/clip)</option>
+        <option value="final" selected>final mode (~10 min/clip)</option></select>
+      <button class="primary" onclick="job('anim')"
+        title="generates NEW video on the GPU - the expensive step">🎬 Render video (GPU)</button>
+      <button onclick="job('post')"
+        title="re-extracts sprites from the video already on disk with current settings - free and instant">✨ Rebuild sheets (free)</button>
+      <button onclick="exportGodot()"
+        title="one sheet + Godot 4 resources, every animation on a shared feet anchor - free and instant">📦 Export for Godot</button>
+    </div>
+    <div class="muted" style="margin-bottom:10px">${(()=>{
+      if(spec.style==='pixel'&&!isVfx){
+        const px=(STATE.templates.pixel_presets||{})[String(spec.pixel_bits||'')]||{};
+        return 'ℹ Every clip renders at 24fps, then pixel sprites are <b>collapsed to classic keyframe counts</b> — loops get '
+          +(px.frames_loop||8)+' frames sampled across one detected cycle, one-shots get '
+          +(px.frames_once||12)+', played at '+(px.fps||10)+'fps like real '
+          +(spec.pixel_bits||32)+'-bit games. Longer clips do not add smoothness. "Rebuild sheets" never touches the GPU.';
+      }
+      return 'ℹ Every clip renders at 24fps and the sheet samples every 2nd frame → <b>5.2s clip = 124 video frames = 61 sprites at 12fps</b>. Making a clip longer does not make motion smoother — it spreads the same sprite rate over more action. Keep loops at ~5.2s; give big one-shots the seconds they need, then trim with the action window. "Rebuild sheets" never touches the GPU.';
+    })()}</div>
+    <div class="grid">${Object.keys(anims).map(k=>{
+      const st=a.anims[k]||{}; const appd=!!ap[k]; const isTest=st.quality==='test';
+      const chip=st.done
+        ?(isTest?'<span class="chip mid">TEST render — finalize to approve</span>'
+          :(appd?'<span class="chip ok">approved ✓ (final)</span>'
+                :'<span class="chip warn">👀 final — awaiting your review</span>'))
+        :(st.frames>0?'<span class="chip mid">rendered — needs post</span>'
+                     :'<span class="chip">not rendered</span>');
+      return `<div class="acard">
+        ${st.done?`<img src="/files/${cur}/${k}/preview.webp?v=${imgV}"
+            onerror="if(!this.dataset.f){this.dataset.f=1;this.src='/files/${cur}/${k}/preview.gif?v=${imgV}'}else{this.style.display='none'}">`
+          :'<div style="height:210px;display:flex;align-items:center;justify-content:center;color:var(--dim)">not rendered yet</div>'}
+        ${st.takes?`<div class="row" style="margin-top:6px">
+          <label style="margin:0">take</label>
+          <select class="a_take" data-anim="${esc(k)}" onchange="pickTake('${esc(k)}',this.value)"
+                  title="every render of this animation is kept - switch back to an earlier one any time">
+            <option value="">loading…</option>
+          </select>
+          <span class="muted">${st.takes} earlier render${st.takes>1?'s':''} kept</span>
+        </div>`:''}
+        <div class="row"><input type="checkbox" class="a_sel" data-anim="${esc(k)}" ${st.done&&appd&&!isTest?'':'checked'}>
+          <b>${esc(k)}</b>${chip}<span style="flex:1"></span>
+          ${st.done?`<button class="small" onclick="openTest('${esc(k)}')">test ▶</button>`:''}
+          ${st.done&&!appd&&!isTest?`<button class="small primary" onclick="approve('${esc(k)}',true)">✓</button>`:''}
+          ${appd&&!isTest?`<button class="small" onclick="approve('${esc(k)}',false)" title="remove approval">↺</button>`:''}
+        </div>
+        <details class="adv"><summary>${anims[k].action!=null?'action timeline & settings':'prompt & settings'}</summary>
+          ${anims[k].action!=null
+            ?`<div class="muted" style="margin-bottom:4px">Describe only WHAT SHE DOES over the ${anims[k].seconds||5.2}s, as a timeline of beats (the identity, camera lock, green screen and style are added automatically in the official H3 brief format). Say what you want to see, never what you don't.</div>
+              <textarea class="a_action" data-anim="${esc(k)}" rows="4" oninput="promptEdit()">${esc(anims[k].action)}</textarea>`
+            :`<textarea class="a_prompt" data-anim="${esc(k)}" rows="5" oninput="promptEdit()">${esc(anims[k].prompt)}</textarea>`}
+          <div class="row" style="margin-top:6px">
+            <label style="margin:0">sec</label><input class="a_secs" data-anim="${esc(k)}" type="number" step="0.1" value="${anims[k].seconds||5.2}" style="width:64px" oninput="promptEdit()">
+            <label style="margin:0">canvas</label>
+            <select class="a_canvas" data-anim="${esc(k)}" onchange="promptEdit()">
+              ${['square','portrait','wide'].map(c=>'<option '+((anims[k].canvas||'square')===c?'selected':'')+'>'+c+'</option>').join('')}
+            </select>
+            <button class="small" onclick="rmAnim('${esc(k)}')">✕ remove</button>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <label style="margin:0">start pose</label>
+            <select class="a_view" data-anim="${esc(k)}" onchange="promptEdit()">
+              <option value="">reference</option>
+              ${Object.keys(spec.views||{}).map(v=>'<option '+((anims[k].view||'')===v?'selected':'')+'>'+esc(v)+'</option>').join('')}
+            </select>
+            <label style="margin:0">end pose</label>
+            <select class="a_endview" data-anim="${esc(k)}" onchange="promptEdit()"
+              title="only harvested poses are safe here - a generated pose makes the character drift">
+              <option value="">none (loop / prompt-driven)</option>
+              ${Object.keys(spec.views||{}).map(v=>{
+                const harv=(spec.views[v]||{}).from_anim;
+                return '<option '+((anims[k].end_view||'')===v?'selected':'')+' value="'+esc(v)+'">'+esc(v)+(harv?'':' ⚠ drifts')+'</option>';}).join('')}
+            </select>
+          </div>
+        </details>
+      </div>`;}).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="small" onclick="flushPending()">💾 save now</button>
+      <span class="muted" id="prompt_saved">prompt edits save automatically</span></div>`;
+  // fill the take dropdowns (one request per animation that has history)
+  document.querySelectorAll('.a_take').forEach(sel=>loadTakes(sel.dataset.anim));
+}
+
+// ---- takes: every render of an animation is kept and switchable ----------
+async function loadTakes(anim){
+  const sel=document.querySelector('.a_take[data-anim="'+anim+'"]'); if(!sel)return;
+  const id=cur;
+  try{
+    const d=await (await fetch('/api/takes/'+id+'/'+encodeURIComponent(anim))).json();
+    if(cur!==id)return;        // these takes belong to the sprite you left
+    sel.innerHTML=(d.takes||[]).map(t=>{
+      const bits=[t.when||'?', (t.frames!=null?t.frames+'f':'')+(t.quality?' '+t.quality:''),
+                  t.seed?'seed '+t.seed:'', t.active?'← in use':''].filter(Boolean).join(' · ');
+      return `<option value="${t.id}" ${t.active?'selected':''}>${bits}</option>`;
+    }).join('')||'<option value="">none</option>';
+  }catch(e){sel.innerHTML='<option value="">unavailable</option>';}
+}
+async function pickTake(anim, take){
+  if(!take||take==='active')return;
+  if(!confirm('Use this earlier take of "'+anim+'"?\n\nThe one in use now is kept as a take, so you can switch back.'))
+    {loadTakes(anim);return;}
+  await api('/api/take/activate',{id:cur,anim,take});
+  imgV=Date.now();spec=null;
+  toast('Switched "'+anim+'" to the earlier take');
+  render();
+}
+
+function selAll(v){document.querySelectorAll('.a_sel').forEach(c=>c.checked=v);}
+function specRulesFor(s){
+  const t=STATE.templates;
+  if(s.sprite_type==='vfx')return t.vfx_rules;
+  if(s.style==='painted')return t.painted_anim_rules;
+  const px=(t.pixel_presets||{})[String(s.pixel_bits||'')];
+  return px?px.anim_rules:t.anim_rules;
+}
+function specRules(){return specRulesFor(spec);}
+function scaffoldKit(s,pid){
+  const t=STATE.templates, proj=(STATE.projects||{})[pid]||{};
+  const kit=(t.game_kits||{})[proj.game_type||'side_arena']||{anims:[]};
+  const rules=specRulesFor(s);
+  let added=0;
+  s.animations=s.animations||{};
+  (kit.anims||[]).forEach(a=>{
+    if(s.animations[a.key])return;
+    let an;
+    if(briefStyle(s)){
+      // brief-style: action timeline only; one square canvas for everything
+      // (VFX are separate sprites, so no animation needs extra headroom)
+      an={action:ACTION_PRESETS[a.preset]||ACTION_PRESETS[a.key]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',seconds:5.2};
+      const f=ACTION_FACING[a.preset]||ACTION_FACING[a.key]; if(f)an.facing=f;
+    }else{
+      const body=ANIM_PRESETS[a.preset]||ANIM_PRESETS[a.key]||'Describe the motion: start, peak, end.';
+      an={prompt:kitRules(rules,a.preset||a.key)+body,seconds:5.2};
+      if(a.canvas)an.canvas=a.canvas;
+    }
+    if(a.needs_view)an.view=a.needs_view;
+    s.animations[a.key]=an;added++;
+  });
+  if(kit.views){
+    s.views=s.views||{};
+    for(const[v,instr]of Object.entries(kit.views)){
+      if(!s.views[v])s.views[v]={edit_prompt:instr+' Keep the exact same character, outfit, colors, hairstyle, proportions and art style, full body visible with a margin, and the exact same flat solid bright green background. Change nothing else.'};
+    }
+  }
+  return added;
+}
+function briefStyle(s){return s.sprite_type!=='vfx';}   // VFX keep the legacy free-text prompt
+function addAnim(preset){
+  collectPrompts();
+  const name=preset==='custom'?(prompt('Animation name:')||''):preset;
+  const key=name.toLowerCase().replace(/[^a-z0-9_-]+/g,'_'); if(!key)return;
+  if(briefStyle(spec)){
+    const an={action:ACTION_PRESETS[preset]||'Describe only what she does over the clip, as a timeline of beats: start, peak, end.',seconds:5.2};
+    if(ACTION_FACING[preset])an.facing=ACTION_FACING[preset];
+    spec.animations[key]=an;
+  }else{
+    spec.animations[key]={prompt:kitRules(specRules(),preset)+(ANIM_PRESETS[preset]||'Describe the motion: start, peak, end.'),seconds:5.2};
+  }
+  dirty=true;render();
+}
+function rmAnim(k){collectPrompts();delete spec.animations[k];dirty=true;render();savePrompts();}
+function refWords(){
+  const rp=document.getElementById('f_ref'), o=document.getElementById('f_refwords'); if(!rp||!o)return;
+  const n=rp.value.trim().split(/\s+/).filter(Boolean).length;
+  o.textContent=n+' words'+(n>300?' — TOO LONG, Krea-2 will fail silently':n>250?' — near the limit':'');
+  o.style.color=n>300?'var(--err)':n>250?'var(--warn)':'var(--dim)';
+}
+function collectPrompts(){
+  const rp=document.getElementById('f_ref'); if(rp)spec.ref_prompt=rp.value;
+  const idn=document.getElementById('f_identity'); if(idn)spec.identity=idn.value;
+  document.querySelectorAll('.a_prompt').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k])spec.animations[k].prompt=t.value;});
+  document.querySelectorAll('.a_action').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k])spec.animations[k].action=t.value;});
+  document.querySelectorAll('.a_secs').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k])spec.animations[k].seconds=parseFloat(t.value)||5.2;});
+  document.querySelectorAll('.a_canvas').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k]){if(t.value==='square')delete spec.animations[k].canvas;
+      else spec.animations[k].canvas=t.value;}});
+  document.querySelectorAll('.a_view').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k]){if(t.value)spec.animations[k].view=t.value;
+      else delete spec.animations[k].view;}});
+  document.querySelectorAll('.a_endview').forEach(t=>{const k=t.dataset.anim;
+    if(spec.animations[k]){if(t.value)spec.animations[k].end_view=t.value;
+      else delete spec.animations[k].end_view;}});
+}
+
+function addKit(){
+  collectPrompts();
+  const added=scaffoldKit(spec,projOf(cur));
+  dirty=true;render();
+  toast(added?added+' animations scaffolded from the project\'s movement kit - review the prompts, then render in test mode':'full kit already present');
+}
+function rmView(key){
+  if(!confirm('Remove pose "'+key+'" from the library?'))return;
+  collectPrompts();delete spec.views[key];dirty=true;savePrompts().then(()=>render());
+}
+async function savePrompts(){
+  collectPrompts();
+  const id=cur, body=JSON.parse(JSON.stringify(spec));
+  saving++;
+  try{ await api('/api/char/save',{id,spec:body});
+       if(STATE.characters[id])STATE.characters[id]=JSON.parse(JSON.stringify(body));
+       holdSpec=Date.now()+3000;
+       if(cur===id)dirty=false;
+  } finally{saving--;}
+}
+// Prompt and identity text costs nothing to store, so it saves itself a moment
+// after you stop typing instead of waiting for a button you may never press.
+function promptEdit(){
+  dirty=true;
+  const id=cur;
+  const el=document.getElementById('prompt_saved');
+  if(el){el.textContent='saving…';el.style.color='var(--dim)';}
+  schedule('prompts:'+id,900,async()=>{
+    if(cur!==id)return;                 // flushed on the way out, or stale
+    const rp=document.getElementById('f_ref');
+    if(rp&&!rp.value.trim()){
+      const e0=document.getElementById('prompt_saved');
+      if(e0){e0.textContent='not saved — the reference prompt cannot be empty';
+             e0.style.color='var(--warn)';}
+      return;
+    }
+    try{ await savePrompts();
+         const e2=document.getElementById('prompt_saved');
+         if(e2&&cur===id){e2.textContent='saved ✓';e2.style.color='var(--ok)';}
+    }catch(e){
+      const e2=document.getElementById('prompt_saved');
+      if(e2&&cur===id){e2.textContent='save failed';e2.style.color='var(--err)';}
+    }
+  });
+}
+async function delSprite(){
+  if(!confirm('Delete "'+cur+'" from the roster? Generated files stay on disk.'))return;
+  const pid=projOf(cur);
+  await api('/api/char/delete',{id:cur});
+  location.hash=pid?('#/proj/'+pid):'#/';
+}
+function newSprite(kind){
+  const raw=prompt('Name for the new '+(kind==='vfx'?'effect':'character')+':'); if(!raw)return;
+  const id=raw.toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
+  if(!id)return toast('invalid name',true);
+  const t=STATE.templates, st=projStyle(curProj);
+  let s;
+  if(kind==='vfx'){
+    s={display_name:'VFX - '+raw,sprite_type:'vfx',project:curProj,
+       ref_prompt:t.vfx_pixel+'DESCRIBE THE EFFECT HERE - a COMPLETE self-contained effect, every endpoint visible, touching no edge. '+t.vfx_stage,
+       animations:{loop:{prompt:t.vfx_rules+ANIM_PRESETS.vfx,seconds:5.2}}};
+  }else{
+    s={display_name:raw,style:st.pixel?'pixel':'painted',project:curProj,
+       // reference prompt: subject+pose first, framing early, the backdrop named
+       // as a hex-coded object, everything phrased as what you WANT to see
+       ref_prompt:(st.pixel?'A '+(st.bits||32)+'-bit pixel art game sprite of ':'A hand-painted 2D game sprite of ')
+         +'DESCRIBE THE CHARACTER (who they are, build, face, hair) standing in a calm ready stance, full body from head to toe, centered and small in frame with empty green margin above the head and below the feet, seen in three-quarter view angled toward the right with the chest open to the viewer and the face, eyes and feet all pointing right. DESCRIBE THE OUTFIT, COLORS AND HELD ITEMS; hands empty and relaxed. '
+         +(st.pixel?'Crisp square pixels, hard clean edges, flat cel shading, matte non-reflective surfaces, dark outlines, a limited palette, flat even shadowless studio lighting. ':'Clean bold outlines, painterly cel shading, matte surfaces, flat even shadowless studio lighting. ')
+         +'The background is a flat, uniform chroma-key green field, color #00FF00, smooth edge to edge; the figure floats on the green with a hard clean edge and is the only element in the image.',
+       // identity: the verbatim feature list the video model keeps fully preserved
+       identity:'DESCRIBE THE CHARACTER AS A FEATURE LIST: hair, eyes, face, outfit pieces and colors, held items, art style',
+       animations:{}};
+    if(st.pixel)s.pixel_bits=st.bits;
+    scaffoldKit(s,curProj);
+  }
+  api('/api/char/save',{id,spec:s}).then(()=>{location.hash='#/char/'+id+'/ref';
+    toast(kind==='vfx'?'Created — describe the effect in step 1'
+      :'Created — the movement kit is pre-scaffolded; give them a look in step 1');});
+}
+
+// ------------------------------------------------------------------ export
+// Free and instant - it only re-packs sprites that already exist. Every
+// animation lands on one cell with one anchor (the feet), so an
+// AnimatedSprite2D can switch clips without the character jumping.
+async function exportGodot(project){
+  const label=project?('project "'+project+'"'):(spec.display_name||cur);
+  toast('Packing '+label+' for Godot…');
+  try{
+    const body=project?{project}:{id:cur};
+    body.height=EXPORT_H; body.res_dir=EXPORT_DIR;
+    const r=await api('/api/export',body);
+    showExport(r);
+  }catch(e){ toast('Export failed: '+e.message,true); }
+}
+let EXPORT_H=128, EXPORT_DIR='sprites';
+function showExport(r){
+  const one=r.exports.length===1?r.exports[0]:null;
+  const rows=r.exports.map(x=>`<tr><td>${esc(x.id)}</td>
+      <td class="mono">${x.animations} anims · ${x.frames} frames</td>
+      <td class="mono">${x.cell[0]}×${x.cell[1]}</td>
+      <td><a href="${x.zip_url}" download>${esc(x.id)}.zip</a>
+          <span class="muted">${Math.round(x.bytes/1024)} KB</span></td></tr>`).join('');
+  document.getElementById('modal').innerHTML=`
+    <h3>Exported for Godot</h3>
+    <div class="muted">Standing height ${r.height}px × each character's own size ·
+      resources point at <span class="mono">res://${esc(r.res_dir)}/&lt;name&gt;/</span></div>
+    <table style="width:100%;margin:10px 0;font-size:12.5px;border-collapse:collapse">${rows}</table>
+    ${r.bundle_url?`<div class="row"><a class="mono" href="${r.bundle_url}" download>⬇ everything in one zip
+      (${Math.round(r.bundle_bytes/1024/1024*10)/10} MB)</a></div>`:''}
+    ${r.errors.length?`<div class="warn">skipped — ${r.errors.map(esc).join('; ')}</div>`:''}
+    <div class="est" style="line-height:1.6">
+      <b>In Godot 4</b><br>
+      1. Unzip into your project so it lands at <span class="mono">res://${esc(r.res_dir)}/</span><br>
+      2. Drag <span class="mono">&lt;name&gt;.tscn</span> into a scene — it is an AnimatedSprite2D
+         already wired up, anchored at the feet, filtered to Nearest<br>
+      3. Play a clip by name: <span class="mono">$Ninja.play("walk")</span>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:10px">
+      <span class="muted">files are also on disk under sprites_out/_export/</span>
+      <button class="primary" onclick="closeModal()">Done</button>
+    </div>`;
+  document.getElementById('modalback').classList.add('show');
+}
+
+// --------------------------------------------------------------- tab 3: test
+let labAnim=null, COMPARE_WITH=null;
+function openTest(anim){labAnim=anim;tab='test';render();}
+function setCompare(id){COMPARE_WITH=(id&&id!==cur)?id:null;render();}
+// character size lives OUTSIDE any single animation, because it applies to
+// all of them - and it only ever touches this character, never the one
+// standing next to it for comparison
+function charScale(v){
+  const val=parseFloat(v), id=cur;      // id captured NOW, not when the timer fires
+  spec.sprite_scale=val;
+  document.getElementById('charscalev').textContent=val.toFixed(2)+'×';
+  window.LIVE_TUNE={char:id,anim:labAnim||'idle',sprite_scale:val,ts:Date.now()};
+  const msg=document.getElementById('char_scale_msg');
+  if(msg){msg.textContent='saving…';}
+  schedule('charscale:'+id,600,async()=>{
+    saving++;
+    try{
+      await api('/api/anim/tune',{id,anim:'',sprite_scale:val});
+      // the poll already in flight carries the pre-save snapshot, so patch it
+      // too - otherwise the next render puts the old size back on screen
+      if(STATE.characters[id])STATE.characters[id].sprite_scale=val;
+      holdSpec=Date.now()+3000;
+      const m2=document.getElementById('char_scale_msg');
+      if(m2&&cur===id)m2.textContent='saved ✓ — applies to every animation of this character';
+    }catch(e){
+      const m2=document.getElementById('char_scale_msg');
+      if(m2&&cur===id)m2.textContent='save failed';
+    }finally{saving--;}
+  });
+}
+
+// ---- Pixel Lab: fixed-pixel + Sobel-outline experiments ---------------------
+// Inspired by collidingscopes/video-to-pixel-art (a WebGL shader: quantize the
+// sample coordinate to a pixel size, Sobel on luminance, Bayer 4x4 dither,
+// palette snap, then mix an edge colour in where the gradient beats a
+// threshold). Rebuilt here on the CPU over the RAW 640px green-screen frames,
+// so "pixel size" is real: one output pixel = ps x ps source pixels on a grid
+// anchored at the source origin - the same grid on every frame, so nothing
+// crawls between frames. Only differences from the shader, on purpose:
+//  * cells can be averaged / dominant-sampled instead of point-sampled (point
+//    sampling shimmers in animation);
+//  * edges can be measured on the pixel grid itself (clean outlines) or on
+//    the source pixels as the shader does;
+//  * gradient is normalised so 1.0 = a full black->white step; the edge only
+//    tints the character's own cells, never the keyed backdrop.
+// Nothing here writes to disk - it is a sandbox for finding settings.
+let labMode='play';
+const PL_DEF={ps:5,samp:'dominant',eth:0.3,eint:0.5,ecol:'#000000',esrc:'grid',
+              dith:0,pal:0,zoom:1,rate:1,key:true,stride:2,orig:true};
+const PL={anim:null,frames:[],box:null,src:[0,0],timer:null,i:0,playing:true,
+          loading:false,palette:null,palKey:'',stand:null,...PL_DEF};
+try{Object.assign(PL,JSON.parse(localStorage.getItem('pixel_lab')||'{}'));}catch(e){}
+function plSave(){
+  const o={};for(const k in PL_DEF)o[k]=PL[k];
+  try{localStorage.setItem('pixel_lab',JSON.stringify(o));}catch(e){}
+}
+function plStop(){clearInterval(PL.timer);PL.timer=null;}
+
+function renderPixelLab(p,anims){
+  if(!PL.anim||!anims.includes(PL.anim))PL.anim=anims[0]||null;
+  const seg=(id,opts,cur,fn)=>`<div class="seg">${opts.map(([v,l])=>
+    `<span class="${String(cur)===String(v)?'on':''}" onclick="${fn}('${v}',this)">${l}</span>`).join('')}</div>`;
+  p.innerHTML=`
+    <div class="row" style="margin-bottom:8px">
+      <label style="margin:0">animation</label>
+      <select onchange="PL.anim=this.value;plLoad()">${anims.map(n=>
+        `<option value="${esc(n)}" ${n===PL.anim?'selected':''}>${esc(n)}</option>`).join('')}</select>
+      <label style="margin:0">load</label>
+      <select onchange="PL.stride=parseInt(this.value);plSave();plLoad()">
+        ${[[1,'every frame (24fps)'],[2,'every 2nd (12fps)'],[4,'every 4th (6fps)']].map(([v,l])=>
+          `<option value="${v}" ${PL.stride===v?'selected':''}>${l}</option>`).join('')}</select>
+      <span class="muted" id="pl_status">loading…</span>
+      <span style="flex:1"></span>
+      <span class="muted">raw render frames, re-pixelized live · nothing is saved to the sprite</span>
+    </div>
+    <div class="plview">
+      <div><div class="muted" style="margin-bottom:3px">pixelized <span class="mono" id="pl_grid"></span></div>
+        <canvas id="pl_out" class="plc"></canvas></div>
+      <div id="pl_origwrap" ${PL.orig?'':'hidden'}><div class="muted" style="margin-bottom:3px">original (keyed)</div>
+        <canvas id="pl_src" class="plc" style="image-rendering:auto"></canvas></div>
+    </div>
+    <div class="tl">
+      <div class="row" style="gap:10px">
+        <div class="transport">
+          <button class="tb" onclick="plStep(-1)" title="previous frame (←)">⏮</button>
+          <button class="tb" id="pl_play" onclick="plToggle()" title="play / pause (space)">${PL.playing?'⏸':'▶'}</button>
+          <button class="tb" onclick="plStep(1)" title="next frame (→)">⏭</button>
+        </div>
+        <span class="mono" id="pl_pos">frame – / –</span>
+        <label style="margin:0">speed</label>
+        <input type="range" min="0.25" max="2" step="0.05" style="width:120px" value="${PL.rate}"
+          oninput="PL.rate=parseFloat(this.value);document.getElementById('pl_ratev').textContent=PL.rate.toFixed(2)+'×';plSave();plTimer()">
+        <span class="mono" id="pl_ratev" style="width:46px">${PL.rate.toFixed(2)}×</span>
+        <label style="margin:0">zoom</label>
+        <input type="range" min="0.5" max="3" step="0.25" style="width:90px" value="${PL.zoom}"
+          oninput="PL.zoom=parseFloat(this.value);document.getElementById('pl_zoomv').textContent=PL.zoom+'×';plSave();plDraw()">
+        <span class="mono" id="pl_zoomv" style="width:40px" title="view scale of the source window - the image stays this size, pixel size changes how chunky it is">${PL.zoom}×</span>
+        <label style="margin:0"><input type="checkbox" ${PL.orig?'checked':''} style="vertical-align:middle"
+          onchange="PL.orig=this.checked;document.getElementById('pl_origwrap').hidden=!PL.orig;plSave();plDraw()"> show original</label>
+        <label style="margin:0"><input type="checkbox" ${PL.key?'checked':''} style="vertical-align:middle"
+          onchange="PL.key=this.checked;plSave();plLoad()"> chroma key</label>
+      </div>
+      <div class="plgrid">
+        <div><label>pixel size <span class="muted">(source px per output pixel)</span></label>
+          <input type="range" min="1" max="32" step="1" style="width:190px;vertical-align:middle" value="${PL.ps}"
+            oninput="PL.ps=parseInt(this.value);plSet('pl_psv',PL.ps+' px');plDraw()">
+          <span class="mono" id="pl_psv">${PL.ps} px</span></div>
+        <div><label>sampling <span class="muted">(how a cell picks its colour)</span></label>
+          ${seg('samp',[['nearest','nearest (shader)'],['average','average'],['dominant','dominant']],PL.samp,'plSamp')}</div>
+        <div><label>edge threshold <span class="muted">(1.0 = full black→white step)</span></label>
+          <input type="range" min="0.01" max="1" step="0.01" style="width:190px;vertical-align:middle" value="${PL.eth}"
+            oninput="PL.eth=parseFloat(this.value);plSet('pl_ethv',PL.eth.toFixed(2));plDraw()">
+          <span class="mono" id="pl_ethv">${PL.eth.toFixed(2)}</span></div>
+        <div><label>edge intensity <span class="muted">(how much edge colour is mixed in)</span></label>
+          <input type="range" min="0" max="1" step="0.01" style="width:190px;vertical-align:middle" value="${PL.eint}"
+            oninput="PL.eint=parseFloat(this.value);plSet('pl_eintv',Math.round(PL.eint*100)+'%');plDraw()">
+          <span class="mono" id="pl_eintv">${Math.round(PL.eint*100)}%</span></div>
+        <div><label>edge colour</label>
+          <input type="color" value="${PL.ecol}" style="width:48px;height:28px;padding:1px"
+            oninput="PL.ecol=this.value;plSave();plDraw()">
+          ${['#000000','#1a1028','#2b1d3a','#ffffff','#ffe9a8'].map(c=>
+            `<span class="plsw" style="background:${c}" onclick="PL.ecol='${c}';this.parentNode.querySelector('input').value='${c}';plSave();plDraw()"></span>`).join('')}</div>
+        <div><label>edge source</label>
+          ${seg('esrc',[['grid','pixel grid'],['source','source pixels (shader)']],PL.esrc,'plEsrc')}</div>
+        <div><label>palette <span class="muted">(median-cut from this clip)</span></label>
+          ${seg('pal',[[0,'off'],[8,'8'],[16,'16'],[32,'32'],[64,'64']],PL.pal,'plPal')}</div>
+        <div><label>dither <span class="muted">(Bayer 4×4 · needs a palette)</span></label>
+          <input type="range" min="0" max="1" step="0.01" style="width:190px;vertical-align:middle" value="${PL.dith}"
+            oninput="PL.dith=parseFloat(this.value);plSet('pl_dithv',Math.round(PL.dith*100)+'%');plDraw()">
+          <span class="mono" id="pl_dithv">${Math.round(PL.dith*100)}%</span></div>
+      </div>
+      <div class="row" style="margin-top:8px;gap:10px">
+        <span class="muted">settings</span>
+        <span class="mono" id="pl_json" style="color:var(--dim)"></span>
+        <span style="flex:1"></span>
+        <button class="small" onclick="plReset()">reset to defaults</button>
+      </div>
+      <div class="muted" style="margin-top:6px">nearest = point-sample the cell centre like the shader (crisp, but crawls between
+        frames) · average = box mean (soft) · dominant = the larger of two luminance clusters per cell (k-centroid; keeps outlines
+        and highlights) · "pixel grid" edges are measured between output pixels; "source pixels" measures the 640px image under
+        each cell like the original shader · edges tint only the character, never the keyed backdrop</div>
+    </div>`;
+  plLoad();
+}
+function plSet(id,txt){const e=document.getElementById(id);if(e)e.textContent=txt;plSave();}
+function plSeg(el,v){[...el.parentNode.children].forEach(s=>s.classList.toggle('on',s===el));}
+function plSamp(v,el){PL.samp=v;plSeg(el);plSave();plDraw();}
+function plEsrc(v,el){PL.esrc=v;plSeg(el);plSave();plDraw();}
+function plPal(v,el){PL.pal=parseInt(v);plSeg(el);plSave();plDraw();}
+function plReset(){Object.assign(PL,PL_DEF);plSave();render();}
+function plToggle(){PL.playing=!PL.playing;const b=document.getElementById('pl_play');if(b)b.textContent=PL.playing?'⏸':'▶';}
+function plStep(d){PL.playing=false;const b=document.getElementById('pl_play');if(b)b.textContent='▶';
+  if(PL.frames.length){PL.i=(PL.i+d+PL.frames.length)%PL.frames.length;plDraw();}}
+function plTimer(){
+  plStop();
+  PL.timer=setInterval(()=>{           // setInterval: rAF starves in the app's preview pane
+    if(!document.getElementById('pl_out')){plStop();return;}
+    if(PL.playing&&PL.frames.length){PL.i=(PL.i+1)%PL.frames.length;plDraw();}
+  },1000/(24/PL.stride*PL.rate));
+}
+
+// -- loading: raw PNGs -> keyed RGBA over a grid-aligned box around the character
+let _plLoadSeq=0;
+async function plLoad(){
+  plStop();PL.frames=[];PL.palette=null;PL.palKey='';PL.i=0;
+  const st=document.getElementById('pl_status');
+  if(!PL.anim){if(st)st.textContent='no animation with raw frames';return;}
+  const seq=++_plLoadSeq;
+  let info;
+  try{info=await (await fetch('/api/frames/'+cur+'/'+encodeURIComponent(PL.anim))).json();}
+  catch(e){if(st)st.textContent='could not list frames';return;}
+  if(seq!==_plLoadSeq)return;
+  const names=info.frames.filter((_,i)=>i%PL.stride===0);
+  const meta=info.meta||{};
+  PL.stand=meta.stand_h||null;
+  if(!names.length){if(st)st.textContent='no raw frames on disk for '+PL.anim;return;}
+  // the box: post's crop box + margin, snapped OUTWARD to a 32px grid so every
+  // pixel size up to 32 gets whole cells inside it
+  const src=meta.source_size||null;
+  const cb=meta.crop_box||null;
+  PL.loading=true;
+  const out=new Array(names.length);
+  let done=0;
+  // fetch + createImageBitmap rather than an <img> and decode(): decode() never
+  // settles while the tab is in the background, which left the lab stuck on
+  // "loading..." forever with no error
+  const loadOne=async(k)=>{
+    let img;
+    try{
+      const res=await fetch('/files/'+info.dir+'/'+names[k]+'?v='+imgV);
+      if(!res.ok)return;
+      img=await createImageBitmap(await res.blob());
+    }catch(e){return;}
+    if(seq!==_plLoadSeq){if(img.close)img.close();return;}
+    if(!PL.box){
+      const W=img.width,H=img.height;PL.src=[W,H];
+      const b=cb&&src&&src[0]===W?cb:[0,0,W,H];
+      PL.box=[Math.max(0,Math.floor((b[0]-24)/32)*32),Math.max(0,Math.floor((b[1]-24)/32)*32),
+              Math.min(W,Math.ceil((b[2]+24)/32)*32),Math.min(H,Math.ceil((b[3]+24)/32)*32)];
+    }
+    out[k]=plKeyFrame(img);
+    if(img.close)img.close();          // the pixels are in `out` now
+    done++;if(st)st.textContent='loading '+done+'/'+names.length+'…';
+  };
+  PL.box=null;
+  await loadOne(0);                           // first one alone: it fixes the box
+  for(let k=1;k<names.length;k+=6)await Promise.all(names.slice(k,k+6).map((_,j)=>loadOne(k+j)));
+  if(seq!==_plLoadSeq)return;
+  PL.frames=out.filter(Boolean);PL.loading=false;
+  if(st)st.textContent=PL.frames.length
+    ? PL.frames.length+' frames · '+(PL.box?(PL.box[2]-PL.box[0])+'×'+(PL.box[3]-PL.box[1])+' px window':'')
+    : 'could not read the raw frames for '+PL.anim;
+  plDraw();plTimer();
+}
+// chroma key, same recipe as postprocess.chroma_key_green: backdrop = median of
+// a 4px border (survives green drifting to cyan), alpha ramps with distance
+// (32 -> 88), kept pixels despilled by clamping green
+function plKeyFrame(img){
+  const [W,H]=PL.src,[x0,y0,x1,y1]=PL.box,bw=x1-x0,bh=y1-y0;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0);
+  const full=g.getImageData(0,0,W,H).data;
+  const box=g.getImageData(x0,y0,bw,bh);
+  const d=box.data;
+  if(PL.key){
+    const rs=[],gs=[],bs=[];
+    const take=(x,y)=>{const o=(y*W+x)*4;rs.push(full[o]);gs.push(full[o+1]);bs.push(full[o+2]);};
+    for(let x=0;x<W;x+=2)for(let y=0;y<4;y++){take(x,y);take(x,H-1-y);}
+    for(let y=0;y<H;y+=2)for(let x=0;x<4;x++){take(x,y);take(W-1-x,y);}
+    const med=a=>{a.sort((p,q)=>p-q);return a[a.length>>1];};
+    const br=med(rs),bg=med(gs),bb=med(bs);
+    const despill=bg>Math.max(br,bb)+20;
+    for(let o=0;o<d.length;o+=4){
+      const dr=d[o]-br,dg=d[o+1]-bg,db=d[o+2]-bb;
+      const dist=Math.sqrt(dr*dr+dg*dg+db*db);
+      const a=Math.max(0,Math.min(255,(dist-32)*(255/56)));
+      d[o+3]=a;
+      if(despill&&a>0){const cap=Math.max(d[o],d[o+2]);if(d[o+1]>cap)d[o+1]=cap;}
+    }
+  }
+  return {rgba:d,w:bw,h:bh};   // no img ref: let the decoded bitmap go
+}
+
+// -- the shader, per frame ------------------------------------------------------
+const BAYER4=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function plCells(f){
+  // downscale the keyed box into cells on the global ps grid; a cell is opaque
+  // when at least half of it is (hard pixel edges, like the post path)
+  const ps=PL.ps,[x0,y0]=PL.box,d=f.rgba,w=f.w,h=f.h;
+  const cx0=Math.floor(x0/ps),cy0=Math.floor(y0/ps),
+        cw=Math.ceil((x0+w)/ps)-cx0,ch=Math.ceil((y0+h)/ps)-cy0;
+  const rgb=new Float32Array(cw*ch*3),alpha=new Uint8Array(cw*ch);
+  const lum=new Float32Array(ps*ps),idx=new Int32Array(ps*ps);
+  for(let cy=0;cy<ch;cy++)for(let cx=0;cx<cw;cx++){
+    const sx=(cx0+cx)*ps-x0,sy=(cy0+cy)*ps-y0;
+    const ci=cy*cw+cx;
+    if(PL.samp==='nearest'){
+      const px=sx+(ps>>1),py=sy+(ps>>1);
+      if(px<0||py<0||px>=w||py>=h)continue;
+      const o=(py*w+px)*4;
+      if(d[o+3]<128)continue;
+      alpha[ci]=1;rgb[ci*3]=d[o];rgb[ci*3+1]=d[o+1];rgb[ci*3+2]=d[o+2];
+      continue;
+    }
+    let n=0,na=0,total=0;
+    for(let y=sy;y<sy+ps;y++){ if(y<0||y>=h)continue;
+      for(let x=sx;x<sx+ps;x++){ if(x<0||x>=w)continue;
+        total++;const o=(y*w+x)*4;
+        if(d[o+3]<128)continue;
+        idx[n]=o;lum[n]=0.299*d[o]+0.587*d[o+1]+0.114*d[o+2];n++;na++;}}
+    if(!total||na*2<total)continue;
+    alpha[ci]=1;
+    let r=0,g=0,b=0;
+    if(PL.samp==='average'||n<4){
+      for(let k=0;k<n;k++){const o=idx[k];r+=d[o];g+=d[o+1];b+=d[o+2];}
+      rgb[ci*3]=r/n;rgb[ci*3+1]=g/n;rgb[ci*3+2]=b/n;
+    }else{
+      // dominant: split the cell's pixels into two luminance clusters (one
+      // 2-means step) and keep the mean of the bigger one - thin outlines and
+      // highlights survive instead of smearing into grey (k-centroid-lite)
+      let m=0;for(let k=0;k<n;k++)m+=lum[k];m/=n;
+      let lo=0,hi=0,nlo=0,nhi=0;
+      for(let k=0;k<n;k++){if(lum[k]<m){lo+=lum[k];nlo++;}else{hi+=lum[k];nhi++;}}
+      const clo=nlo?lo/nlo:m,chi=nhi?hi/nhi:m;
+      let clo2=0,chi2=0;nlo=0;nhi=0;
+      for(let k=0;k<n;k++){const near=Math.abs(lum[k]-clo)<=Math.abs(lum[k]-chi);
+        if(near){clo2+=lum[k];nlo++;}else{chi2+=lum[k];nhi++;}}
+      const pickLo=nlo>=nhi,cc=pickLo?(nlo?clo2/nlo:m):(nhi?chi2/nhi:m);
+      let cnt=0;
+      for(let k=0;k<n;k++){const near=Math.abs(lum[k]-clo)<=Math.abs(lum[k]-chi);
+        if(near===pickLo){const o=idx[k];r+=d[o];g+=d[o+1];b+=d[o+2];cnt++;}}
+      rgb[ci*3]=r/cnt;rgb[ci*3+1]=g/cnt;rgb[ci*3+2]=b/cnt;
+    }
+  }
+  return {cw,ch,cx0,cy0,rgb,alpha};
+}
+function plEdges(f,c){
+  // Sobel gradient magnitude of luminance, normalised so a hard 0->1 step = 1.0
+  const {cw,ch,rgb,alpha}=c,e=new Float32Array(cw*ch);
+  const L=(i)=>alpha[i]?(0.299*rgb[i*3]+0.587*rgb[i*3+1]+0.114*rgb[i*3+2])/255:0;
+  if(PL.esrc==='grid'){
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+      const i=y*cw+x;if(!alpha[i])continue;
+      const s=(dx,dy)=>{const xx=x+dx,yy=y+dy;return(xx<0||yy<0||xx>=cw||yy>=ch)?0:L(yy*cw+xx);};
+      const gx=-s(-1,-1)-2*s(-1,0)-s(-1,1)+s(1,-1)+2*s(1,0)+s(1,1);
+      const gy=-s(-1,-1)-2*s(0,-1)-s(1,-1)+s(-1,1)+2*s(0,1)+s(1,1);
+      e[i]=Math.sqrt(gx*gx+gy*gy)/4;
+    }
+  }else{
+    // like the shader: 1-source-pixel Sobel evaluated at the cell's sample
+    // point (centre here; the shader uses the corner)
+    const ps=PL.ps,[x0,y0]=PL.box,d=f.rgba,w=f.w,h=f.h;
+    const S=(x,y)=>{if(x<0||y<0||x>=w||y>=h)return 0;const o=(y*w+x)*4;
+      return d[o+3]<128?0:(0.299*d[o]+0.587*d[o+1]+0.114*d[o+2])/255;};
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+      const i=y*cw+x;if(!alpha[i])continue;
+      const px=(c.cx0+x)*ps-x0+(ps>>1),py=(c.cy0+y)*ps-y0+(ps>>1);
+      const gx=-S(px-1,py-1)-2*S(px-1,py)-S(px-1,py+1)+S(px+1,py-1)+2*S(px+1,py)+S(px+1,py+1);
+      const gy=-S(px-1,py-1)-2*S(px,py-1)-S(px+1,py-1)+S(px-1,py+1)+2*S(px,py+1)+S(px+1,py+1);
+      e[i]=Math.sqrt(gx*gx+gy*gy)/4;
+    }
+  }
+  return e;
+}
+// median-cut palette over opaque cells sampled from across the clip (the
+// palette is a property of the whole animation, never of one frame, or the
+// colours would pop between frames)
+function plPalette(){
+  const key=[PL.pal,PL.ps,PL.samp,PL.key,PL.anim,PL.frames.length].join('|');
+  if(PL.palKey===key)return PL.palette;
+  const pts=[];const step=Math.max(1,Math.floor(PL.frames.length/12));
+  for(let k=0;k<PL.frames.length;k+=step){
+    const c=plCells(PL.frames[k]);
+    for(let i=0;i<c.alpha.length;i++)if(c.alpha[i])pts.push([c.rgb[i*3],c.rgb[i*3+1],c.rgb[i*3+2]]);
+  }
+  let boxes=[pts];
+  while(boxes.length<PL.pal){
+    let bi=-1,bs=-1,bc=0;
+    boxes.forEach((b,j)=>{if(b.length<2)return;
+      for(let ch=0;ch<3;ch++){let lo=255,hi=0;for(const p of b){if(p[ch]<lo)lo=p[ch];if(p[ch]>hi)hi=p[ch];}
+        if(hi-lo>bs){bs=hi-lo;bi=j;bc=ch;}}});
+    if(bi<0)break;
+    const b=boxes[bi];b.sort((p,q)=>p[bc]-q[bc]);
+    const m=b.length>>1;boxes.splice(bi,1,b.slice(0,m),b.slice(m));
+  }
+  PL.palette=boxes.filter(b=>b.length).map(b=>{let r=0,g=0,bb=0;for(const p of b){r+=p[0];g+=p[1];bb+=p[2];}
+    return [r/b.length,g/b.length,bb/b.length];});
+  PL.palKey=key;return PL.palette;
+}
+function plDraw(){
+  const out=document.getElementById('pl_out');
+  if(!out||!PL.frames.length||!PL.box)return;
+  const f=PL.frames[PL.i],c=plCells(f),e=plEdges(f,c);
+  const pal=PL.pal?plPalette():null;
+  const ec=[parseInt(PL.ecol.slice(1,3),16),parseInt(PL.ecol.slice(3,5),16),parseInt(PL.ecol.slice(5,7),16)];
+  const {cw,ch,rgb,alpha}=c;
+  const img=new ImageData(cw,ch),o=img.data;
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+    const i=y*cw+x;if(!alpha[i])continue;
+    let r=rgb[i*3],g=rgb[i*3+1],b=rgb[i*3+2];
+    if(pal){
+      if(PL.dith>0){const t=(BAYER4[(y&3)*4+(x&3)]/16-0.5)*PL.dith*255;r+=t;g+=t;b+=t;}
+      let best=0,bd=1e9;
+      for(let k=0;k<pal.length;k++){const p=pal[k],dr=p[0]-r,dg=p[1]-g,db=p[2]-b,dd=dr*dr+dg*dg+db*db;
+        if(dd<bd){bd=dd;best=k;}}
+      r=pal[best][0];g=pal[best][1];b=pal[best][2];
+    }
+    if(e[i]>PL.eth){const t=PL.eint;r+=(ec[0]-r)*t;g+=(ec[1]-g)*t;b+=(ec[2]-b)*t;}
+    o[i*4]=r;o[i*4+1]=g;o[i*4+2]=b;o[i*4+3]=255;
+  }
+  const small=plDraw.tmp||(plDraw.tmp=document.createElement('canvas'));
+  small.width=cw;small.height=ch;small.getContext('2d').putImageData(img,0,0);
+  // one cell covers ps source pixels, so the picture keeps its footprint at
+  // every pixel size (as the reference shader does) and the blocks grow
+  const ps=PL.ps,sc=PL.zoom;
+  out.width=Math.round(cw*ps*sc);out.height=Math.round(ch*ps*sc);
+  const g=out.getContext('2d');g.imageSmoothingEnabled=false;
+  g.clearRect(0,0,out.width,out.height);g.drawImage(small,0,0,out.width,out.height);
+  const src=document.getElementById('pl_src');
+  if(src&&PL.orig){
+    // the same window of the keyed source at the same scale
+    const [x0,y0]=PL.box;
+    src.width=out.width;src.height=out.height;
+    const sg=src.getContext('2d');sg.clearRect(0,0,src.width,src.height);
+    const kd=new ImageData(new Uint8ClampedArray(f.rgba),f.w,f.h);
+    const kc=plDraw.tmp2||(plDraw.tmp2=document.createElement('canvas'));kc.width=f.w;kc.height=f.h;
+    kc.getContext('2d').putImageData(kd,0,0);
+    sg.drawImage(kc,0,0,f.w,f.h,(x0-c.cx0*ps)*sc,(y0-c.cy0*ps)*sc,f.w*sc,f.h*sc);
+  }
+  const txt=(id,t)=>{const el=document.getElementById(id);if(el)el.textContent=t;};
+  txt('pl_pos','frame '+(PL.i+1)+' / '+PL.frames.length);
+  txt('pl_grid',cw+'×'+ch+' px'+(PL.stand?' · character ≈ '+Math.round(PL.stand/PL.ps)+' px tall':''));
+  const js=document.getElementById('pl_json');
+  if(js)js.textContent=JSON.stringify({pixel_size:PL.ps,sampling:PL.samp,edge_threshold:PL.eth,
+    edge_intensity:PL.eint,edge_color:PL.ecol,edge_source:PL.esrc,palette:PL.pal,dither:PL.dith});
+}
+addEventListener('keydown',e=>{
+  if(tab!=='test'||labMode!=='pixel'||['INPUT','TEXTAREA','SELECT'].includes((e.target||{}).tagName))return;
+  if(e.key===' '){e.preventDefault();plToggle();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();plStep(-1);}
+  else if(e.key==='ArrowRight'){e.preventDefault();plStep(1);}
+});
+
+// ---- Test & Tune: preview on top, an editor timeline underneath -------------
+// Follows the sprite-editor convention (Aseprite / Piskel / Godot SpriteFrames /
+// video editors): filmstrip with a live playhead, transport controls, draggable
+// in/out handles for the playback window, per-frame actions on hover. Speed and
+// the window apply live; anything that changes WHICH frames exist ("shape")
+// rebuilds the sheet - free, no GPU.
+const TL={anim:null,frames:0,range:[0,0],auto:[0,0],rate:1,drop:new Set(),dirty:false,
+          px:'',loop:'cycle',quiet:0.35,sync:null,drag:null};
+
+function renderTestTab(p){
+  const a=assets(cur);
+  const done=Object.keys(spec.animations||{}).filter(n=>(a.anims[n]||{}).done);
+  if(!done.length){
+    p.innerHTML=`<div class="muted">Nothing to test yet — this sprite has no finished
+      animations.<br><br>1. Pick/approve a reference in <a onclick="tab='ref';render()">step 1</a><br>
+      2. Render animations in <a onclick="tab='anims';render()">step 2</a><br>
+      3. Then come back here to play and tune them.</div>`;
+    return;
+  }
+  if(!labAnim||!done.includes(labAnim))labAnim=null;
+  const anim=labAnim, sp=anim?spec.animations[anim]:null;
+  const q=n=>(a.anims[n]||{}).quality==='test'?'test':'final';
+  const pixel=labMode==='pixel';
+  plStop();
+  p.innerHTML=`
+    <div class="row" style="margin-bottom:10px">
+      <span class="pill ${anim||pixel?'':'on'}" onclick="labMode='play';labAnim=null;render()" title="all animations, WASD / keys">🎮 free play</span>
+      ${done.map(n=>`<span class="pill ${n===anim&&!pixel?'on':''} ${q(n)}" onclick="labMode='play';labAnim='${esc(n)}';render()"
+          title="${q(n)==='test'?'TEST render':'final'}">${esc(n)}</span>`).join('')}
+      <span style="flex:1"></span>
+      <span class="pill ${pixel?'on':''}" onclick="labMode='pixel';render()"
+          title="re-pixelize the raw frames live: fixed pixel size, Sobel outlines, palette, dither">🔬 pixel lab</span>
+    </div>`;
+  if(pixel){
+    clearInterval(TL.sync);TL.anim=null;
+    const withFrames=Object.keys(spec.animations||{}).filter(n=>(a.anims[n]||{}).frames>0);
+    const lab=document.createElement('div');p.appendChild(lab);
+    renderPixelLab(lab,withFrames);
+    return;
+  }
+  p.innerHTML+=`
+    <div class="row" style="margin-bottom:8px">
+      <label style="margin:0">size of ${esc(spec.display_name||cur)}</label>
+      <input id="char_scale" type="range" min="0.4" max="2.5" step="0.05" style="width:170px"
+        value="${spec.sprite_scale||1}" oninput="charScale(this.value)">
+      <span class="mono" id="charscalev" style="width:52px">${(spec.sprite_scale||1).toFixed(2)}×</span>
+      <button class="small" onclick="charScale(1);document.getElementById('char_scale').value=1">reset</button>
+      <span class="muted" id="char_scale_msg">applies to every animation of this character only · saves automatically</span>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <label style="margin:0">compare with</label>
+      <select id="cmpsel" onchange="setCompare(this.value)">
+        <option value="">nobody (just this sprite)</option>
+        ${Object.keys(STATE.characters).filter(id=>id!==cur
+            &&STATE.characters[id].sprite_type!=='vfx'
+            &&Object.values((STATE.assets[id]||{}).anims||{}).some(a=>a.done))
+          .sort().map(id=>`<option value="${id}" ${COMPARE_WITH===id?'selected':''}>${esc(STATE.characters[id].display_name||id)}</option>`).join('')}
+      </select>
+      <span class="muted">stands on the same ground line and mirrors this animation — for checking relative size and style</span>
+    </div>
+    <iframe id="lab" src="/viewer?char=${cur}${anim?'&focus='+anim:''}${COMPARE_WITH?'&compare='+COMPARE_WITH:''}"></iframe>
+    ${anim?`
+    <div class="tl" id="tl">
+      <div class="row" style="gap:10px">
+        <div class="transport">
+          <button class="tb" onclick="tlStep(-1)" title="previous frame (←)">⏮</button>
+          <button class="tb" id="tl_play" onclick="tlToggle()" title="play / pause (space)">⏸</button>
+          <button class="tb" onclick="tlStep(1)" title="next frame (→)">⏭</button>
+        </div>
+        <span class="mono" id="tl_pos">frame – / –</span>
+        <span class="muted" id="tl_fps"></span>
+        <span style="flex:1"></span>
+        <label style="margin:0">speed</label>
+        <input id="tune_rate" type="range" min="0.25" max="4" step="0.05" style="width:150px"
+          value="${sp.rate||1}" oninput="tlRate(this.value)">
+        <span class="mono" id="ratev" style="width:48px">${(sp.rate||1).toFixed(2)}×</span>
+        <button class="tb" id="tl_ghost" onclick="tlGhost()" title="onion skin: ghost of previous frames (t)">👻</button>
+        <button class="tb" id="tl_guides" onclick="tlGuides()" title="ground line & center guides (g)">📐</button>
+      </div>
+      <div class="stripwrap" id="stripwrap"><div class="strip" id="strip"></div></div>
+      <div class="row" style="gap:10px;margin-top:6px">
+        <span class="muted">playback window</span>
+        <input id="tune_s" class="mono" type="number" style="width:60px" oninput="tlRangeInput()">
+        <span class="muted">to</span>
+        <input id="tune_e" class="mono" type="number" style="width:60px" oninput="tlRangeInput()">
+        <span class="muted" id="tune_hint"></span>
+        <button class="small" onclick="tlResetRange()">use auto-detected</button>
+        <span style="flex:1"></span>
+        <span class="muted">drag the [ ] handles or click a frame to scrub · hover a frame for ✂</span>
+      </div>
+      <div class="shape">
+        <div class="row" style="gap:14px">
+          <div><label>${esc(anim)} size <span class="muted">(this animation only)</span></label>
+            <input id="tune_ascale" type="range" min="0.5" max="2" step="0.02" style="width:150px;vertical-align:middle"
+              value="${sp.scale??1}" oninput="tlAScale(this.value)">
+            <span class="mono" id="ascalev">${(sp.scale??1).toFixed(2)}×</span>
+            <button class="small" onclick="tlAScaleAuto()" title="scale so this animation's first frame matches idle's height">match idle</button>
+            <button class="small" onclick="tlAScale(1);document.getElementById('tune_ascale').value=1">reset</button></div>
+          ${['walk','run','leap','jump'].includes(anim)?`
+          <div><label>${anim} speed <span class="muted">(px/sec across the ground)</span></label>
+            <input id="tune_move" type="range" min="0" max="600" step="10" style="width:150px;vertical-align:middle"
+              value="${sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim])}" oninput="tlMove(this.value)">
+            <span class="mono" id="movev">${sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim])}</span></div>`:''}
+          <span style="flex:1"></span>
+          <span class="muted" id="tl_autosave">saved automatically</span>
+        </div>
+        <div style="margin-top:10px">
+          <label>effect sprites <span class="muted">(overlaid in-engine; each fires once during the animation)</span></label>
+          <div id="fxlist"></div>
+          <div class="row" style="margin-top:6px">
+            <select id="fxpick">${vfxOptions()}</select>
+            <button class="small" onclick="tlFxAdd()">+ attach effect</button>
+            <button class="small" onclick="tlFxTest()">▶ replay with effects</button>
+            ${(sp.fx||[]).length?'<button class="small" onclick="tlFxClear()">✕ remove all</button>':''}
+          </div>
+        </div>
+      </div>
+      ${sp.action!=null?`
+      <div class="shape">
+        <div class="row" style="gap:14px">
+          <div><label>keyframes</label>
+            <div class="seg" id="seg_px">${[['','auto'],['6','6'],['8','8'],['12','12'],['16','16'],['24','24'],['0','all']].map(([v,l])=>
+              `<span data-v="${v}" class="${String(sp.px_frames??'')===v?'on':''}" onclick="tlSeg('px','${v}',this)">${l}</span>`).join('')}</div></div>
+          <div><label>loop style</label>
+            <div class="seg" id="seg_loop">
+              <span data-v="cycle" class="${(sp.loop_mode||'cycle')==='cycle'?'on':''}" onclick="tlSeg('loop','cycle',this)">full cycle</span>
+              <span data-v="pingpong" class="${sp.loop_mode==='pingpong'?'on':''}" onclick="tlSeg('loop','pingpong',this)">subtle ping-pong</span>
+            </div></div>
+          <div id="quiet_wrap" style="${sp.loop_mode==='pingpong'?'':'display:none'}"><label>subtlety <span class="muted">(smaller = calmer)</span></label>
+            <input id="tune_quiet" type="range" min="0.1" max="1" step="0.05" style="width:130px;vertical-align:middle"
+              value="${sp.quiet??0.35}" oninput="TL.quiet=parseFloat(this.value);document.getElementById('quietv').textContent=Math.round(this.value*100)+'%';tlDirty()">
+            <span class="mono" id="quietv">${Math.round((sp.quiet??0.35)*100)}%</span></div>
+          <span style="flex:1"></span>
+          <span class="muted" id="tl_cuts"></span>
+          <span class="muted" id="tl_shape_msg">saves automatically</span>
+          <button class="small" onclick="tlReset()">reset</button>
+          <button class="small primary" id="tl_save" onclick="saveTune()">💾 save now</button>
+        </div>
+        <div class="muted" style="margin-top:4px">everything here saves itself · keyframes, loop style, subtlety and cuts also rebuild the sheet (free, ~30s), so those wait a moment for you to finish</div>
+      </div>`:`
+      <div class="row" style="margin-top:8px;justify-content:flex-end">
+        <span class="muted" id="tl_shape_msg">saves automatically</span>
+        <button class="small primary" id="tl_save" onclick="saveTune()">💾 save now</button></div>`}
+    </div>`:`<div class="muted" style="margin-top:8px">Pick an animation above to open its timeline editor.</div>`}`;
+  clearInterval(TL.sync);
+  if(anim){
+    TL.anim=anim;TL.rate=sp.rate||1;TL.drop=new Set(sp.drop||[]);TL.dirty=false;
+    TL.px=String(sp.px_frames??'');TL.loop=sp.loop_mode||'cycle';TL.quiet=sp.quiet??0.35;
+    TL.ascale=sp.scale??1;
+    TL.move=sp.move_speed??({walk:120,run:260,leap:280,jump:0}[anim]??null);
+    TL.fx=JSON.parse(JSON.stringify(sp.fx||[]));
+    loadTimeline(anim);renderFx();
+    TL.sync=setInterval(tlSync,100);
+  }
+}
+
+// ---- sprite size / movement speed / effects ---------------------------------
+function vfxOptions(){
+  const out=[];
+  Object.keys(STATE.characters).sort().forEach(id=>{
+    const c=STATE.characters[id]; if(c.sprite_type!=='vfx')return;
+    const st=(STATE.assets[id]||{}).anims||{};
+    Object.keys(c.animations||{}).forEach(an=>{ if((st[an]||{}).done)
+      out.push(`<option value="${id}|${an}">${esc(c.display_name||id)}${Object.keys(c.animations).length>1?' · '+esc(an):''}</option>`);});
+  });
+  return out.length?out.join(''):'<option value="">(no effect sprites rendered yet)</option>';
+}
+function renderFx(){
+  const el=document.getElementById('fxlist'); if(!el)return;
+  if(!TL.fx.length){el.innerHTML='<div class="muted" style="padding:4px 0">none — this animation plays with no effects</div>';return;}
+  el.innerHTML=TL.fx.map((f,i)=>{
+    const c=STATE.characters[f.char]||{};
+    return `<div class="fxrow">
+      <img src="/files/${f.char}/${f.anim}/frames/sprite_002.png?v=${imgV}"
+           onerror="this.src='/files/${f.char}/${f.anim}/frames/sprite_000.png?v=${imgV}'">
+      <b>${esc(c.display_name||f.char)}</b><span class="muted">${esc(f.anim)}</span>
+      <label>at</label><input type="range" min="0" max="1" step="0.05" value="${f.at}"
+        oninput="tlFxSet(${i},'at',this.value)" style="width:90px"><span class="mono">${Math.round(f.at*100)}%</span>
+      <label>x</label><input type="number" step="0.1" value="${f.dx}" style="width:56px" oninput="tlFxSet(${i},'dx',this.value)">
+      <label>y</label><input type="number" step="0.1" value="${f.dy}" style="width:56px" oninput="tlFxSet(${i},'dy',this.value)">
+      <label>size</label><input type="number" step="0.1" min="0.1" value="${f.scale}" style="width:56px" oninput="tlFxSet(${i},'scale',this.value)">
+      <span style="flex:1"></span>
+      <button class="small" onclick="tlFxDel(${i})" title="remove this effect">✕</button>
+    </div>`;}).join('');
+}
+function tlAScale(v){TL.ascale=parseFloat(v);document.getElementById('ascalev').textContent=TL.ascale.toFixed(2)+'×';liveTune();autoSave();}
+function tlAScaleAuto(){
+  const E=lab(); if(!E||!E.suggestScale)return;
+  const s=Math.round(E.suggestScale(TL.anim)*100)/100;
+  document.getElementById('tune_ascale').value=s; tlAScale(s);
+  toast('sized so this animation\'s first frame matches idle ('+s.toFixed(2)+'×)');
+}
+function tlMove(v){TL.move=parseFloat(v);document.getElementById('movev').textContent=TL.move;liveTune();autoSave();}
+function tlFxAdd(){
+  const v=(document.getElementById('fxpick')||{}).value; if(!v)return toast('no effect sprites available yet',true);
+  const [char,anim]=v.split('|');
+  TL.fx.push({char,anim,at:0.45,dx:1.0,dy:-0.5,scale:1.0});
+  renderFx();liveTune();autoSave();tlFxTest();
+}
+function tlFxSet(i,k,v){TL.fx[i][k]=parseFloat(v);renderFx();liveTune();autoSave();}
+function tlFxDel(i){TL.fx.splice(i,1);renderFx();liveTune();autoSave();}
+function tlFxClear(){TL.fx=[];renderFx();liveTune();autoSave();}
+function tlFxTest(){const E=lab(); if(E&&E.testFx)E.testFx();}
+
+async function loadTimeline(anim){
+  const id=cur;          // this load belongs to THIS sprite and this animation
+  try{
+    const meta=await (await fetch('/files/'+id+'/'+anim+'/meta.json?v='+imgV)).json();
+    // a slow load from the sprite you just left would otherwise write its
+    // frame count, window and cut mapping into the panel showing another one
+    if(cur!==id||TL.anim!==anim)return;
+    // the strip shows EVERY collapsed frame (from all_frames/), including the
+    // cut ones - so indices never shift as you cut and a cut is reversible
+    const total=meta.all_frames||meta.frames;
+    const cutSet=new Set(meta.dropped||[]);
+    TL.frames=meta.frames;TL.total=total;
+    // TWO index spaces live here: the strip (every collapsed frame, cuts
+    // included) and the played clip (cuts removed). TL.range/TL.drop are
+    // always strip indices - they must survive a cut being added or undone -
+    // so anything crossing to the player is converted, never passed raw.
+    TL.playIndex={}; TL.allIndex=[]; TL.keptBefore=new Array(total+1); let pi=0;
+    for(let i=0;i<total;i++){ TL.keptBefore[i]=pi;
+      if(!cutSet.has(i)){ TL.playIndex[i]=pi; TL.allIndex[pi]=i; pi++; } }
+    TL.keptBefore[total]=pi;
+    const ar=meta.action_range||[0,meta.frames];      // stored in PLAY space
+    TL.auto=[TL.allIndex[ar[0]]!=null?TL.allIndex[ar[0]]:0,
+             TL.allIndex[ar[1]]!=null?TL.allIndex[ar[1]]:total];
+    TL.range=(spec.animations[anim].range)||TL.auto.slice();
+    document.getElementById('tl_fps').textContent=meta.fps+'fps'+(meta.collapsed?' · '+meta.frames+' keyframes':'')
+      +(cutSet.size?' · '+cutSet.size+' cut':'');
+    document.getElementById('tune_hint').textContent='of '+total+' (auto '+TL.auto.join('–')+')';
+    const src=meta.all_frames?'all_frames':'frames';
+    const strip=document.getElementById('strip');
+    strip.innerHTML=Array.from({length:total},(_,i)=>
+      `<div class="fr ${TL.drop.has(i)?'off':''}" data-i="${i}" onclick="tlScrub(${TL.playIndex[i]!=null?TL.playIndex[i]:0})" title="frame ${i} — click to scrub">
+         <img src="/files/${id}/${anim}/${src}/sprite_${String(i).padStart(3,'0')}.png?v=${imgV}" draggable="false">
+         <div class="n">${i}</div>
+         <span class="cut" onclick="event.stopPropagation();tlCut(${i})" title="cut / restore this frame">✂</span>
+       </div>`).join('')
+      +'<div class="hd in" id="hd_in" title="drag: window start"><span>[</span></div>'
+      +'<div class="hd out" id="hd_out" title="drag: window end"><span>]</span></div>';
+    ['hd_in','hd_out'].forEach(id=>{
+      const h=document.getElementById(id);
+      h.addEventListener('pointerdown',e=>{TL.drag=id;h.setPointerCapture(e.pointerId);e.preventDefault();});
+      h.addEventListener('pointermove',e=>{if(TL.drag!==id)return;tlDragTo(id,e.clientX);});
+      h.addEventListener('pointerup',()=>{TL.drag=null;});
+    });
+    tlPaintRange();tlCutsLabel();
+  }catch(e){}
+}
+
+// ---- playhead / transport ------------------------------------------------------
+function lab(){const f=document.getElementById('lab');return f&&f.contentWindow&&f.contentWindow.EDIT;}
+function tlSync(){
+  const E=lab(); if(!E||E.anim!==TL.anim)return;
+  const pos=document.getElementById('tl_pos'); if(pos)pos.textContent='frame '+E.frame+' / '+TL.frames;
+  const pl=document.getElementById('tl_play'); if(pl)pl.textContent=E.paused?'▶':'⏸';
+  // the playhead runs over PLAYING frames; map it back to strip indices
+  document.querySelectorAll('#strip .fr').forEach(el=>{
+    const i=+el.dataset.i;
+    el.classList.toggle('now', TL.playIndex && TL.playIndex[i]===E.frame);
+  });
+}
+function tlToggle(){const E=lab(); if(E)E.toggle();}
+function tlStep(d){const E=lab(); if(E)E.step(d);}
+function tlScrub(i){const E=lab(); if(E)E.scrub(i);}
+function tlGhost(){const E=lab(); if(!E)return; document.getElementById('tl_ghost').classList.toggle('on',E.ghost());}
+function tlGuides(){const E=lab(); if(!E)return; document.getElementById('tl_guides').classList.toggle('on',E.guides());}
+document.addEventListener('keydown',e=>{
+  if(tab!=='test'||!TL.anim||['INPUT','TEXTAREA','SELECT'].includes((e.target||{}).tagName))return;
+  if(e.key==='ArrowLeft'){tlStep(-1);e.preventDefault();}
+  else if(e.key==='ArrowRight'){tlStep(1);e.preventDefault();}
+  else if(e.key===' '){tlToggle();e.preventDefault();}
+});
+
+// ---- speed & window (live) ---------------------------------------------------
+function tlRate(v){TL.rate=parseFloat(v);document.getElementById('ratev').textContent=TL.rate.toFixed(2)+'×';liveTune();autoSave();}
+function tlRangeInput(){
+  const s=parseInt(document.getElementById('tune_s').value),e=parseInt(document.getElementById('tune_e').value);
+  if(isNaN(s)||isNaN(e)||e-s<2)return;
+  TL.range=[Math.max(0,s),Math.min(TL.total,e)];tlPaintRange(false);liveTune();tlDirty();
+}
+function tlResetRange(){TL.range=TL.auto.slice();tlPaintRange();liveTune();tlDirty();}
+function tlDragTo(id,clientX){
+  const frs=[...document.querySelectorAll('#strip .fr')]; if(!frs.length)return;
+  // nearest frame boundary to the pointer
+  let best=0,bd=1e9;
+  frs.forEach((el,i)=>{const r=el.getBoundingClientRect();
+    [[i,r.left],[i+1,r.right]].forEach(([b,x])=>{const d=Math.abs(x-clientX);if(d<bd){bd=d;best=b;}});});
+  if(id==='hd_in')TL.range[0]=Math.min(best,TL.range[1]-2);
+  else TL.range[1]=Math.max(best,TL.range[0]+2);
+  TL.range[0]=Math.max(0,TL.range[0]);TL.range[1]=Math.min(TL.total,TL.range[1]);
+  tlPaintRange();liveTune();tlDirty();
+}
+function tlPaintRange(fill=true){
+  const [s,e]=TL.range;
+  document.querySelectorAll('#strip .fr').forEach(el=>{const i=+el.dataset.i;el.classList.toggle('out',i<s||i>=e);});
+  const frs=document.querySelectorAll('#strip .fr'), hi=document.getElementById('hd_in'), ho=document.getElementById('hd_out');
+  if(frs.length&&hi&&ho){
+    const a=frs[Math.min(s,frs.length-1)], b=frs[Math.min(Math.max(e-1,0),frs.length-1)];
+    hi.style.left=(a.offsetLeft-6)+'px'; ho.style.left=(b.offsetLeft+b.offsetWidth-6)+'px';
+  }
+  if(fill){const si=document.getElementById('tune_s'),ei=document.getElementById('tune_e');
+    if(si)si.value=s; if(ei)ei.value=e;}
+}
+// strip window -> played-clip window: count the frames that survive the cuts,
+// exactly as postprocess does, so the preview matches what Apply renders
+function tlPlayRange(){
+  const k=TL.keptBefore;
+  if(!k)return TL.range.slice();
+  const c=i=>k[Math.max(0,Math.min(TL.total,i))];
+  return [c(TL.range[0]), c(TL.range[1])];
+}
+function liveTune(){
+  // guard the PLAYED length, not the strip length: a window covering only cut
+  // frames is 2 wide on the strip but empty in the clip
+  const _pr=tlPlayRange(); if(_pr[1]-_pr[0]<2)return;
+  // the play area polls this continuously (same-origin), so tuning always
+  // lands even if the iframe is mid-load or got reloaded
+  window.LIVE_TUNE={char:cur,anim:TL.anim,rate:TL.rate,range:_pr,
+    sprite_scale:(spec.sprite_scale||1),anim_scale:TL.ascale,move_speed:TL.move,
+    fx:JSON.parse(JSON.stringify(TL.fx)),ts:Date.now()};
+}
+
+// ---- shape (rebuilds on save) --------------------------------------------------
+function tlSeg(kind,v,el){
+  el.parentElement.querySelectorAll('span').forEach(s=>s.classList.toggle('on',s===el));
+  if(kind==='px')TL.px=v; else {TL.loop=v;document.getElementById('quiet_wrap').style.display=v==='pingpong'?'':'none';}
+  tlDirty();
+}
+function tlCut(i){
+  if(TL.drop.has(i))TL.drop.delete(i); else TL.drop.add(i);
+  const el=document.querySelector('#strip .fr[data-i="'+i+'"]'); if(el)el.classList.toggle('off',TL.drop.has(i));
+  tlCutsLabel();tlDirty();
+}
+function tlCutsLabel(){const c=document.getElementById('tl_cuts'); if(c)c.textContent=TL.drop.size?TL.drop.size+' frame(s) cut':'';}
+function tlDirty(){
+  TL.dirty=true;
+  // these settings change WHICH frames exist, so saving them rebuilds the
+  // sheet (free, ~30s). Autosaved like everything else - an edit you can see
+  // in the preview must never be lost by clicking away - but on a longer
+  // delay so a burst of cuts becomes one rebuild instead of one each.
+  tlStatus('saving…','var(--dim)');
+  scheduleTuneSave(1600);
+}
+function tlStatus(txt,color){
+  for(const id of ['tl_autosave','tl_shape_msg']){
+    const el=document.getElementById(id);
+    if(el){el.textContent=txt;el.style.color=color||'var(--dim)';}
+  }
+}
+// One writer for every Test & Tune setting of one animation. The sprite, the
+// animation and the values are snapshotted HERE, never read when the timer
+// fires - `cur` and `TL` belong to whatever you opened in the meantime.
+function scheduleTuneSave(ms){
+  const id=cur, anim=TL.anim;
+  if(!id||!anim)return;
+  const a=(spec.animations||{})[anim]||{};
+  const shape=a.action!=null&&TL.dirty;
+  const body={id,anim,rate:TL.rate,range:TL.range.slice(),
+              anim_scale:(TL.ascale===1?null:TL.ascale),
+              fx:JSON.parse(JSON.stringify(TL.fx||[]))};
+  if(TL.move!=null)body.move_speed=TL.move;
+  if(shape){
+    body.px_frames=TL.px===''?null:parseInt(TL.px);
+    body.loop_mode=TL.loop; body.quiet=TL.quiet;
+    body.drop=[...TL.drop].sort((x,y)=>x-y);
+  }
+  const pr=tlPlayRange();
+  if(pr[1]-pr[0]<2){            // an empty window would be saved as unplayable
+    tlStatus('not saved — that window has fewer than 2 playing frames','var(--warn)');
+    return;
+  }
+  schedule('tune:'+id+':'+anim,ms,async()=>{
+    saving++;
+    try{
+      const r=await api('/api/anim/tune',body);
+      const patch=t=>{if(!t)return;
+        t.rate=body.rate; t.range=body.range.slice(); t.scale=TL.ascale;
+        t.fx=JSON.parse(JSON.stringify(body.fx));
+        if(body.move_speed!=null)t.move_speed=body.move_speed;
+        if(shape){
+          if(body.px_frames==null)delete t.px_frames; else t.px_frames=body.px_frames;
+          t.loop_mode=body.loop_mode; t.quiet=body.quiet;
+          if(body.drop.length)t.drop=body.drop; else delete t.drop;
+        }};
+      if(cur===id&&spec)patch((spec.animations||{})[anim]);
+      patch(((STATE.characters[id]||{}).animations||{})[anim]);
+      holdSpec=Date.now()+3000;
+      if(cur===id&&TL.anim===anim){
+        TL.dirty=false;
+        tlStatus(r.job_id?'saved ✓ — rebuilding the sheet (free, ~30s)':'saved ✓','var(--ok)');
+      }
+      if(r.job_id)document.getElementById('jobs').classList.add('open');
+    }catch(e){
+      if(cur===id&&TL.anim===anim)tlStatus('save failed','var(--err)');
+    }finally{saving--;}
+  });
+}
+function tlReset(){render();}
+
+// Size, speed and effects need no re-processing, so they SAVE THEMSELVES a
+// moment after you stop dragging - a slider that previews live but silently
+// forgets on reload is the worst of both worlds. Only the settings that
+// rebuild the sheet (keyframes, loop style, cut frames) wait for 💾.
+function autoSave(){
+  tlStatus('saving…','var(--dim)');
+  scheduleTuneSave(600);       // no shape fields pending = no rebuild
+}
+// Everything in this panel saves itself; the button only means "now".
+async function saveTune(){
+  const pr=tlPlayRange();
+  if(pr[1]-pr[0]<2)return toast(TL.range[1]-TL.range[0]<2
+    ? 'window end must be at least 2 frames after start'
+    : 'that window is empty once the cut frames are removed',true);
+  scheduleTuneSave(0);
+  flushPending();
+}
+
+// ------------------------------------------------------------- jobs & modal
+function estimateJob(type,anims,p){
+  const E=STATE.estimates||{};
+  const clip=p.mode==='final'?(E.clip_final||600):(E.clip_test||130);
+  let sec=0,lines=[];
+  if(type==='ref'){sec+=E.ref_final||100;lines.push('1 reference — ≈'+minutes(sec)+' min');}
+  if(type==='variations'){sec=6*(E.ref_final||100);lines.push('6 candidates — ≈'+minutes(E.ref_final||100)+' min each');}
+  if(type==='anim'){sec=anims.length*clip;lines.push(anims.length+' clip(s) — ≈'+minutes(clip)+' min each');}
+  if(type==='post')lines.push('post only — seconds, no GPU');
+  return {sec,lines,note:'Add ≈'+minutes(E.cold_load||300)+' min once if the needed model is not loaded.'};
+}
+function selectedAnims(){
+  return [...document.querySelectorAll('.a_sel')].filter(c=>c.checked).map(c=>c.dataset.anim);
+}
+async function job(type,extra){
+  try{if(dirty)await savePrompts();}catch(e){return;}
+  const a=assets(cur);
+  const anims=type==='anim'||type==='post'?selectedAnims():[];
+  if((type==='anim'||type==='post')&&!anims.length)return toast('tick at least one animation card',true);
+  if(type==='anim'&&!a.ref)return toast('this sprite needs an approved reference first (step 1)',true);
+  if(type==='anim'&&!(spec.approved||{}).ref&&!confirm('The reference is not approved yet — animate anyway?'))return;
+  const modeSel=document.getElementById('f_mode');
+  // every render gets a fresh seed (0 = the server rolls one), or re-rolling
+  // returns the identical output and overwrites nothing but the timestamp
+  const p={mode:modeSel?modeSel.value:'final',
+           seed:(type==='variations'?Math.floor(Math.random()*900000)+1000:0),
+           ...(extra||{})};
+  if(type==='post')return queueJob(type,anims,p);
+  const est=estimateJob(type,anims,p);
+  const warns=[];
+  if(type==='anim'&&p.mode==='final')warns.push('FINAL quality: ≈'+minutes(est.sec)+' min of GPU. If you have not seen these motions in test mode, consider test first.');
+  if(STATE.comfy_busy>0||STATE.jobs.some(j=>j.status!=='done'&&j.status!=='error'))warns.push('The GPU is busy — this queues behind current work.');
+  if(type==='anim')anims.forEach(n=>{const st=(assets(cur).anims[n]||{});
+    if(st.done)warns.push('"'+n+'" already has finished sprites — re-rendering REPLACES them.');});
+  pendingJob={type,anims,p};
+  document.getElementById('modal').innerHTML=
+    '<h3>'+({ref:'Generate reference?',variations:'Generate candidates?',anim:'Render animations?'}[type]||type)+'</h3>'+
+    '<div>'+esc(spec.display_name||cur)+' · mode '+p.mode+(p.kind?' · '+p.kind:'')+'</div>'+
+    (anims.length?'<ul>'+anims.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+
+    '<div class="est">⏱ ≈'+minutes(est.sec)+' min GPU<br>'+est.lines.join('<br>')+
+    '<br><span class="muted">'+est.note+'</span></div>'+
+    warns.map(w=>'<div class="warn">⚠ '+w+'</div>').join('')+
+    '<div class="row" style="justify-content:flex-end;margin-top:10px">'+
+    '<button onclick="closeModal()">Cancel</button>'+
+    '<button class="primary" onclick="confirmJob()">Start</button></div>';
+  document.getElementById('modalback').classList.add('show');
+}
+function closeModal(){document.getElementById('modalback').classList.remove('show');pendingJob=null;}
+async function confirmJob(){const j=pendingJob;closeModal();if(j)await queueJob(j.type,j.anims,j.p);}
+async function queueJob(type,anims,p){
+  await api('/api/job',{type,char:cur,anims,params:p});
+  toast(type+' queued ✓ — progress in the Jobs bar below');
+  document.getElementById('jobs').classList.add('open');
+}
+
+function fmtDur(j){if(!j.started)return'';const e=(j.finished||Date.now()/1000)-j.started;
+  return e>=90?Math.round(e/60)+'m':Math.round(e)+'s';}
+function renderJobs(){
+  const jl=document.getElementById('joblist');
+  const open=new Set([...jl.querySelectorAll('.job.open')].map(x=>x.dataset.id));
+  const r=STATE.jobs.filter(j=>j.status==='running').length,
+        q=STATE.jobs.filter(j=>j.status==='queued').length;
+  const s=r+' running / '+q+' queued';
+  document.getElementById('jobsummary').textContent='Jobs: '+s;
+  document.getElementById('jobsummary2').textContent=s;
+  jl.innerHTML=STATE.jobs.map(j=>`
+    <div class="job ${open.has(j.id)?'open':''}" data-id="${j.id}">
+      <div class="head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="status ${j.status}">${j.status}</span><b>${j.type}</b>
+        <span>${j.char}</span><span class="muted">${(j.anims||[]).join(', ')}</span>
+        <span class="muted" style="margin-left:auto">${fmtDur(j)}</span></div>
+      <pre>${esc(j.log||'(no log yet)')}${j.error?'\n\nERROR: '+esc(j.error):''}</pre>
+    </div>`).join('')||'<div class="muted" style="padding:8px 0">No jobs yet.</div>';
+}
+
+route(); poll();
+</script>
+</body>
+</html>

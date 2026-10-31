@@ -1,0 +1,4 @@
+requests
+numpy
+Pillow
+scipy  # optional: cleans stray pixels around sprites

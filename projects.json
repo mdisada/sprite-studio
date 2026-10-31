@@ -1,0 +1,14 @@
+{
+  "spirtes": {
+    "display_name": "Spirtes (painted)",
+    "style": "painted",
+    "game_type": "side_arena",
+    "created": 1788179339.5652971
+  },
+  "heroes": {
+    "display_name": "Heroes (32-bit pixel)",
+    "style": "pixel",
+    "pixel_bits": "32",
+    "game_type": "side_arena"
+  }
+}

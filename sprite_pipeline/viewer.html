@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sprite Motion Test</title>
+<style>
+  body{margin:0;background:#101218;color:#e6e8f2;font:13px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+  #hud{position:fixed;top:10px;left:12px;color:#9aa0b8;user-select:none}
+  #hud b{color:#5ac8fa}
+  #help{position:fixed;bottom:10px;left:12px;color:#9aa0b8;user-select:none}
+  #help span{display:inline-block;background:#1d1f2a;border:1px solid #31354a;border-radius:5px;
+             padding:1px 7px;margin:0 6px 4px 0}
+  #help .ctl{background:#1d1f2a;color:#e6e8f2;border:1px solid #31354a;border-radius:6px;
+             padding:6px 10px;margin:0 5px 5px 0;cursor:pointer;font-size:13px;user-select:none}
+  #help .ctl:hover:not(:disabled){border-color:#5ac8fa}
+  #help .ctl:disabled{opacity:.35;cursor:not-allowed}
+  #help .ctl.testmode{border-color:#f5a97f;border-style:dashed}
+  #help .ctl.active{background:#134b66;border-color:#5ac8fa;box-shadow:0 0 8px #5ac8fa66}
+  #help .muted{color:#9aa0b8;border:none;background:none}
+  #zoomctl{position:fixed;top:10px;right:12px;user-select:none}
+  #zoomctl button{background:#1d1f2a;color:#e6e8f2;border:1px solid #31354a;border-radius:6px;
+             padding:5px 10px;margin-left:5px;cursor:pointer;font-size:13px}
+  #zoomctl button:hover{border-color:#5ac8fa}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">loading…</div>
+<div id="help"></div>
+<div id="zoomctl">
+  <button onclick="zset(ZOOM*1.25)">🔍+</button>
+  <button onclick="zset(ZOOM/1.25)">🔍−</button>
+  <button onclick="zset(1)" id="zreset">⟲ 100%</button>
+</div>
+<script>
+"use strict";
+const QS = new URLSearchParams(location.search);
+const CHAR = QS.get('char') || 'stormshield';
+const FOCUS = QS.get('focus') || null;  // loop one animation for study/tuning
+// a second character standing alongside for size / style comparison
+const COMPARE = QS.get('compare') || null;
+const CMP = {spec:{}, anims:{}, anim:null, frame:0, fpos:0, acc:0};
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const hud = document.getElementById('hud');
+function fit(){cv.width=innerWidth;cv.height=innerHeight;}
+addEventListener('resize', fit); fit();
+
+// ------------------------------------------------------------- asset loading
+async function json(u){const r=await fetch(u);if(!r.ok)throw 0;return r.json();}
+function loadImg(u){return new Promise(res=>{const i=new Image();
+  i.onload=()=>res(i); i.onerror=()=>res(null); i.src=u;});}
+
+async function loadAnim(char, anim){
+  try{
+    const meta = await json('/files/'+char+'/'+anim+'/meta.json');
+    const url=i=>'/files/'+char+'/'+anim+'/frames/sprite_'+String(i).padStart(3,'0')+'.png';
+    let frames = await Promise.all(Array.from({length: meta.frames}, (_,i)=>loadImg(url(i))));
+    if(frames.some(f=>!f)){
+      // files may be mid-rewrite by a post job - retry the misses once
+      await new Promise(r=>setTimeout(r,1200));
+      frames = await Promise.all(frames.map((f,i)=>f?f:loadImg(url(i)+'?r=1')));
+    }
+    if(frames.some(f=>!f)) return null;
+    return {meta, frames};
+  }catch(e){ return null; }
+}
+
+const ANIMS = {};      // character animations
+const FX = {};         // loaded vfx sprites  {"char/anim": {meta, frames}}
+let SPEC = {};         // the character's spec (sprite_scale, per-anim tuning)
+// legacy slices for the original stormshield effect set: a VFX clip's useful
+// burst is a window inside the loop, not the whole clip
+const FX_SLICES = {
+  'vfx_chain_bolt/loop':  {start:6, len:14},
+  'vfx_impact/burst':     {start:2, len:12},
+  'vfx_storm/loop':       {start:2, len:26},
+  'vfx_tempo_ring/pulse': {start:2, len:22},
+};
+// DEF's built-in effect sets (stormshield) name effects by short key
+const LEGACY_FX = {
+  bolt:  {char:'vfx_chain_bolt', anim:'loop'},
+  impact:{char:'vfx_impact',     anim:'burst'},
+  storm: {char:'vfx_storm',      anim:'loop'},
+  ring:  {char:'vfx_tempo_ring', anim:'pulse'},
+};
+const fxKey = f => f.char ? (f.char + '/' + f.anim)
+                          : (LEGACY_FX[f.key] ? LEGACY_FX[f.key].char + '/' + LEGACY_FX[f.key].anim : '');
+// every effect attached to any animation of this character
+function fxList(anim){
+  const a=(SPEC.animations||{})[anim];
+  return (a&&Array.isArray(a.fx))?a.fx:[];
+}
+// movement across the ground, px/s - purely per-animation data, so any
+// animation can travel (or not) without the engine knowing its name
+function moveSpeed(anim){
+  const a=(SPEC.animations||{})[anim];
+  return (a&&a.move_speed!=null)?a.move_speed:0;
+}
+function spriteScale(){return SPEC.sprite_scale||1;}
+// same scale rules, but for any (spec, animations) pair - used by the
+// comparison sprite so it is drawn exactly as its own character would be
+function scaleFor(spec, anims, name){
+  const a=(spec.animations||{})[name]||{};
+  const per=(a.scale!=null)?a.scale:((anims[name]||{}).scaleFix||1);
+  return per*(spec.sprite_scale||1);
+}
+// horizontal anchor: centre of the feet in the FIRST frame, in source pixels.
+// The vertical anchor is already the frame-0 ground line; without the matching
+// horizontal one every clip is pinned to the source frame centre, so two clips
+// with different scaleFix put the same body at two different screen x.
+function footXSrc(anim){
+  if(anim._footX!=null)return anim._footX;
+  const img=anim.frames[0], b=anim.meta.crop_box;
+  const c=document.createElement('canvas'); c.width=img.width; c.height=img.height;
+  const g=c.getContext('2d'); g.drawImage(img,0,0);
+  const px=g.getImageData(0,0,c.width,c.height).data;
+  const sx=(b[2]-b[0])/img.width, sy=(b[3]-b[1])/img.height;
+  const gy=anim.meta.ground_y!=null?(anim.meta.ground_y-b[1])/sy:img.height;
+  const band=Math.max(4,Math.round(6/sy));   // fixed band: sizing it as a share of
+  let lo=1e9,hi=-1;                          // the height grows with a raised arm
+  for(let y=Math.max(0,Math.round(gy-band));y<Math.min(img.height,Math.round(gy)+1);y++)
+    for(let x=0;x<img.width;x++)
+      if(px[(y*img.width+x)*4+3]>32){ if(x<lo)lo=x; if(x>hi)hi=x; }
+  anim._footX = hi<0 ? (b[0]+b[2])/2 : b[0]+((lo+hi)/2)*sx;
+  return anim._footX;
+}
+// height of an animation's first frame, in SOURCE pixels (so clips cropped
+// differently are comparable)
+function standHeightSrc(anim){
+  const img=anim.frames[0], c=document.createElement('canvas');
+  c.width=img.width; c.height=img.height;
+  const g=c.getContext('2d'); g.drawImage(img,0,0);
+  const px=g.getImageData(0,0,c.width,c.height).data;
+  let top=-1, bot=-1;
+  for(let y=0;y<c.height&&top<0;y++)for(let x=0;x<c.width;x++)
+    if(px[(y*c.width+x)*4+3]>32){top=y;break;}
+  for(let y=c.height-1;y>=0&&bot<0;y--)for(let x=0;x<c.width;x++)
+    if(px[(y*c.width+x)*4+3]>32){bot=y;break;}
+  if(top<0)return 1;
+  const b=anim.meta.crop_box;
+  return (bot-top+1)*((b[3]-b[1])/img.height);
+}
+// per-animation size: an explicit studio override wins, else the canvas
+// auto-normalization (1.0 whenever every clip shares one canvas)
+function animScale(name){
+  const a=(SPEC.animations||{})[name];
+  if(a&&a.scale!=null)return a.scale;
+  const an=ANIMS[name];
+  return an?(an.scaleFix||1):1;
+}
+
+// -------------------------------------------------------------- state machine
+// oneShot animations lock input until done, then fall back to idle.
+// rate = playback speed multiplier (game feel: strikes are snappy, idles are
+// calm). One-shots play only the clip's detected action_range - video models
+// repeat actions to fill their mandatory length, games need exactly one.
+// How an animation behaves is DATA on the animation itself, so a user can
+// invent any animation ("cartwheel", "taunt", "channel") and it works. The
+// spec supplies: loop, use_action, hold_last, interrupt, move_speed, rate.
+// Anything unset falls back to "a one-shot that returns to idle" - the
+// safest behaviour for an unknown animation.
+function def(name){
+  const s=(SPEC.animations||{})[name]||{};
+  const loop=!!s.loop;
+  return {
+    loop,
+    oneShot: !loop,
+    // loop inside the detected action window: skips a clip's baked ease-in
+    // so a locomotion cycle starts moving instantly
+    useAction: !!s.use_action,
+    // hold the final frame instead of returning to idle (death, victory)
+    stay: !!s.hold_last,
+    // cuts through a committed one-shot (hurt/death reactions)
+    interrupt: !!s.interrupt,
+    rate: s.rate!=null?s.rate:1,
+  };
+}
+const DEF=new Proxy({},{get:(_,k)=>typeof k==='string'?def(k):undefined});
+
+// one-shots play [start,end) from the clip's motion analysis; loops play all
+// UNLESS the range was set manually (tuning panel / spec override)
+function animRange(name){
+  const a=ANIMS[name]; if(!a)return [0,0];
+  const d=DEF[name]||{};
+  const r=a.meta.action_range;
+  const valid=r&&r[1]-r[0]>=2&&r[0]>=0;
+  if(valid&&(a.meta.range_manual||d.oneShot||d.useAction))
+    return [r[0],Math.min(r[1],a.frames.length)];
+  return [0,a.frames.length];
+}
+
+// live tuning from the studio's Test & Tune panel: PULL the parent page's
+// LIVE_TUNE every few ticks (same-origin) - robust against iframe reloads
+// and messages sent before this page finished loading
+let _tuneTs=0,_tunePoll=0;
+function pollTune(){
+  if(window.parent===window)return;
+  try{
+    const t=window.parent.LIVE_TUNE;
+    // A live tune belongs to exactly ONE sprite. LIVE_TUNE is a single global
+    // in the studio and it outlives the panel that wrote it, so an untagged
+    // tune from the sprite you were just editing was applied to this one the
+    // moment this play area loaded (a fresh frame starts at _tuneTs 0) - that
+    // is how one character's size showed up on another.
+    if(!t||t.char!==CHAR||t.ts===_tuneTs)return;
+    _tuneTs=t.ts;
+    // the character's own size is not animation-specific, so it lands even
+    // when the animation named in the tune is not loaded here
+    if(t.sprite_scale!=null)SPEC.sprite_scale=t.sprite_scale;
+    if(!ANIMS[t.anim])return;
+    const meta=ANIMS[t.anim].meta;
+    if(t.rate!=null)meta.rate=t.rate;
+    if(t.range){meta.action_range=[t.range[0],t.range[1]];meta.range_manual=true;}
+    // live spec edits: movement speed, attached effects, per-animation size
+    SPEC.animations=SPEC.animations||{};
+    const as=SPEC.animations[t.anim]=SPEC.animations[t.anim]||{};
+    if(t.anim_scale!==undefined)as.scale=t.anim_scale;
+    if(t.move_speed!==undefined)as.move_speed=t.move_speed;
+    if(t.fx!==undefined){as.fx=t.fx;ensureFx();P.firedFx=new Set();}
+    if(P.anim===t.anim){const [s,en]=animRange(t.anim);
+      if(P.frame<s||P.frame>=en)P.frame=s;}
+  }catch(e){}
+}
+
+const P = {  // the player character
+  x: 0, y: 0, facing: 1, anim: 'idle', frame: 0, acc: 0,
+  locked: false, dead: false, firedFx: null, queued: null,
+};
+let SPRITES_FX = [];   // active vfx instances
+let ghost=false, guides=false, fpsMul=1, ZOOM=1;
+let SCALE=Math.max(0.3, Math.min(0.8, cv.height*0.62/720));
+addEventListener('resize', ()=>{SCALE=Math.max(0.3, Math.min(0.8, cv.height*0.62/720));});
+// VIEW() is the shared canvas/zoom scale - it belongs to the VIEWER.
+// Each character's own size (sprite_scale x per-animation scale) is passed
+// per draw, so resizing one character can never resize another.
+function VIEW(){return SCALE*ZOOM;}
+function SZ(){return VIEW()*spriteScale();}   // main character's scale
+function zset(z){ZOOM=Math.max(0.4,Math.min(2.5,z));
+  document.getElementById('zreset').textContent='⟲ '+Math.round(ZOOM*100)+'%';}
+const keys = {};
+
+function groundY(){ return cv.height*0.78; }
+function setAnim(name, opts){
+  if(!ANIMS[name]) return;
+  if(P.anim===name && !(opts&&opts.force)) return;
+  const [s,e]=animRange(name);
+  P.anim=name; P.acc=0; P.firedFx=new Set();
+  P.frame=(opts&&opts.phase)?Math.min(e-1,s+Math.floor(opts.phase*(e-s))):s;
+  P.fpos=P.frame;
+  P.locked=!!DEF[name].oneShot;
+}
+
+function trigger(want){
+  if(P.dead){P.dead=false;P.locked=false;setAnim('idle',{force:true});return;}
+  if(!want||!ANIMS[want])return;
+  // animations flagged "interrupt" cut through anything (hurt/death, AFK
+  // style); other actions queue if a one-shot is committed, never dropped
+  if(def(want).interrupt){P.locked=false;setAnim(want,{force:true});}
+  else if(P.locked){P.queued=want;}
+  else setAnim(want);
+}
+
+function jumpOrLeap(){
+  const running=P.anim==='run'||P.anim==='leap'||(keys['shift']&&(keys['a']||keys['d']));
+  return (running&&ANIMS.leap)?'leap':'jump';
+}
+const KEYMAP={'f':'attack','1':'cast','2':'skill_aoe','3':'skill_tempo','z':'hit','x':'death',
+              'v':'victory'};
+const KEY2BTN={'a':'walkL','d':'walkR','shift':'run',' ':'jump','w':'jump',
+               'e':'guard','s':'guard','f':'attack','1':'cast','2':'aoe',
+               '3':'tempo','z':'hit','x':'death','v':'victory'};
+function btnLight(k,on){
+  const id=KEY2BTN[k]; if(!id)return;
+  const b=document.getElementById('btn_'+id);
+  if(b)b.classList.toggle('active',on);
+  if(id==='jump'){const l=document.getElementById('btn_leap');
+    if(l)l.classList.toggle('active',on&&jumpOrLeap()==='leap');}
+}
+addEventListener('keydown', e=>{
+  const k=e.key.toLowerCase(); keys[k]=true; btnLight(k,true);
+  if(k==='t')ghost=!ghost; if(k==='g')guides=!guides;
+  let want=KEYMAP[k]||null;
+  if(k==='w'||k===' ')want=jumpOrLeap();
+  if(want)trigger(want);
+});
+addEventListener('keyup', e=>{const k=e.key.toLowerCase();keys[k]=false;btnLight(k,false);});
+
+// ------- on-screen controls: shortcut shown in each button, availability
+// ------- and test/final state indicated, lit while the key is held
+// Conventional controls for the animations a movement kit usually has...
+const CORE_BTNS=[
+  {id:'walkL', label:'A · ◀ walk',      hold:'a',        needs:'walk'},
+  {id:'walkR', label:'D · walk ▶',      hold:'d',        needs:'walk'},
+  {id:'run',   label:'⇧+A/D · run',     toggle:'shift',  needs:'run'},
+  {id:'jump',  label:'Space · jump',    tapf:()=> 'jump', needs:'jump'},
+  {id:'leap',  label:'Run+Space · leap',tapf:()=> 'leap', needs:'leap'},
+  {id:'guard', label:'E · guard',       hold:'e',        needs:'guard'},
+  {id:'attack',label:'F · attack',      tap:'attack',    needs:'attack'},
+  {id:'cast',  label:'1 · cast',        tap:'cast',      needs:'cast'},
+  {id:'aoe',   label:'2 · AoE',         tap:'skill_aoe', needs:'skill_aoe'},
+  {id:'tempo', label:'3 · tempo',       tap:'skill_tempo',needs:'skill_tempo'},
+  {id:'hit',   label:'Z · hit',         tap:'hit',       needs:'hit'},
+  {id:'death', label:'X · death',       tap:'death',     needs:'death'},
+  {id:'victory',label:'V · victory',    tap:'victory',   needs:'victory'},
+];
+// ...plus a button and a free key for EVERY other animation the character
+// has, so anything a user invents is playable without touching this file.
+const SPARE_KEYS='456789qrtyubnm'.split('');
+function allButtons(){
+  const covered=new Set(CORE_BTNS.map(b=>b.needs).concat(['idle','fall','skill_cast']));
+  const extra=Object.keys(ANIMS).filter(n=>!covered.has(n));
+  const spare=SPARE_KEYS.filter(k=>!KEY2BTN[k]);
+  return CORE_BTNS.concat(extra.map((n,i)=>{
+    const key=spare[i];
+    if(key){KEYMAP[key]=n;KEY2BTN[key]='x_'+n;}
+    return {id:'x_'+n, label:(key?key.toUpperCase()+' · ':'')+n.replace(/_/g,' '),
+            tap:n, needs:n};
+  }));
+}
+function animQuality(name){
+  const a=ANIMS[name]; if(!a)return null;
+  const src=a.meta.source_size||[640,640];
+  return Math.min(src[0],src[1])>=512?'final':'test';
+}
+function buildControls(){
+  const bar=document.getElementById('help');
+  bar.innerHTML='';
+  allButtons().forEach(def=>{
+    const b=document.createElement('button');
+    b.id='btn_'+def.id; b.className='ctl'; b.textContent=def.label;
+    const q=animQuality(def.needs);
+    if(!q){b.disabled=true;b.title='"'+def.needs+'" is not rendered yet';}
+    else if(q==='test'){b.classList.add('testmode');b.title='"'+def.needs+'" is a TEST render';}
+    if(def.hold){
+      b.addEventListener('pointerdown',()=>{keys[def.hold]=true;b.classList.add('active');});
+      const off=()=>{keys[def.hold]=false;b.classList.remove('active');};
+      b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);
+    }else if(def.toggle){
+      b.addEventListener('click',()=>{keys[def.toggle]=!keys[def.toggle];
+        b.classList.toggle('active',keys[def.toggle]);});
+    }else{
+      b.addEventListener('click',()=>trigger(def.tapf?def.tapf():def.tap));
+    }
+    bar.appendChild(b);
+  });
+}
+
+// ------------------------------------------------------------------ rendering
+function drawAnim(a, frameIdx, x, anchorY, facing, scale, alpha, additive, centered){
+  const m=a.meta, img=a.frames[frameIdx]; if(!img)return;
+  const [sw,sh]=m.source_size||[640,640], b=m.crop_box;
+  const bw=b[2]-b[0], bh=b[3]-b[1];
+  // `scale` is the subject's COMPLETE character scale, so the compare
+  // sprite is never multiplied by the main character's size
+  const R=VIEW()*(scale||1);
+  // effects keep their box centre; characters line up on their frame-0 feet
+  const anchorX = centered ? (b[0]+b[2])/2 : footXSrc(a);
+  const cxOff=((b[0]+b[2])/2 - anchorX)*R;
+  ctx.save();
+  if(additive) ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=alpha==null?1:alpha;
+  ctx.imageSmoothingEnabled=(m.style==='painted'); // crisp for pixel, smooth for painted
+  ctx.translate(x,0); ctx.scale(facing,1);
+  // characters anchor by their frame-0 ground line (feet in the reference
+  // stance) on the ground; the crop-box bottom can be a shield tip or cape
+  // hem from a later frame. Effects anchor by their box center.
+  const footOff = (m.ground_y!=null ? Math.min(Math.max(m.ground_y,b[1]),b[3]) : b[3]) - b[1];
+  const top = centered ? anchorY-bh*R/2 : anchorY-footOff*R;
+  ctx.drawImage(img, cxOff-bw*R/2, top, bw*R, bh*R);
+  ctx.restore();
+}
+
+function spawnFx(def, owner){
+  const k=fxKey(def), fx=FX[k]; if(!fx)return;
+  const slice=FX_SLICES[k]||{start:0, len:fx.frames.length};
+  const m=ANIMS[owner.anim].meta;
+  const charH=(m.crop_box[3]-m.crop_box[1])*SZ();
+  SPRITES_FX.push({fx, slice, i:0, acc:0,
+    x:cv.width/2+owner.x+owner.facing*(def.dx||0)*charH*0.5,
+    cy:groundY()+(def.dy||0)*charH,
+    facing:owner.facing, scale:def.scale||1});
+}
+// load any vfx sprites referenced by the spec that aren't in memory yet
+async function ensureFx(){
+  const want=new Set();
+  Object.keys(SPEC.animations||{}).forEach(n=>fxList(n).forEach(f=>want.add(fxKey(f))));
+  await Promise.all([...want].filter(k=>k&&!FX[k]).map(async k=>{
+    const [c,a]=k.split('/'); const r=await loadAnim(c,a); if(r)FX[k]=r;
+  }));
+}
+
+// ------- editor API for the studio's Test & Tune timeline (same origin):
+// pause/scrub/step the focused animation and read the playhead back
+let PAUSED=false;
+window.EDIT={
+  get frame(){return P.frame;}, get anim(){return P.anim;}, get paused(){return PAUSED;},
+  get frames(){const a=ANIMS[P.anim];return a?a.frames.length:0;},
+  // measured height of this animation's first frame vs idle's, so the studio
+  // can offer "match idle" as a starting point for the size override
+  suggestScale(name){const a=ANIMS[name||P.anim]; if(!a||!ANIMS.idle)return 1;
+    try{return Math.max(0.5,Math.min(2, standHeightSrc(ANIMS.idle)/standHeightSrc(a)));}
+    catch(e){return 1;}},
+  pause(){PAUSED=true;}, play(){PAUSED=false;},
+  toggle(){PAUSED=!PAUSED;return PAUSED;},
+  scrub(i){const a=ANIMS[P.anim]; if(!a)return; PAUSED=true;
+    P.frame=Math.max(0,Math.min(a.frames.length-1,i|0)); P.fpos=P.frame; P.acc=0;},
+  step(d){const a=ANIMS[P.anim]; if(!a)return; PAUSED=true;
+    const [s,e]=animRange(P.anim); const n=Math.max(1,e-s);
+    P.frame=s+(((P.frame-s+d)%n)+n)%n; P.fpos=P.frame;},
+  ghost(v){ghost=v==null?!ghost:!!v;return ghost;},
+  guides(v){guides=v==null?!guides:!!v;return guides;},
+  // replay the attached effects of the current animation right now
+  testFx(){const a=ANIMS[P.anim]; if(!a)return;
+    const [rs]=animRange(P.anim); P.frame=rs; P.fpos=rs; P.firedFx=new Set(); PAUSED=false;},
+};
+
+let last=performance.now();
+function tick(now){
+  if(++_tunePoll%8===0)pollTune();   // ~4x/sec
+  // dt is capped so a stalled tab can't fast-forward the state machine
+  const dt=Math.min(0.1,(now-last)/1000); last=now;
+  let a=ANIMS[P.anim];   // re-read before drawing: the state machine below
+                         // can switch animations part-way through this tick
+  if(a){
+    const d=DEF[P.anim];
+    const [rs,re]=animRange(P.anim);
+    // constant display cadence: speed changes step THROUGH the source frames
+    // (skipping or holding them) instead of changing the screen fps, so every
+    // animation keeps the same consistent 12fps flipbook cadence
+    const cad=(a.meta.fps||12)*fpsMul;
+    // DEF rates were tuned for 61-frame 12fps clips; keyframe-collapsed
+    // sprites are already stepped, so they play 1:1 unless the user tuned them
+    const step=(a.meta.rate!=null?a.meta.rate:(a.meta.collapsed?1:(d.rate||1)));
+    if(PAUSED)P.acc=0; else P.acc+=dt;
+    while(P.acc>1/cad){
+      P.acc-=1/cad;
+      const prev=P.frame;
+      P.fpos=(P.fpos==null?P.frame:P.fpos)+step;
+      P.frame=Math.floor(P.fpos);
+      // fire vfx when playback CROSSES the trigger frame (steps can skip it).
+      // Effects are DATA: only what the character's spec attaches plays, so a
+      // new character never inherits another character's effects.
+      fxList(P.anim).forEach(f=>{
+        const id=f.key||fxKey(f);
+        const at=rs+Math.floor((f.at==null?0.5:f.at)*(re-rs));
+        if(prev<at && P.frame>=at && !P.firedFx.has(id+at)){
+          P.firedFx.add(id+at);spawnFx(f,P);}
+      });
+      if(P.frame>=re){
+        if(FOCUS===P.anim||d.loop){
+          P.fpos=rs+((P.fpos-rs)%Math.max(1,re-rs));P.frame=Math.floor(P.fpos);}
+        else if(d.stay){P.frame=re-1;P.fpos=P.frame;P.dead=true;}
+        else {P.locked=false;const q=P.queued;P.queued=null;
+              setAnim(q&&ANIMS[q]?q:'idle',{force:true});}
+      }
+    }
+  }
+  // movement intent (only when not locked in a one-shot)
+  if(!P.locked&&!P.dead){
+    const left=keys['a'],right=keys['d'],run=keys['shift'];
+    if(keys['e']||keys['s']) setAnim('guard');
+    else if(left||right){
+      // pick a locomotion clip that actually exists; if none is loaded the
+      // character must NOT slide around in the idle animation
+      const target=(run&&ANIMS.run)?'run':(ANIMS.walk?'walk':(ANIMS.run?'run':null));
+      if(target){
+        if(P.anim!==target){
+          // phase-match locomotion switches so feet don't reset mid-stride
+          const ph=(P.anim==='walk'||P.anim==='run')
+            ?(P.frame-animRange(P.anim)[0])/Math.max(1,animRange(P.anim)[1]-animRange(P.anim)[0]):0;
+          setAnim(target,{phase:ph});
+        }
+        P.facing=right?1:-1;
+        P.x+=(right?1:-1)*moveSpeed(target)*dt;
+        P.x=Math.max(-cv.width*0.42,Math.min(cv.width*0.42,P.x));
+      }
+    } else if(def(P.anim).loop && P.anim!=='idle' && FOCUS!==P.anim)
+      setAnim('idle');            // released the key; focus mode holds its clip
+  } else {
+    // A committed animation travels at its OWN move_speed in its facing.
+    // No animation names here: a leap carries momentum because its spec says
+    // 280 px/s, a jump stays put because its spec says 0, and any animation
+    // a user invents travels if they give it a speed.
+    const sp=moveSpeed(P.anim);
+    if(sp){
+      P.x+=P.facing*sp*dt;
+      P.x=Math.max(-cv.width*0.42,Math.min(cv.width*0.42,P.x));
+    }
+  }
+
+  // comparison sprite mirrors whatever the main character is doing when it
+  // has that animation, so you can compare like for like
+  if(CMP.anim){
+    const want=CMP.anims[P.anim]?P.anim:(CMP.anims.idle?'idle':CMP.anim);
+    if(want!==CMP.anim){CMP.anim=want;CMP.frame=0;CMP.fpos=0;CMP.acc=0;}
+    const ca=CMP.anims[CMP.anim];
+    if(ca){
+      const cd=(CMP.spec.animations||{})[CMP.anim]||{};
+      const cad=(ca.meta.fps||12)*fpsMul;
+      const cstep=(ca.meta.rate!=null?ca.meta.rate:(ca.meta.collapsed?1:(cd.rate||1)));
+      const cr=ca.meta.action_range, useR=cr&&cr[1]-cr[0]>=2&&(ca.meta.range_manual||!cd.loop);
+      const [crs,cre]=useR?[cr[0],Math.min(cr[1],ca.frames.length)]:[0,ca.frames.length];
+      CMP.acc+=dt;
+      while(CMP.acc>1/cad){
+        CMP.acc-=1/cad;
+        CMP.fpos+=cstep;
+        if(CMP.fpos>=cre)CMP.fpos=crs+((CMP.fpos-crs)%Math.max(1,cre-crs));
+        CMP.frame=Math.floor(CMP.fpos);
+      }
+    }
+  }
+
+  // draw ---------------------------------------------------------------
+  // `a` was captured BEFORE the state machine ran; a one-shot ending inside
+  // this tick switches P.anim (to idle), so re-read the clip here or we draw
+  // the old animation's frames at the NEW animation's scale - a one-frame
+  // size pop, glaring when the two clips are scaled differently.
+  a = ANIMS[P.anim] || a;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const g=ctx.createLinearGradient(0,0,0,cv.height);
+  g.addColorStop(0,'#141722');g.addColorStop(1,'#1c2030');
+  ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#232840';ctx.fillRect(0,groundY(),cv.width,3);
+
+  const cx=cv.width/2+P.x;
+  if(a){ // grounded elliptical drop shadow (separate from frames, AFK-style)
+    const bw=(a.meta.crop_box[2]-a.meta.crop_box[0])*VIEW()*animScale(P.anim)*spriteScale();
+    ctx.save();ctx.globalAlpha=0.28;ctx.fillStyle='#000';
+    ctx.beginPath();ctx.ellipse(cx,groundY()+7,bw*0.3,bw*0.085,0,0,Math.PI*2);
+    ctx.fill();ctx.restore();
+  }
+  // comparison sprite: a second character standing on the SAME ground line
+  // so relative size and style read honestly side by side
+  if(CMP.anim&&CMP.anims[CMP.anim]){
+    const ca=CMP.anims[CMP.anim];
+    const cmpX=cv.width*0.28;
+    const cbw=(ca.meta.crop_box[2]-ca.meta.crop_box[0])*VIEW()*scaleFor(CMP.spec,CMP.anims,CMP.anim);
+    ctx.save();ctx.globalAlpha=0.28;ctx.fillStyle='#000';
+    ctx.beginPath();ctx.ellipse(cmpX,groundY()+7,cbw*0.3,cbw*0.085,0,0,Math.PI*2);
+    ctx.fill();ctx.restore();
+    drawAnim(ca,Math.min(CMP.frame,ca.frames.length-1),cmpX,groundY(),1,
+             scaleFor(CMP.spec,CMP.anims,CMP.anim),1,false);
+    ctx.save();
+    ctx.font='11px system-ui';ctx.textAlign='center';
+    ctx.fillStyle='#7f8496';
+    ctx.fillText((CMP.spec.display_name||COMPARE)+' · '+CMP.anim,cmpX,groundY()+26);
+    ctx.fillStyle='#5ac8fa';
+    ctx.fillText((SPEC.display_name||CHAR)+' · '+P.anim,cx,groundY()+26);
+    ctx.restore();
+  }
+  if(ghost&&ANIMS.idle&&P.anim!=='idle')
+    drawAnim(ANIMS.idle,0,cx,groundY(),P.facing,spriteScale(),0.35,false);
+  if(a) drawAnim(a,Math.min(P.frame,a.frames.length-1),cx,groundY(),P.facing,
+                 animScale(P.anim)*spriteScale(),1,false);
+
+  SPRITES_FX=SPRITES_FX.filter(s=>{
+    s.acc+=dt;
+    const fps=(s.fx.meta.fps||12)*fpsMul;
+    while(s.acc>1/fps){s.acc-=1/fps;s.i++;}
+    if(s.i>=s.slice.len)return false;
+    drawAnim(s.fx,Math.min(s.slice.start+s.i,s.fx.frames.length-1),
+             s.x,s.cy,s.facing,s.scale*spriteScale(),1,true,true);
+    return true;
+  });
+
+  // if the character is outside the visible area, point at it from the edge
+  if(cx<0||cx>cv.width){
+    const y=groundY()-120*ZOOM, left=cx<0;
+    ctx.save();ctx.fillStyle='#5ac8fa';
+    ctx.beginPath();
+    if(left){ctx.moveTo(28,y);ctx.lineTo(8,y-12);ctx.lineTo(8,y+12);}
+    else{ctx.moveTo(cv.width-28,y);ctx.lineTo(cv.width-8,y-12);ctx.lineTo(cv.width-8,y+12);}
+    ctx.closePath();ctx.fill();
+    ctx.font='12px sans-serif';
+    ctx.fillText('character',left?34:cv.width-92,y+4);
+    ctx.restore();
+  }
+  if(guides){
+    ctx.strokeStyle='#5ac8fa55';
+    ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,cv.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,groundY());ctx.lineTo(cv.width,groundY());ctx.stroke();
+  }
+  const held=Object.keys(keys).filter(k=>keys[k]).map(k=>k===' '?'space':k);
+  hud.innerHTML='<b>'+CHAR+'</b> · '+P.anim+' '+(P.frame+1)+'/'+(a?a.frames.length:0)+
+    ' · '+((a?a.meta.fps:12)*fpsMul)+'fps'+(P.locked?' · <b>locked</b>':'')+
+    ' · x='+Math.round(P.x)+
+    ' · keys:['+held.join('+')+']'+(FOCUS?' · focus:'+FOCUS:'')+
+    '<br><span style="opacity:.55">loaded: '+Object.keys(ANIMS).join(', ')+'</span>';
+}
+
+(async function(){
+  // the spec is the source of truth: it says which animations exist, how each
+  // behaves, and what effects it spawns. Load EVERY animation the character
+  // has, so a custom one a user invented shows up like any other.
+  try{
+    const st=await (await fetch('/api/state')).json();
+    SPEC=st.characters[CHAR]||{};
+  }catch(e){SPEC={};}
+  const wanted=Object.keys(SPEC.animations||{});
+  if(!wanted.length)wanted.push('idle','walk','attack','hit','death');  // no spec: try the usual
+  await Promise.all(wanted.map(async n=>{const r=await loadAnim(CHAR,n);if(r)ANIMS[n]=r;}));
+  // kit naming aliases: the side-arena kit calls its skill "skill_cast";
+  // the harness' "1 · cast" key/button drives whichever exists. Alias the
+  // SPEC entry too, or the alias plays with none of that animation's tuning
+  // (its size, speed, effects and behaviour all live on the spec).
+  if(!ANIMS.cast&&ANIMS.skill_cast){
+    ANIMS.cast=ANIMS.skill_cast;
+    SPEC.animations=SPEC.animations||{};
+    if(SPEC.animations.skill_cast)SPEC.animations.cast=SPEC.animations.skill_cast;
+  }
+  await ensureFx();
+  // load the comparison character the same way (its own spec drives its size)
+  if(COMPARE&&COMPARE!==CHAR){
+    try{
+      const st=await (await fetch('/api/state')).json();
+      CMP.spec=st.characters[COMPARE]||{};
+      const names=Object.keys(CMP.spec.animations||{});
+      await Promise.all(names.map(async n=>{
+        const r=await loadAnim(COMPARE,n); if(r)CMP.anims[n]=r;}));
+      const base=CMP.anims.idle?'idle':Object.keys(CMP.anims)[0];
+      if(base){
+        // match idle's height the same way the main character does
+        const bH=standHeightSrc(CMP.anims[base]);
+        const bSrc=(CMP.anims[base].meta.source_size||[640,640]).join('x');
+        for(const k in CMP.anims){
+          const src=(CMP.anims[k].meta.source_size||[640,640]).join('x');
+          const s=(src===bSrc)?1:bH/standHeightSrc(CMP.anims[k]);
+          CMP.anims[k].scaleFix=Math.max(0.7,Math.min(1.45,s));
+        }
+        CMP.anim=base;
+      }
+    }catch(e){}
+  }
+  if(!ANIMS.idle){hud.textContent='no idle animation found for '+CHAR;return;}
+  // Normalize each clip to idle's size using stand_h - the character's
+  // height in that clip's FIRST frame, measured at post time before any
+  // keyframe collapse. The video model sometimes renders a character much
+  // larger or smaller in one clip; without this that clip is visibly the
+  // wrong size next to the others. Falls back to the old canvas rule for
+  // animations posted before stand_h existed.
+  const baseStand=ANIMS.idle.meta.stand_h;
+  const baseH=standHeightSrc(ANIMS.idle);
+  const baseSrc=(ANIMS.idle.meta.source_size||[640,640]).join('x');
+  for(const k in ANIMS){
+    const st=ANIMS[k].meta.stand_h;
+    let s;
+    if(baseStand&&st) s=baseStand/st;
+    else {
+      const src=(ANIMS[k].meta.source_size||[640,640]).join('x');
+      s=(src===baseSrc)?1:baseH/standHeightSrc(ANIMS[k]);
+    }
+    ANIMS[k].scaleFix=Math.max(0.4,Math.min(2.5,s));
+  }
+  setAnim(FOCUS&&ANIMS[FOCUS]?FOCUS:'idle',{force:true});
+  buildControls();
+  // setInterval instead of requestAnimationFrame: keeps animating even in
+  // embedded/preview panes that stop pumping rAF while idle
+  setInterval(()=>tick(performance.now()), 33);
+})();
+</script>
+</body>
+</html>

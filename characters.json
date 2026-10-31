@@ -1,0 +1,1705 @@
+{
+  "stormshield": {
+    "display_name": "Stormshield Arcanist",
+    "ref_prompt": "32-bit era video game pixel art character sprite, detailed high-color pixel shading with clean dithering, crisp dark outline, strong readable silhouette, premium SNES / Saturn arcade fighting-game sprite quality. Full body, side-facing three-quarter view, standing combat-idle pose. A storm-mage skirmisher: a slender battle-caster in deep indigo-blue layered robes with silver-and-gold trim over light leather armor, short storm-grey cape, high collar. On the left arm a large ornate round shield with a polished mirror-bright steel face etched with glowing cyan lightning runes and a ring of small clock-like tempo runes around the rim, held angled forward like a focusing lens. The right hand is raised, crackling with cyan-white electricity, and thin forked arcs of chain lightning bounce off the shield face. Glowing cyan eyes, calm focused expression. The character is perfectly centered, whole body visible with a clear margin on all sides, feet at the bottom, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor line, no props, no text, no UI, single character only.",
+    "animations": {
+      "idle": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. Idle animation loop: the storm-mage breathes subtly, the cape and robe hems sway gently, and small arcs of cyan lightning flicker now and then across the rim of the round shield. The movement is small and calm, and the pose at the end matches the pose at the start so the loop is seamless.",
+        "seconds": 5.2,
+        "loop": true
+      },
+      "cast": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Skill-cast animation: the storm-mage raises the round mirrored shield forward, channels crackling cyan electricity from the raised right hand into the shield face, and the shield's runes flare with a bright compact flash held right at the shield. Clear anticipation, flash at the moment of release, a half-step recoil, then back into the guard pose. All lightning hugs the hand, arm and shield.",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.5,
+            "dx": 1.3,
+            "dy": -0.5,
+            "scale": 1.35
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.62,
+            "dx": 2.6,
+            "dy": -0.5,
+            "scale": 1.1
+          }
+        ],
+        "rate": 1.35
+      },
+      "walk": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Walk cycle animation: the storm-mage marches in place with a steady rhythmic gait - feet clearly stepping, knees lifting, robes and cape bobbing with each stride, shield held exactly as in the reference. The body bobs slightly up and down but stays centered, never traveling across the frame. Even, loopable cycle.",
+        "seconds": 5.2,
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Run cycle animation: the storm-mage runs in place at speed - strong leg drive, body leaning slightly forward, cape streaming, shield tucked close, small dust puffs at the feet. The character stays centered, never traveling across the frame. Even, loopable cycle.",
+        "seconds": 5.2,
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 1.3
+      },
+      "jump": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Jump animation: a quick crouch of anticipation, then the storm-mage leaps straight up high into the air with the cape flaring and legs tucked, hangs at the peak in the upper part of the frame, falls, and lands with a springy knee-bend recovery back into the reference stance. There is plenty of empty space above the character; the whole body including the head stays far from every frame edge at the peak of the jump.",
+        "seconds": 5.2,
+        "canvas": "portrait",
+        "range": [
+          4,
+          33
+        ],
+        "rate": 1.35
+      },
+      "hit": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. Hit-reaction animation: the storm-mage flinches backward as if struck, raising the round shield reflexively while sparks scatter off it, a brief stagger, then recovers back into the idle guard pose. Small movement with a loop-friendly start and end.",
+        "seconds": 5.2,
+        "rate": 1.5,
+        "interrupt": true
+      },
+      "death": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. Defeat animation: the storm-mage staggers, the lightning around the hand and shield fizzles out and goes dark, drops to one knee, then collapses forward to the ground and remains still. The body stays fully inside the frame.",
+        "seconds": 5.2,
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "attack": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Basic attack animation: a quick snappy cast - the storm-mage flicks the right hand toward the mirrored shield and a small spark of cyan lightning pops off the shield rim with a brief compact flash. Fast anticipation, sharp release, minimal recoil, straight back to the guard pose, loop-friendly. All effects stay tiny and close to the shield.",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 1.15,
+            "dy": -0.52,
+            "scale": 1.0
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.6,
+            "dx": 2.1,
+            "dy": -0.55,
+            "scale": 0.8
+          }
+        ],
+        "rate": 1.6
+      },
+      "skill_aoe": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Area skill animation: the storm-mage slams the round shield up overhead with both hands; the shield's runes blaze and a compact crown of electric arcs crackles tightly around the raised shield, small sparks falling close around the body. Strong anticipation, bright climax held at the shield, then the mage lowers the shield back into the guard pose.",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_storm",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 0.0,
+            "dy": -0.1,
+            "scale": 1.35
+          }
+        ],
+        "rate": 1.25
+      },
+      "skill_tempo": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Support aura animation: the storm-mage holds the round shield flat in front of the chest; the ring of small clock-like tempo runes around the shield rim lights up and spins like a clock being wound backward while a soft blue-white glow pulses gently on the shield itself. Calm confident motion, ending back in the idle guard pose. The glow stays on and close around the shield.",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_tempo_ring",
+            "anim": "pulse",
+            "at": 0.4,
+            "dx": 0.0,
+            "dy": -0.45,
+            "scale": 1.5
+          }
+        ],
+        "rate": 1.2
+      },
+      "guard": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and pixel-art style. 2D pixel-art game sprite animation: crisp handcrafted 32-bit pixel art with hard pixel edges, visible dark outlines and a limited retro palette in every frame. Do not smooth, do not re-render in 3D, do not clean up the linework; no motion blur, no anti-aliasing, no photorealism. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts, no handheld. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no particles behind the character, no text. No speech, no dialogue, no mouth movement. Guard animation: the storm-mage plants both feet in a slight crouch and braces the round shield squarely forward toward the right side of the frame; a shimmering hexagonal barrier of pale cyan energy flickers across the shield face while small arcs dance on its rim. Holds the braced stance with subtle breathing, loop-friendly.",
+        "seconds": 5.2,
+        "loop": true
+      }
+    },
+    "views": {
+      "side": {
+        "edit_prompt": "Turn the character to a strict full right-facing side profile view, standing upright in a neutral stance, seen exactly from the side so the nose, the toes and the front of the round shield all point toward the right edge of the image, with the shield arm on the far side partly visible. Keep the exact same character, outfit, colors, proportions and 32-bit pixel-art style, full body visible with a margin, and keep the exact same flat solid bright green background. Change nothing else."
+      }
+    },
+    "project": "spirtes"
+  },
+  "vfx_chain_bolt": {
+    "display_name": "VFX - Chain Bolt",
+    "ref_prompt": "32-bit era video game pixel art visual effect sprite, luminous glowing energy drawn in crisp pixel clusters with clean dithering, high color count, premium SNES arcade quality. A complete self-contained forked chain-lightning strike, fully inside the image with clear margin on every side: it begins at a small bright origin flash orb on the left, travels right as a jagged cyan-white electric arc, and splits into two or three forks that each end in a small spark burst tip well before the right edge. Both ends of the lightning are fully visible; the bolt does not touch any edge of the image. The effect is centered with a small margin inside the frame and fully visible, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor, no objects, no characters, no text, single effect only.",
+    "animations": {
+      "loop": {
+        "prompt": "<Picture 1> defines the exact look and pixel-art style of this visual effect. 2D pixel-art game VFX animation: crisp handcrafted 32-bit pixel art with hard pixel edges and a limited retro palette in every frame. Do not smooth, do not re-render in 3D; no motion blur, no anti-aliasing, no photorealism. Locked-off single static shot: the frame never moves - no pan, no zoom, no reframing, no cuts. The effect stays centered and fully inside the frame on a perfectly flat solid bright green screen in every frame: no floor, no shadows, no characters, no objects, no text. No speech, no sound-driven visuals. Full-strike chain lightning effect: the complete forked bolt appears instantly from its left origin flash to its right fork tips, crackles and flickers rapidly with arcs shifting shape while keeping both endpoints anchored in place, then vanishes and immediately re-strikes in a loopable rhythm. The whole bolt with all its endpoints stays fully inside the frame at all times, never touching the edges.",
+        "seconds": 5.2
+      }
+    },
+    "sprite_type": "vfx",
+    "project": "spirtes"
+  },
+  "vfx_impact": {
+    "display_name": "VFX - Impact Burst",
+    "ref_prompt": "32-bit era video game pixel art visual effect sprite, luminous glowing energy drawn in crisp pixel clusters with clean dithering, high color count, premium SNES arcade quality. A radial electric impact burst: a bright cyan-white flash core with jagged lightning sparks radiating outward in all directions and a few small floating embers, centered. The effect is centered with a small margin inside the frame and fully visible, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor, no objects, no characters, no text, single effect only.",
+    "animations": {
+      "burst": {
+        "prompt": "<Picture 1> defines the exact look and pixel-art style of this visual effect. 2D pixel-art game VFX animation: crisp handcrafted 32-bit pixel art with hard pixel edges and a limited retro palette in every frame. Do not smooth, do not re-render in 3D; no motion blur, no anti-aliasing, no photorealism. Locked-off single static shot: the frame never moves - no pan, no zoom, no reframing, no cuts. The effect stays centered and fully inside the frame on a perfectly flat solid bright green screen in every frame: no floor, no shadows, no characters, no objects, no text. No speech, no sound-driven visuals. Impact burst effect: starts as a tiny spark, explodes into a bright radial flash with jagged lightning sparks flying outward, then quickly dissipates into small fading embers, leaving the frame empty green. A single quick effect that completes well before the clip ends.",
+        "seconds": 5.2
+      }
+    },
+    "sprite_type": "vfx",
+    "project": "spirtes"
+  },
+  "vfx_storm": {
+    "display_name": "VFX - Lightning Storm",
+    "ref_prompt": "32-bit era video game pixel art visual effect sprite, luminous glowing energy drawn in crisp pixel clusters with clean dithering, high color count, premium SNES arcade quality. Three complete vertical lightning strikes side by side, each fully inside the image: each bolt starts at a small bright flash near the top, zigzags downward as jagged cyan-white pixel lightning, and ends in a wide impact flash burst near the bottom. Clear margin on every side; no bolt touches any edge of the image. The effect is centered with a small margin inside the frame and fully visible, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor, no objects, no characters, no text, single effect only.",
+    "animations": {
+      "loop": {
+        "prompt": "<Picture 1> defines the exact look and pixel-art style of this visual effect. 2D pixel-art game VFX animation: crisp handcrafted 32-bit pixel art with hard pixel edges and a limited retro palette in every frame. Do not smooth, do not re-render in 3D; no motion blur, no anti-aliasing, no photorealism. Locked-off single static shot: the frame never moves - no pan, no zoom, no reframing, no cuts. The effect stays centered and fully inside the frame on a perfectly flat solid bright green screen in every frame: no floor, no shadows, no characters, no objects, no text. No speech, no sound-driven visuals. AoE lightning storm effect: complete vertical bolts strike downward one after another at different positions, each appearing with a top origin flash and ending in a bright impact burst near the bottom, flickering for a moment before vanishing as the next strikes, in a loopable storm rhythm. Every bolt is fully inside the frame with its top flash and bottom impact both visible, never touching the edges.",
+        "seconds": 5.2
+      }
+    },
+    "sprite_type": "vfx",
+    "project": "spirtes"
+  },
+  "vfx_tempo_ring": {
+    "display_name": "VFX - Tempo Ring",
+    "ref_prompt": "32-bit era video game pixel art visual effect sprite, luminous glowing energy drawn in crisp pixel clusters with clean dithering, high color count, premium SNES arcade quality. A glowing circular ring of arcane rune glyphs that suggest clock faces - stylized magical time-runes with small hands and tick marks fused with lightning motifs, deep blue with white-cyan glow, evenly spaced around the ring, seen flat from the front, centered, with soft radiant light connecting them. The effect is centered with a small margin inside the frame and fully visible, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor, no objects, no characters, no text, single effect only.",
+    "animations": {
+      "pulse": {
+        "prompt": "<Picture 1> defines the exact look and pixel-art style of this visual effect. 2D pixel-art game VFX animation: crisp handcrafted 32-bit pixel art with hard pixel edges and a limited retro palette in every frame. Do not smooth, do not re-render in 3D; no motion blur, no anti-aliasing, no photorealism. Locked-off single static shot: the frame never moves - no pan, no zoom, no reframing, no cuts. The effect stays centered and fully inside the frame on a perfectly flat solid bright green screen in every frame: no floor, no shadows, no characters, no objects, no text. No speech, no sound-driven visuals. Support aura pulse effect: the glowing rune ring starts small at the center, expands smoothly outward while the clock runes rotate, brightens, then fades out before reaching the frame edge, leaving the frame empty green. A single smooth pulse that completes before the clip ends.",
+        "seconds": 5.2
+      }
+    },
+    "sprite_type": "vfx",
+    "project": "spirtes"
+  },
+  "stormshield_hd": {
+    "display_name": "Stormshield Arcanist HD",
+    "style": "painted",
+    "ref_prompt": "High-quality stylized 2D mobile-RPG hero character art: hand-painted with clean bold dark outlines, rich painterly cel shading, soft color gradients, vibrant saturated colors, slightly exaggerated heroic proportions with a strong readable silhouette, polished professional game art quality, smooth crisp edges, no pixelation. Full body, side-facing three-quarter view seen very slightly from above, standing combat-idle pose. A storm-mage skirmisher: a slender battle-caster in deep indigo-blue layered robes with silver-and-gold trim over light leather armor, short storm-grey cape, hood up. On the left arm a large ornate round shield with a polished mirror-bright steel face etched with glowing cyan lightning runes and a ring of small clock-like tempo runes around the rim, held angled forward like a focusing lens. The right hand is raised, crackling with cyan-white electricity, thin forked arcs of chain lightning bouncing off the shield face. Glowing cyan eyes, calm focused expression. The character is perfectly centered, whole body visible with a clear margin on all sides, feet at the bottom, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor line, no props, no text, no UI, single character only.",
+    "animations": {
+      "idle": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. Idle animation loop: the storm-mage breathes subtly, the cape and robe hems sway gently, and small arcs of cyan lightning flicker now and then across the rim of the round shield. The movement is small and calm, and the pose at the end matches the pose at the start so the loop is seamless. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "loop": true
+      },
+      "cast": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Skill-cast animation: the storm-mage raises the round mirrored shield forward, channels crackling cyan electricity from the raised right hand into the shield face, and the shield's runes flare with a bright compact flash held right at the shield. Clear anticipation, flash at the moment of release, a half-step recoil, then back into the guard pose. All lightning hugs the hand, arm and shield. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.5,
+            "dx": 1.3,
+            "dy": -0.5,
+            "scale": 1.35
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.62,
+            "dx": 2.6,
+            "dy": -0.5,
+            "scale": 1.1
+          }
+        ],
+        "rate": 1.35
+      },
+      "walk": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Walk cycle animation: the storm-mage marches in place with a steady rhythmic gait - feet clearly stepping, knees lifting, robes and cape bobbing with each stride, shield held exactly as in the reference. The body bobs slightly up and down but stays centered, never traveling across the frame. Even, loopable cycle. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Run cycle animation: the storm-mage runs in place at speed - strong leg drive, body leaning slightly forward, cape streaming, shield tucked close, small dust puffs at the feet. The character stays centered, never traveling across the frame. Even, loopable cycle. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 1.3
+      },
+      "jump": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character keeps the exact same three-quarter facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Jump animation: a quick crouch of anticipation, then the storm-mage leaps straight up high into the air with the cape flaring and legs tucked, hangs at the peak in the upper part of the frame, falls, and lands with a springy knee-bend recovery back into the reference stance. There is plenty of empty space above the character; the whole body including the head stays far from every frame edge at the peak of the jump. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "canvas": "portrait",
+        "rate": 2.0,
+        "range": [
+          0,
+          40
+        ]
+      },
+      "hit": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. Hit-reaction animation: the storm-mage flinches backward as if struck, raising the round shield reflexively while sparks scatter off it, a brief stagger, then recovers back into the idle guard pose. Small movement with a loop-friendly start and end. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "rate": 1.5,
+        "interrupt": true
+      },
+      "death": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. Defeat animation: the storm-mage staggers, the lightning around the hand and shield fizzles out and goes dark, drops to one knee, then collapses forward to the ground and remains still. The body stays fully inside the frame. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "attack": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Basic attack animation: a quick snappy cast - the storm-mage flicks the right hand toward the mirrored shield and a small spark of cyan lightning pops off the shield rim with a brief compact flash. Fast anticipation, sharp release, minimal recoil, straight back to the guard pose, loop-friendly. All effects stay tiny and close to the shield. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 1.15,
+            "dy": -0.52,
+            "scale": 1.0
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.6,
+            "dx": 2.1,
+            "dy": -0.55,
+            "scale": 0.8
+          }
+        ],
+        "rate": 1.6
+      },
+      "skill_aoe": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Area skill animation: the storm-mage slams the round shield up overhead with both hands; the shield's runes blaze and a compact crown of electric arcs crackles tightly around the raised shield, small sparks falling close around the body. Strong anticipation, bright climax held at the shield, then the mage lowers the shield back into the guard pose. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_storm",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 0.0,
+            "dy": -0.1,
+            "scale": 1.35
+          }
+        ],
+        "rate": 1.25
+      },
+      "skill_tempo": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Support aura animation: the storm-mage holds the round shield flat in front of the chest; the ring of small clock-like tempo runes around the shield rim lights up and spins like a clock being wound backward while a soft blue-white glow pulses gently on the shield itself. Calm confident motion, ending back in the idle guard pose. The glow stays on and close around the shield. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_tempo_ring",
+            "anim": "pulse",
+            "at": 0.4,
+            "dx": 0.0,
+            "dy": -0.45,
+            "scale": 1.5
+          }
+        ],
+        "rate": 1.2
+      },
+      "guard": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. Guard animation: the storm-mage plants both feet in a slight crouch and braces the round shield squarely forward toward the right side of the frame; a shimmering hexagonal barrier of pale cyan energy flickers across the shield face while small arcs dance on its rim. Holds the braced stance with subtle breathing, loop-friendly. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left. ",
+        "seconds": 5.2,
+        "loop": true
+      }
+    },
+    "views": {
+      "gaze": {
+        "edit_prompt": "Turn the character's head and eyes so they are clearly looking toward the right side of the image, the face in three-quarter view angled to the right. Keep the exact same character, standing pose, body position, outfit, colors, proportions, hand-painted art style, full body visible, and the exact same flat solid bright green background. Change nothing else."
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "project": "spirtes"
+  },
+  "stormshield_f": {
+    "display_name": "Petite Paladin (Stormshield)",
+    "style": "painted",
+    "ref_prompt": "High-quality stylized 2D mobile-RPG hero character art: hand-painted with clean bold dark outlines, rich painterly cel shading, soft color gradients, vibrant saturated colors, slightly exaggerated heroic proportions with a strong readable silhouette, polished professional game art quality, smooth crisp edges, no pixelation. Full body, in a platformer-hero stance like classic and modern side-scrolling action games: body angled about 30 degrees toward the right (her direction of travel) with the chest still open toward the viewer so both eyes and most of the outfit read clearly. Strong bold silhouette with game-readable proportions, feet planted apart on a clear baseline, standing combat-idle pose. A petite young female Paladin: small and slight of build, visibly dwarfed by her equipment, with a determined earnest expression, big bright cyan-glowing eyes, and light silver-white hair in a short braid. She wears polished paladin half-armor sized for a backline caster - small pauldrons, a light breastplate and greaves in white and silver with gold trim over a blue-and-white acolyte outfit, and a short storm-grey half-cape. On her left arm she carries an OVERSIZED ornate round paladin shield almost as tall as she is, its polished mirror-bright steel face etched with glowing cyan lightning runes and a ring of small clock-like tempo runes around the golden rim, planted forward like a focusing lens. Thin forked arcs of chain lightning bounce off the shield face, and her free right hand crackles with cyan-white electricity. The character is perfectly centered, whole body visible with a clear margin on all sides, feet at the bottom, no cropping. Background is a perfectly flat, uniform, solid bright green chroma-key backdrop with no shadows, no floor line, no props, no text, no UI, single character only.",
+    "animations": {
+      "idle": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Idle animation loop: the petite paladin stands alert and plucky, chin lifted, breathing steadily; she readjusts her grip on the oversized shield that is almost as tall as she is, straightens her back to look a little bigger than she is, and small arcs of cyan lightning flicker eagerly across the shield rim as if impatient with her. Small, calm, loopable movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1,
+        "range": [
+          0,
+          27
+        ],
+        "loop": true
+      },
+      "cast": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Skill-cast animation: she plants her feet wide, hoists the oversized shield forward with both determination and visible effort, channels crackling electricity from her raised hand into the mirror face, and the runes flare in a bright compact flash held at the shield - an overly serious wind-up for someone her size, paid off with a proud half-step recoil back into the guard pose. All lightning hugs her hand, arm and shield. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.5,
+            "dx": 1.3,
+            "dy": -0.5,
+            "scale": 1.35
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.62,
+            "dx": 2.6,
+            "dy": -0.5,
+            "scale": 1.1
+          }
+        ],
+        "rate": 1.35
+      },
+      "walk": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Her hips, legs and feet stride clearly toward the right side of the frame like a side-scrolling platformer hero, committed to the horizontal direction of travel, while her chest stays open toward the viewer and both eyes remain visible. She stays centered in frame, never traveling across it. Walk cycle animation: quick, purposeful little steps with a high cadence - a small person on an important mission - the oversized shield swaying slightly with each stride, braid bobbing, her expression earnest and determined. Even, loopable cycle. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1,
+        "range": [
+          10,
+          21
+        ],
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120
+      },
+      "run": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Her hips, legs and feet stride clearly toward the right side of the frame like a side-scrolling platformer hero, committed to the horizontal direction of travel, while her chest stays open toward the viewer and both eyes remain visible. She stays centered in frame, never traveling across it. Run cycle animation: an all-out earnest sprint, short legs driving hard, body leaning eagerly into the direction of travel, braid and half-cape streaming behind her, hauling the oversized shield along with stubborn effort. Determined face. Even, loopable cycle. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1,
+        "range": [
+          20,
+          61
+        ],
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260
+      },
+      "jump": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. A crisp platformer jump performed in place: a springy, energetic crouch, then she leaps straight up with surprising bounce for someone hauling an oversized shield - knees tucked, braid and cape flaring, a strong readable silhouette at the apex high in the frame - then a light-footed landing with a proud little recovery back into the reference stance. Plenty of empty space above her; her whole body stays far from every frame edge at the peak. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "canvas": "portrait",
+        "rate": 2.3,
+        "range": [
+          2,
+          36
+        ]
+      },
+      "hit": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Hit-reaction animation: the impact staggers her small frame back a step and she nearly loses her footing - but she catches herself on the oversized shield, plants her feet stubbornly, and pulls herself back into the guard stance with gritted teeth. Refuses to fall. Small movement, loop-friendly start and end. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1,
+        "range": [
+          20,
+          28
+        ],
+        "interrupt": true
+      },
+      "death": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's face, eyes, feet and body all point the same way - toward the right side of the frame - and the head never turns to the left. All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty. Defeat animation: the cyan lightning around her hand and shield flickers out and goes dark; she buckles, staggers, drops to her knees, and then falls all the way down onto her side, landing flat on the ground with her body horizontal, her oversized shield clattering down flat beside her. She ends completely motionless lying on the ground - clearly defeated, not kneeling and not getting back up. Her whole body stays inside the frame. Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "attack": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Basic attack animation: a quick, eager cast - she flicks her right hand at the oversized mirrored shield with the enthusiasm of someone who sincerely loves this part of the job, and a compact spark of cyan lightning pops off the shield rim with a bright little flash. Snappy anticipation, sharp release, tiny recoil that barely rocks her planted stance, straight back to guard. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_chain_bolt",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 1.15,
+            "dy": -0.52,
+            "scale": 1.0
+          },
+          {
+            "char": "vfx_impact",
+            "anim": "burst",
+            "at": 0.6,
+            "dx": 2.1,
+            "dy": -0.55,
+            "scale": 0.8
+          }
+        ],
+        "rate": 1.6
+      },
+      "skill_aoe": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Area skill animation: with comedic stubborn effort she heaves the oversized shield up overhead - it is almost bigger than she is - wobbling slightly under the weight before the runes blaze and a compact crown of electric arcs crackles triumphantly around the raised shield, sparks raining close around her. Big anticipation, bright climax at the shield, then she lowers it with a satisfied little nod back into the guard pose. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_storm",
+            "anim": "loop",
+            "at": 0.45,
+            "dx": 0.0,
+            "dy": -0.1,
+            "scale": 1.35
+          }
+        ],
+        "rate": 1.25
+      },
+      "skill_tempo": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. All magic effects stay small and close to the character's body and shield; no bolt, beam or ring travels away from the character and nothing reaches the frame edges (projectiles and big effects are separate overlay sprites). Support aura animation: her gentler side - she hugs the oversized shield close in front of her chest, closes her eyes for a moment in earnest concentration, and the ring of clock-like tempo runes around the rim lights up and spins like a clock wound backward while a soft protective blue-white glow pulses on the shield. Calm, caring motion, ending back in the idle stance. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "fx": [
+          {
+            "char": "vfx_tempo_ring",
+            "anim": "pulse",
+            "at": 0.4,
+            "dx": 0.0,
+            "dy": -0.45,
+            "scale": 1.5
+          }
+        ],
+        "rate": 1.2
+      },
+      "guard": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right (the direction they face and act). She keeps the exact same facing, proportions, scale and framing as the reference image for the entire clip, and the first and last frames match the reference stance exactly so the clip cuts seamlessly from and back to the idle animation. Guard animation: she ducks almost entirely behind the oversized shield - only the top of her hood, her braid and her big wary eyes peeking over the rim - feet planted stubbornly wide, a shimmering barrier of pale cyan energy flickering across the shield face. She holds the braced stance with subtle determined breathing, loop-friendly. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "rate": 1,
+        "range": [
+          16,
+          30
+        ],
+        "loop": true
+      },
+      "leap": {
+        "prompt": "<Picture 1> defines the character's exact identity, outfit, proportions, colors and hand-painted art style. Smooth 2D hand-painted game animation: clean bold outlines and painterly cel shading in every frame, fluid natural motion. Do not re-render in 3D, no photorealism, no pixelation. Locked-off single static wide shot: the frame never moves - no pan, no zoom, no push-in, no reframing, no cuts. The character stays perfectly centered at constant scale, full body always visible, feet on a fixed baseline. The background stays a perfectly flat solid bright green screen in every frame: no floor, no shadows, no environment, no props, no text. No speech, no mouth movement. The character's face, eyes, feet and body all point the same way - toward the right side of the frame - and the head never turns to the left. The clip begins and ends in the exact same mid-run stride pose as the reference image, at the same scale and framing, so it cuts seamlessly from and back to the run cycle. Running leap animation: already sprinting, the petite paladin takes one powerful drive step and launches forward into a flying horizontal leap - body stretched toward the right, the oversized shield thrust out ahead of her like a battering ram, cape streaming straight back, legs trailing in a split leap at the peak - then swings her legs forward, lands in a deep lunge that absorbs the impact, and rolls straight back up into her running stride. The whole leap is performed in place: she stays centered in frame and never travels across it; the forward momentum is conveyed entirely by her pose, lean and streaming cape. The character's head and eyes stay turned toward the right side of the frame, clearly looking to the right, never looking to the left.  All motion plays at natural real-time speed with athletic, snappy timing - never in slow motion, never floaty.  Her hairstyle stays exactly as in the reference in every single frame - the same neat bun, never loose, never a ponytail, never a different hairstyle. ",
+        "seconds": 5.2,
+        "canvas": "wide",
+        "view": "runpose",
+        "rate": 4,
+        "range": [
+          18,
+          58
+        ],
+        "move_speed": 280
+      }
+    },
+    "views": {
+      "runpose": {
+        "edit_prompt": "Change the pose to a dynamic mid-run stride facing the right side of the image: right leg driving forward, left leg trailing back, body leaning forward into the sprint, cape streaming behind her, the oversized shield held tight at her side, face and eyes toward the right. Keep the exact same character, outfit, colors, proportions, hand-painted art style, full body visible with a margin, and the exact same flat solid bright green background. Change nothing else."
+      },
+      "death_end": {
+        "edit_prompt": "Change the pose so the character is lying defeated on the ground: collapsed on her side, body horizontal along the ground, eyes closed, head resting down, arms limp, legs slack, and her oversized shield fallen flat on the ground beside her. Keep the exact same character, outfit, colors, hairstyle, proportions, hand-painted art style, her whole body visible with a margin, and the exact same flat solid bright green background. Change nothing else.",
+        "note": "generated from scratch - do NOT use as an end pose (causes drift); kept for reference only"
+      }
+    },
+    "approved": {
+      "ref": true,
+      "anims": {
+        "idle": true,
+        "walk": true,
+        "run": false,
+        "leap": true
+      }
+    },
+    "project": "spirtes"
+  },
+  "sunshield": {
+    "display_name": "Sunshield Paladin",
+    "project": "heroes",
+    "style": "painted",
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi paladin girl stands in a relaxed ready stance, full body from head to toe, in three-quarter view facing the right side of the image with her chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of her height, large warm blue eyes, a small calm closed-mouth smile, a compact torso and short limbs. Her bright blonde hair is tied in a high ponytail with a black ribbon, a few loose strands framing her face. She wears a fitted white bodice with gold trim over a pleated yellow tasset skirt, small matte armor plates with gold filigree on her shoulders and shins, brown leather belts with pouches at her waist, white thigh-high boots with gold greave plates, and a short white cape hanging still from her shoulders, clasped with a gold sun emblem. On her left arm she holds a comically oversized kite shield more than twice her own height, its point resting on the ground beside her feet and its flat matte white face painted with a large gold sun emblem; her right hand hangs open and empty at her side. The figure is small and centered with wide empty green margin above her head, below her feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under her feet.",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "She holds her relaxed ready stance and breathes slowly, her chest and shoulders rising and falling in an even rhythm of about one breath per second, while her ponytail and the hem of her cape sway very slightly with each breath; the shield stays planted on the ground line and her free right hand stays open at her side. The motion is small and even from beginning to end.",
+        "loop_mode": "pingpong",
+        "quiet": 0.3,
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "She walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second: her legs alternate clearly, her arms and ponytail bob with each step, and she carries the oversized shield upright on her left arm lifted just off the ground line, while her body stays at the same spot and size in the frame throughout. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "She performs one shield bash toward the right: she begins in her ready stance, then over the first second draws the oversized shield back a little and crouches, then in a fast snap of under half a second shifts her weight forward and slams the flat face of the shield forward, recoils slightly, and finally settles back into the exact ready stance she started in and holds it for the rest of the clip. The whole shield and her whole body stay inside the frame edges at the fullest extent of the swing.",
+        "rate": 1.05,
+        "range": [
+          5,
+          10
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "She performs a casting gesture with empty hands: she begins in her ready stance, then over the first second raises her open right hand high above her head with fingers spread while bracing the oversized shield upright in front of her with her left arm, then holds that raised pose firmly for about two seconds with her hand open and empty and the air around it clear, then lowers the hand and settles back into her ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then her head and upper body snap backward toward the left in one sharp jolt, her free arm flying up and the shield tilting, and she rocks half a step back onto her heels with her eyes squeezed shut and her teeth clenched. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame at every moment and the green field around her stays completely empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          5,
+          11
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "A heavy blow slams into her: in under half a second her head snaps back, her calm smile breaks into a wide-eyed gasp of pain and the huge shield is torn off her arm and clatters flat to the ground. She drops hard onto one knee, one arm flung out ahead of her as if still trying to shield someone behind her, then that arm buckles and she pitches forward onto her side. She lies completely still for the last two seconds, her hand still stretched out toward the fallen shield.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "She celebrates: she begins in her ready stance, then hops once on the spot with both feet leaving the ground line for a moment and landing back on it, then plants the oversized shield firmly upright beside her and thrusts her free right fist straight up with a wide grin, and finally settles into a proud held pose with her chest out and her fist still raised, holding it for the last two seconds. Her raised arm, the whole shield and the cape stay inside the frame edges.",
+        "hold_last": true
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "She braces low behind the oversized shield: she begins in her ready stance, then in half a second drops into a crouch with both hands gripping the shield, its point planted on the ground line and only her eyes visible over the rim, and holds that braced stance with a subtle tense sway, her ponytail swaying slightly. The bracing cycle is even from beginning to end.",
+        "rate": 1.0,
+        "range": [
+          0,
+          16
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "loop": true,
+        "fx": []
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "She crouches, then springs straight up into the air, knees tucked and the shield held close, rises to the top of her jump and hangs there for a moment, then falls and lands with a springy knee-bend back into her starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          13
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": []
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "She is already sprinting in mid-stride. She drives off her back foot and springs up into the air in a high running-jump arc, front knee tucked up and back leg trailing behind her, rises to the top of the arc and hangs there for a moment, then falls and lands on her front foot with a braced knee-bend that carries her straight back into a running stride.",
+        "view": "runpose",
+        "rate": 1.7,
+        "move_speed": 280.0,
+        "range": [
+          5,
+          21
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          8,
+          10,
+          12,
+          21
+        ],
+        "fx": []
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "She runs in place facing the right edge of the frame, treadmill-style, at a fast even pace of about three strides per second with a slight forward lean: her legs drive clearly, her arms pump and her ponytail and cape stream behind her, and she carries the oversized shield upright on her left arm lifted off the ground line, while her body stays at the same spot and size in the frame throughout. The stride cycle is even from beginning to end.",
+        "rate": 1.0,
+        "range": [
+          0,
+          7
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260.0,
+        "fx": []
+      }
+    },
+    "approved": {
+      "ref": true,
+      "anims": {
+        "idle": true,
+        "walk": true,
+        "attack": true,
+        "skill_cast": true,
+        "guard": true,
+        "victory": true,
+        "death": true,
+        "hit": true,
+        "jump": true,
+        "leap": true,
+        "run": true
+      }
+    },
+    "keyframes": true,
+    "identity": "a chibi paladin girl with a big head about one third of her height, large blue eyes, a small calm closed-mouth smile, bright blonde hair in a high ponytail tied with a black ribbon, a fitted white bodice with gold trim over a pleated yellow tasset skirt, small matte armor plates with gold filigree on her shoulders and shins, brown leather belts with pouches, white thigh-high boots with gold greave plates, a short white cape clasped with a gold sun emblem, and on her left arm a comically oversized flat white kite shield more than twice her own height with a large gold sun emblem on its face; her right hand is open and empty, all drawn as 32-bit pixel art with thick dark outlines and flat colors",
+    "views": {
+      "runpose": {
+        "from_anim": "run",
+        "frame": 30
+      }
+    },
+    "pronoun": "she"
+  },
+  "scientist": {
+    "display_name": "Scientist",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi scientist girl stands in a wary ready stance with her weight back as if braced for something to go wrong, full body from head to toe, in three-quarter view facing the right side of the image with her chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of her height, large green eyes behind round glasses, a flat serious deadpan mouth, a compact torso and short limbs. Her blonde hair is pulled up in a high ponytail with loose strands around her face. An enormous overloaded canvas backpack towers above her head and dominates her silhouette: a rolled bedroll across the top, a thin radio antenna, glass bottles of green and blue liquid in leather loops, buckled pouches, pinned notes and a small metal pan. She wears an open white lab coat with a green cross patch on the sleeve and an ID badge on a lanyard, brown leather harness straps, a brown utility belt of vials, brown shorts, a thigh strap of bottles, dark grey leg warmers and scuffed brown hiking boots. In her raised hand she holds a test tube of glowing green liquid trailing vapour. Cream, olive and brown colors with green glass accents. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi scientist girl with a big head about one third of her height, round glasses over large green eyes, a flat serious deadpan mouth, blonde hair in a high ponytail with loose strands, an enormous overloaded canvas backpack towering above her head with a bedroll, a radio antenna, green and blue glass bottles, buckled pouches, pinned notes and a small metal pan, an open white lab coat with a green cross patch and an ID lanyard, brown harness straps, a brown utility belt of vials, brown shorts, a thigh strap of bottles, dark grey leg warmers and brown hiking boots, holding a test tube of glowing green liquid",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "She holds her ready stance and breathes slowly, chest and shoulders rising and falling about once a second, her eyes flicking warily from side to side and the gear on her enormous backpack swaying slightly. The motion is small and even from beginning to end.",
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "She walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and the huge backpack carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "She runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, the enormous backpack bouncing heavily on her shoulders, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 1.3
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "She drops into a low defensive crouch, turning her shoulder and the huge backpack toward the front like a wall, one arm raised protectively over her head, and holds that braced stance with a tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "She crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          14
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": [],
+        "drop": [
+          6,
+          8,
+          10,
+          12
+        ]
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "She is already sprinting in mid-stride. She drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries she back into a running stride.",
+        "rate": 1.65,
+        "move_speed": 280.0,
+        "range": [
+          7,
+          18
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then over the first second winds up and hurls the test tube overhand in a fast throwing motion that completes in under half a second, follows through with her arm across her body, then straightens and settles back into the exact ready stance she started in and holds it.",
+        "rate": 1.6,
+        "range": [
+          5,
+          10
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then pulls a flask from her belt and holds it up at eye level with both hands, studying it intently through her glasses for about two seconds with a focused calculating frown, then lowers it and settles back into her ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "She begins in the ready stance, then her head and upper body snap backward in one sharp jolt and she rocks half a step back with eyes squeezed shut. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          4,
+          12
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second her head snaps back, her deadpan calm breaks into a wide-eyed look of alarm, her glasses are knocked askew and the test tube slips from her fingers and shatters. The enormous backpack drags her over backwards and she lands hard on it, one arm flailing, then she stretches a shaking hand toward the broken tube as if to check the sample. Her hand drops and she lies completely still on her back for the last two seconds, pinned under the pack.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "She lets out a relieved breath and her shoulders drop, then pushes her glasses up her nose with one finger and gives a small satisfied nod, finally settling into a composed, quietly pleased pose and holding it for the last two seconds.",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "pronoun": "she"
+  },
+  "dog": {
+    "display_name": "Dog",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi fluffy white Samoyed dog stands happily on all four legs, full body from head to toe, in three-quarter view facing the right side of the image with his body turned toward the viewer and all four paws flat on an invisible ground line. Super-deformed proportions: a big head about one third of his height, large round friendly black eyes, an open mouth smiling with a small pink tongue out, a compact fluffy body and short legs. Thick fluffy pure white fur with soft cream shading, a small black nose, pointed perked-up ears with pale pink inner ears, and a thick fluffy tail curled up over his back. A bright blue neckerchief scarf with a small white paw print is tied around his neck. He looks delighted and eager, as if about to bound forward to play. White, cream and bright blue colors. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi fluffy white Samoyed dog with a big head about one third of his height, large round friendly black eyes, an open mouth with a small pink tongue out, a small black nose, pointed perked ears with pale pink inner ears, thick pure white fur with cream shading, a thick fluffy tail curled over his back, and a bright blue neckerchief scarf with a small white paw print tied around his neck",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "He holds his ready stance and breathes slowly, chest and shoulders rising and falling about once a second, his curled tail wagging gently and his ears twitching, tongue out in a happy pant. The motion is small and even from beginning to end.",
+        "loop": true,
+        "rate": 1.0,
+        "range": [
+          0,
+          8
+        ],
+        "fx": []
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "He walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, ears and tail bobbing with each step and the blue scarf carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "He runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, his ears flat back and his fluffy tail streaming behind him, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 1.3
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "He crouches low on his front paws with his rear up and his ears flattened back, holding a braced protective stance with a subtle tense sway and his tail low. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "He crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          14
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": []
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "He is already sprinting in mid-stride. He drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries he back into a running stride.",
+        "rate": 1.45,
+        "move_speed": 280
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then over the first second crouches back on his haunches and lunges forward with a fast snapping bite that completes in under half a second, front paws leaving the ground, then drops back down and settles into the exact ready stance he started in and holds it.",
+        "rate": 1.6,
+        "range": [
+          8,
+          15
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then sits back on his haunches, lifts his head and holds a long open-mouthed bark or howl toward the sky for about two seconds with his ears back and his chest out, then drops back onto all fours and settles into his ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "He begins in the ready stance, then his head and upper body snap backward in one sharp jolt and he rocks half a step back with eyes squeezed shut. Over the next second he plants his feet, opens his eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. He is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "He staggers, his knees buckle and he sinks down, then collapses onto the ground and lies still along the ground line for the last two seconds with only his clothing settling gently. His whole body stays completely inside the frame edges.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "He bounces up on his front paws in delight, spins once in a happy circle with his tail wagging hard, then plants all four paws and settles into a proud happy stance with his tongue out and his tail curled high, holding it for the last two seconds.",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true,
+      "anims": {
+        "victory": true,
+        "death": true,
+        "hit": true,
+        "jump": true,
+        "leap": true,
+        "attack": true,
+        "skill_cast": true,
+        "guard": true,
+        "run": true,
+        "walk": true,
+        "idle": true
+      }
+    },
+    "pronoun": "he",
+    "sprite_scale": 0.6
+  },
+  "ninja": {
+    "display_name": "Ninja",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi ninja girl stands in an eager energetic ready stance with one fist planted on her hip and a small black kunai dagger held up beside her head, full body from head to toe, in three-quarter view facing the right side of the image with her chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of her height, large bright violet eyes crinkled in a warm friendly smile above a purple cloth mask covering her nose and mouth, a compact torso and short limbs. Light brown skin and black hair tied in a high ponytail with a purple ribbon, loose strands framing her face. She wears a sleeveless purple ninja top leaving her arms and midriff bare, black cloth wrappings on her forearms, a purple wrap skirt patterned with pale flowers over dark shorts with a braided purple belt, a thigh holster of small daggers, black wrappings down her calves and purple strapped sandals. A long purple scarf trails from her shoulder. Purple, black and warm brown colors. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi ninja girl with a big head about one third of her height, large bright violet eyes above a purple cloth mask covering her nose and mouth, light brown skin, black hair in a high ponytail tied with a purple ribbon, a sleeveless purple top leaving her arms and midriff bare, black forearm wrappings, a purple wrap skirt patterned with pale flowers over dark shorts with a braided purple belt, a thigh holster of small daggers, black calf wrappings, purple strapped sandals and a long trailing purple scarf, holding a small black kunai",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "She holds her ready stance and breathes slowly, chest and shoulders rising and falling about once a second, her long purple scarf and ponytail drifting lightly. The motion is small and even from beginning to end.",
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "She walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and a kunai carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120.0,
+        "rate": 1.2,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "She runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, her long purple scarf and ponytail streaming behind her, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260.0,
+        "rate": 2.2,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "She drops into a low crouched guard, both arms crossed in front of her face with the kunai held flat, weight on her back foot, and holds that coiled stance with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "She crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.55,
+        "range": [
+          3,
+          14
+        ],
+        "move_speed": 0,
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          6,
+          8,
+          10
+        ]
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "She is already sprinting in mid-stride. She drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries she back into a running stride.",
+        "rate": 1.7,
+        "move_speed": 280.0,
+        "range": [
+          5,
+          17
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          7,
+          10,
+          13
+        ],
+        "fx": []
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then over the first second draws her arm back past her head and snaps it forward in a fast overhand throw that completes in under half a second, body twisting with the follow-through, then recovers and settles back into the exact ready stance she started in and holds it.",
+        "rate": 1.25,
+        "range": [
+          9,
+          15
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then sweeps into a wide flourishing throwing pose, arm extended and scarf sweeping behind her, and holds that dramatic pose for about two seconds with her eyes bright and determined, then relaxes and settles back into her ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "She begins in the ready stance, then her head and upper body snap backward in one sharp jolt and she rocks half a step back with eyes squeezed shut. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          5,
+          11
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second her head snaps back, her bright eyes fly wide with shock above the mask and the kunai spins out of her hand. She stumbles two quick steps trying to stay on her feet, one arm windmilling for balance, then her knees give out and she drops flat onto her front and slides to a stop, one arm outstretched toward the fallen kunai. She lies completely still for the last two seconds, her long scarf settling down over her back.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "She hops once in place, scarf flying, and in the first second flips the kunai back into her thigh holster so both hands come free, then plants her feet and settles into a proud pose with one hand on her hip and the other flashing a clear two-finger peace sign beside her eye, holding that pose completely still for the last two seconds.",
+        "hold_last": true,
+        "rate": 0.7,
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "pronoun": "she",
+    "sprite_scale": 0.9
+  },
+  "sorcerer": {
+    "display_name": "Magicless Sorcerer",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi sorceress stands proudly with her chest out and one fist on her hip, full body from head to toe, in three-quarter view facing the right side of the image with her chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of her height, a wide open-mouthed confident grin and bright happy eyes, a compact torso with extremely thick muscular arms and thighs. Short tousled light brown hair under an enormous floppy black wizard hat with a purple band and a small hanging tassel. She wears black sleeveless sorcerer robes with gold trim that leave her muscular arms bare, a brown leather belt with cords and tassels, a high slit skirt showing one heavily muscled thigh marked with small pale training scars, brown leather bracers, white bandage wraps on one thigh and calf, and brown strapped sandals. In her other hand she holds an enormous solid steel staff as tall as she is, a heavy studded club head resting on the ground beside her. Black, purple, gold and steel grey colors. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi sorceress with a big head about one third of her height, a wide open-mouthed confident grin and bright happy eyes, short tousled light brown hair under an enormous floppy black wizard hat with a purple band and hanging tassel, extremely thick muscular arms and thighs, black sleeveless sorcerer robes with gold trim, a brown leather belt with cords and tassels, a high slit skirt over one heavily muscled scarred thigh, brown bracers, white bandage wraps and brown strapped sandals, holding an enormous solid steel staff as tall as she is with a heavy studded club head",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "She holds her ready stance and breathes slowly, chest and shoulders rising and falling about once a second, her huge hat brim and robe hem swaying and her grin never faltering. The motion is small and even from beginning to end.",
+        "loop": true,
+        "rate": 1,
+        "range": [
+          0,
+          16
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "She walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and the massive steel staff carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "She runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, the massive steel staff swinging heavily in one hand and her huge hat brim flapping, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 2.25,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "She plants the massive steel staff upright in front of her like a pillar and braces behind it with both hands and her shoulder set, knees bent, holding that immovable stance with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "She crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          14
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": []
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "She is already sprinting in mid-stride. She drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries she back into a running stride.",
+        "rate": 1.85,
+        "move_speed": 280,
+        "range": [
+          7,
+          20
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then swings down her steel staff in one enormous heavy arc that completes in under half a second, the staff slamming down",
+        "rate": 1.6,
+        "range": [
+          11,
+          16
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then hoists the massive steel staff high overhead with both hands and holds it up in a huge triumphant flex for about two seconds, grinning hugely with her muscles bunched, then lowers it and settles back into her ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "She begins in the ready stance, then her head and upper body snap backward in one sharp jolt and she rocks half a step back with eyes squeezed shut. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          5,
+          11
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second her head snaps back, her huge grin twists into a clenched-teeth snarl of pain and her wizard hat is knocked askew over one eye. She rams the massive steel staff into the ground and hauls on it with both hands, refusing to go down, holding herself up on one shaking knee for a beat - then her grip fails, the staff topples away and she drops flat on her back with her arms flung wide. She lies completely still for the last two seconds.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true,
+        "canvas": "wide"
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "She throws her arm up and flexes her bicep hugely, laughing with her head back",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true,
+      "anims": {
+        "death": false
+      }
+    },
+    "pronoun": "she",
+    "sprite_scale": 1.3
+  },
+  "barbarian": {
+    "display_name": "Barbarian",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era semi-chibi pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single blue-furred wolf-man barbarian stands upright in a gentle quiet posture, shoulders soft and head level, full body from head to toe, in three-quarter view facing the right side of the image with his chest open toward the viewer and both clawed feet flat on an invisible ground line. Tall pointed wolf ears, soft kind blue eyes under gently sloped brows and a friendly timid closed-mouth smile. Blue fur with a cream-white muzzle, brow marking, chest ruff and ear tufts, and a big bushy blue tail hanging low behind him. He wears simple barbarian leather gear: a sleeveless deep blue tunic wrap, crossed brown leather chest straps with small pouches, a cream fur collar, a wide brown belt, a long dark blue tabard panel marked with a pale diamond, brown leather bracers and leg wraps, clawed hands and bare clawed feet. He holds a large halberd upright at his side, gripped low so the axe head sits level with his shoulder. Blue, cream, brown and iron grey colors. The figure is centered and fills most of the frame from top to bottom, with a small green margin above his ears and below his feet. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under his feet.",
+    "identity": "a blue-furred wolf-man with soft kind blue eyes under gently sloped brows, a friendly timid closed-mouth smile with two fangs, tall pointed wolf ears, a cream-white muzzle, brow marking and chest ruff, a big bushy blue tail hanging low, a sleeveless deep blue tunic wrap, crossed brown leather chest straps with small pouches, a cream fur collar, a wide brown belt, a long dark blue tabard panel marked with a pale diamond, brown leather bracers and leg wraps, clawed hands and bare clawed feet, holding a large halberd",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "He holds his ready stance and breathes slowly, chest and shoulders rising and falling about once a second, his bushy tail swaying slowly and his ears twitching, standing upright with his shoulders soft, the halberd resting butt-down on the ground beside him. The motion is small and even from beginning to end.",
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "He walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second with a light quiet step, his free arm bobbing with each step and the halberd shouldered steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120.0,
+        "rate": 1.15,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "He runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, long legs reaching, his bushy tail streaming behind him and the halberd carried low in one fist, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260.0,
+        "rate": 2.05,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "He holds the halberd horizontally across his chest in both fists and hunches down behind it, ears flattened back and knees bent, holding that braced defensive stance with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "He crouches, then springs lightly straight up into the air with the halberd swung out for balance, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          14
+        ],
+        "fx": [],
+        "move_speed": 0,
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "He is already sprinting in mid-stride. He drives off the back foot and springs up into a high running-jump arc with the halberd swept back behind him, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries him back into a running stride.",
+        "rate": 1.5,
+        "move_speed": 280.0,
+        "range": [
+          6,
+          17
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then over the first second draws the halberd back low and steps in with one fast precise thrust that completes in under half a second, quick and economical rather than wild, then draws it back and settles into the exact ready stance he started in and holds it.",
+        "rate": 1.3,
+        "range": [
+          6,
+          13
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then plants his feet and raises the halberd high above his head in both fists, ears back and fangs bared in a rare fierce snarl, holding that pose for about two seconds, then lowers the halberd and settles back into his quiet ready stance by the end.",
+        "rate": 1.35,
+        "range": [
+          5,
+          20
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "He begins in the ready stance, then his head and upper body snap backward in one sharp jolt and he rocks half a step back with eyes squeezed shut, the halberd swinging wide in his grip. Over the next second he plants his feet, opens his eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. He is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          4,
+          11
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second his head snaps back, his timid smile breaks into a wide-eyed yelp, his ears flatten hard against his skull and the halberd falls out of his hands. He drops onto his knees and curls forward over himself, shoulders hunching in as if to take up less room, then topples onto his side. He lies completely still for the last two seconds, curled up with his bushy tail wrapped around himself.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "hold_last": true,
+        "action": "He begins in his ready stance, then plants the halberd butt-down on the ground beside him in both fists, his ears perking straight up and his big bushy tail wagging hard, and raises his free fist to his chest in a shy delighted cheer as his closed-mouth smile widens over his fangs, then settles into a proud happy stance with his chest out and his tail still wagging, holding it for the last two seconds. The halberd head, his ears and his tail stay inside the frame edges.",
+        "rate": 1.0,
+        "range": [
+          0,
+          13
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "pronoun": "he",
+    "sprite_scale": 0.8
+  },
+  "surgeon": {
+    "display_name": "Surgeon",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi surgeon man stands relaxed and composed with an easy confident posture, full body from head to toe, in three-quarter view facing the right side of the image with his chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of his height, soft kind eyes behind thin glasses and a warm gentle closed-mouth smile, a compact torso and short limbs. Dark brown skin and clean-cut tousled dark brown hair. He wears a long open white doctor's coat over a high-collared dark grey buttoned shirt and dark trousers, a brown leather belt with a simple dark scabbard on his hip, a stethoscope around his neck, an ID badge and pens in his coat pocket, and worn brown leather boots. In one raised hand he holds a single long thin surgical blade, its steel edge catching the light, held lightly the way a craftsman holds a familiar tool. White, dark grey, brown and warm skin tones with steel accents. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi surgeon man with a big head about one third of his height, dark brown skin, clean-cut tousled dark brown hair, thin glasses over soft kind eyes and a warm gentle smile, a long open white doctor's coat over a high-collared dark grey buttoned shirt and dark trousers, a stethoscope around his neck, an ID badge and pens in the coat pocket, a brown belt with a dark scabbard, brown leather boots, holding a single long thin surgical blade",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "He holds his ready stance and breathes slowly, chest and shoulders rising and falling about once a second, the hem of his long white coat swaying gently. The motion is small and even from beginning to end.",
+        "loop": true,
+        "rate": 1.0,
+        "range": [
+          0,
+          16
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "He walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and a thin surgical blade carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "He runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, the long white coat billowing behind him, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260,
+        "rate": 1.3
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "He turns side-on and raises the blade across his body in a precise defensive guard, his free hand open and ready, knees slightly bent, holding that composed stance with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "He crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.25,
+        "range": [
+          4,
+          15
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": []
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "He is already sprinting in mid-stride. He drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries he back into a running stride.",
+        "rate": 1.75,
+        "move_speed": 280.0,
+        "range": [
+          8,
+          21
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          10,
+          12,
+          14,
+          16,
+          18
+        ]
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then over the first second steps in and delivers one fast precise slash with the surgical blade that completes in under half a second, his arm snapping through a clean short arc, then withdraws smoothly and settles into the exact ready stance he started in and holds it.",
+        "rate": 1.6,
+        "range": [
+          5,
+          12
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then raises the surgical blade vertically in front of his face and studies its edge with calm focused concentration for about two seconds, his free hand steadying his wrist, then lowers it and settles back into his ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "He begins in the ready stance, then his head and upper body snap backward in one sharp jolt and he rocks half a step back with eyes squeezed shut. Over the next second he plants his feet, opens his eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. He is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          5,
+          10
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "A heavy blow slams into him: in under half a second his head snaps back, his gentle smile breaks into a sharp grimace and his glasses are knocked askew. He catches the surgical blade against his chest with both hands and sinks onto one knee, head bowed over it for a beat as if saying goodbye, then folds quietly onto his side. He lies completely still for the last two seconds, both hands still holding the blade to his chest.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "He lets out a quiet breath and lowers the blade, adjusts his glasses with two fingers, then slides the blade into the scabbard on his belt and settles into a calm, warmly smiling pose with one hand resting on the hilt, holding it for the last two seconds.",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "pronoun": "he",
+    "sprite_scale": 1.15
+  },
+  "businesswoman": {
+    "display_name": "Businesswoman",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi businesswoman stands like she is presenting to a room, one fist planted on her hip, full body from head to toe, in three-quarter view facing the right side of the image with her chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of her height, a wide beaming confident grin and bright enthusiastic brown eyes, a compact torso and short limbs. Bright red hair pinned up in a messy bun with a yellow pencil stuck through it. She wears a crisp navy-blue business suit jacket over a white collared shirt, navy trousers, a thin gold necklace and a small gold lapel pin, and brown heeled ankle boots. In her other hand she holds an enormous heavy black reinforced travel case, as tall as she is and nearly as wide, with brass corner fittings, thick brass latches and a small brass nameplate, standing on the ground beside her like a shield. Navy blue, white, black, brass and bright red colors. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi businesswoman with a big head about one third of her height, a wide beaming grin and bright enthusiastic brown eyes, bright red hair in a messy bun with a yellow pencil through it, a crisp navy-blue suit jacket over a white collared shirt, navy trousers, a thin gold necklace and gold lapel pin, brown heeled ankle boots, and an enormous heavy black reinforced travel case as tall as she is with brass corner fittings, thick brass latches and a small brass nameplate",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "She holds her ready stance and breathes slowly, chest and shoulders rising and falling about once a second, a loose strand of red hair bouncing. The motion is small and even from beginning to end.",
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "She walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and the enormous black case carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "She runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, the enormous black case swinging heavily in one hand, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260.0,
+        "rate": 2.0,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "She swings the enormous black case up in front of her body like a wall and braces behind it with both hands, knees bent and only her grinning eyes visible over the top, holding that stance with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "She crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.35,
+        "range": [
+          4,
+          15
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "move_speed": 0,
+        "fx": []
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "She is already sprinting in mid-stride. She drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries she back into a running stride.",
+        "rate": 1.45,
+        "move_speed": 280
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then over the first second hauls the enormous black case back and slams it forward in a fast heavy bash that completes in under half a second, her whole body behind it, then swings it back down beside her and settles into the exact ready stance she started in and holds it.",
+        "rate": 1.75,
+        "range": [
+          5,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          12,
+          13
+        ]
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "She begins in her ready stance, then hefts the enormous black case up in front of her and presents it proudly to the viewer with her free hand held out in a showman's flourish, holding that presentation pose for about two seconds with an enormous grin, then lowers it and settles back into her ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "She begins in the ready stance, then her head and upper body snap backward in one sharp jolt and she rocks half a step back with eyes squeezed shut. Over the next second she plants her feet, opens her eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. She is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          6,
+          15
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second her head snaps back, her beaming grin breaks into a wide-eyed gasp and the enormous case slams down flat on its edge beside her. She grabs the case handle with both hands and hauls on it, refusing to let go, and is dragged down onto one knee, then slumps back against the fallen case and slides down it. She comes to rest sitting slumped against the case for the last two seconds, head lolling forward, one hand still on the handle.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "She pumps her free fist in triumph and gives a delighted little hop, then plants the enormous case down beside her, leans an elbow on it and settles into a proud grinning pose with her other hand on her hip, holding it for the last two seconds.",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true,
+      "anims": {
+        "idle": true,
+        "walk": true,
+        "run": true,
+        "guard": true,
+        "skill_cast": true,
+        "attack": true,
+        "leap": true,
+        "jump": true,
+        "death": true,
+        "victory": true,
+        "hit": true
+      }
+    },
+    "pronoun": "she"
+  },
+  "monk": {
+    "display_name": "Monk",
+    "project": "heroes",
+    "style": "painted",
+    "keyframes": true,
+    "pixel_bits": "32",
+    "ref_prompt": "A 32-bit era pixel art video game character sprite: crisp square pixels with hard aliased edges, clean dithered shading, a limited retro palette and a thick dark outline, arcade-quality. A single chibi monk man with his eyes drawn shut - each eye is just one simple thin dark line curving gently downward across his face, the serene look of someone deep in meditation - stands in a still centered stance with a long-barrelled revolver held low in each hand, full body from head to toe, in three-quarter view facing the right side of the image with his chest open toward the viewer and both feet flat on an invisible ground line. Super-deformed proportions: a big head about one third of his height, a firm calm mouth and a quiet hidden intensity in his stillness, a compact lean torso and short limbs. A bald head with a row of small dark incense dots across the crown, a thin dark goatee, and dark brown skin. He wears layered bright orange monk robes with a dark brown sash and geometric trim, dark grey under-robes, dark cloth wrappings down his shins and worn brown sandals, and a long string of large wooden prayer beads hangs around his neck. Bright orange, dark brown, grey and gunmetal colors. The figure is small and centered with wide empty green margin above the head, below the feet and on both sides. The background is one flat uniform chroma-key green, color #00FF00, evenly lit edge to edge under flat shadowless studio lighting, the same green everywhere including under the feet.",
+    "identity": "a chibi monk man with a big head about one third of his height, a bald head with a row of small dark incense dots across the crown, a thin dark goatee, dark brown skin, eyes shut closed, and firm calm mouth, layered bright orange monk robes with a dark brown sash and geometric trim, dark grey under-robes, dark shin wrappings, brown sandals, a long string of large wooden prayer beads around his neck, and a long-barrelled revolver held in each hand",
+    "animations": {
+      "idle": {
+        "seconds": 5.2,
+        "action": "He holds his ready stance and breathes slowly, chest and shoulders rising and falling about once a second, his orange robes and prayer beads swaying very slightly, his gaze steady. The motion is small and even from beginning to end.",
+        "loop": true
+      },
+      "walk": {
+        "seconds": 5.2,
+        "action": "He walks in place facing the right edge of the frame, treadmill-style, at a brisk even pace of two full strides per second, arms bobbing with each step and two revolvers carried steady, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 120,
+        "rate": 1.15
+      },
+      "run": {
+        "seconds": 5.2,
+        "action": "He runs in place facing the right edge of the frame at a fast even pace of about three strides per second with a forward lean, his orange robes billowing and prayer beads swinging, staying at the same spot and size in frame. The stride cycle is even from beginning to end.",
+        "loop": true,
+        "use_action": true,
+        "gait": true,
+        "move_speed": 260.0,
+        "rate": 1.8,
+        "range": [
+          0,
+          16
+        ],
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35
+      },
+      "guard": {
+        "seconds": 5.2,
+        "action": "He turns side-on and crosses both revolvers in front of his chest, head lowered and knees bent in a disciplined braced stance, holding it with a subtle tense sway. The bracing cycle is even from beginning to end.",
+        "loop": true
+      },
+      "jump": {
+        "seconds": 5.2,
+        "action": "He crouches, then springs straight up into the air, rises to the top of the jump and hangs there a moment, then falls and lands with a springy knee-bend back into the starting stance and holds it.",
+        "rate": 1.5,
+        "range": [
+          3,
+          17
+        ],
+        "move_speed": 0,
+        "fx": [],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "drop": [
+          7,
+          9,
+          11,
+          13
+        ]
+      },
+      "leap": {
+        "seconds": 5.2,
+        "action": "He is already sprinting in mid-stride. He drives off the back foot and springs up into a high running-jump arc, hangs at the top, then falls and lands on the front foot with a braced knee-bend that carries he back into a running stride.",
+        "rate": 1.45,
+        "move_speed": 280.0,
+        "range": [
+          9,
+          21
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": [],
+        "drop": [
+          11,
+          13,
+          15,
+          17
+        ]
+      },
+      "attack": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then SHOOTS BOTH PISTOLS IN RAPID SUCCESSION, the pistols kicking sharply upward in under half a second, then lowers the arms, bows his head briefly, and settles into the exact ready stance he started in and holds it.",
+        "rate": 1.6,
+        "range": [
+          5,
+          13
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "skill_cast": {
+        "seconds": 5.2,
+        "action": "He begins in his ready stance, then raises both revolvers out to his sides at shoulder height in a wide braced firing stance, head lowered and jaw set, and holds that pose for about two seconds, then lowers both arms and settles back into his ready stance by the end.",
+        "rate": 1.35
+      },
+      "hit": {
+        "seconds": 5.2,
+        "action": "He begins in the ready stance, then his head and upper body snap backward in one sharp jolt and he rocks half a step back with eyes squeezed shut. Over the next second he plants his feet, opens his eyes and straightens up, and finally returns exactly to the ready stance of the first frame and holds it. He is the only thing in the frame and the background stays empty from edge to edge.",
+        "rate": 1.5,
+        "interrupt": true,
+        "range": [
+          5,
+          12
+        ],
+        "loop_mode": "cycle",
+        "quiet": 0.35,
+        "fx": []
+      },
+      "death": {
+        "seconds": 5.2,
+        "action": "in under half a second his head snaps back, his shut eyes fly wide open, his calm face twists into a clenched grimace and both revolvers drop from his hands. He sinks onto his knees, presses his palms together in front of his chest and bows his head in one last prayer for a beat, then pitches forward onto his side. He lies completely still for the last two seconds, his hands still pressed together.",
+        "rate": 1.2,
+        "hold_last": true,
+        "interrupt": true
+      },
+      "victory": {
+        "seconds": 5.2,
+        "action": "He lowers both revolvers, then holsters them at his sides and presses his palms together in front of his chest, bowing his head in a slow respectful bow, and settles into that calm prayerful pose and holds it for the last two seconds.",
+        "hold_last": true
+      }
+    },
+    "approved": {
+      "ref": true
+    },
+    "pronoun": "he",
+    "sprite_scale": 1.15
+  }
+}
