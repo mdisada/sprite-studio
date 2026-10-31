@@ -1,4 +1,4 @@
-# Comfy Sprite Studio
+# Sprite Studio
 
 **Turn a text description into an animated, transparent game sprite — idle, walk, attack, spells and all.**
 
@@ -8,6 +8,19 @@ cleans it up into real pixel-art sprite frames you can drop straight into a game
 ![Example output: one character, 11 animations, plus 4 spell effects](docs/overview.png)
 
 *Everything above came out of this tool: one character with 11 animations, plus 4 spell effects.*
+
+## Examples
+
+Every one of these started as a paragraph of text. No drawing, no animating by hand.
+
+| | | | | |
+|:-:|:-:|:-:|:-:|:-:|
+| ![Monk idle](docs/examples/monk_idle.gif) | ![Monk attack](docs/examples/monk_attack.gif) | ![Surgeon run](docs/examples/surgeon_run.gif) | ![Ninja leap](docs/examples/ninja_leap.gif) | ![Sorcerer walk](docs/examples/sorcerer_walk.gif) |
+| Monk · idle | Monk · attack | Surgeon · run | Ninja · leap | Sorcerer · walk |
+| ![Dog run](docs/examples/dog_run.gif) | ![Paladin idle](docs/examples/sunshield_idle.gif) | ![Businesswoman attack](docs/examples/businesswoman_attack.gif) | ![Scientist idle](docs/examples/scientist_idle.gif) | ![Impact burst effect](docs/examples/vfx_impact_burst.gif) |
+| Dog · run | Paladin · idle | Businesswoman · attack | Scientist · idle | Effect · impact burst |
+
+*(The previews have a dark background so you can see them. The real frames are transparent PNGs.)*
 
 ---
 
@@ -55,7 +68,7 @@ Unzip it somewhere simple, like `C:\SpriteStudio`.
 **Or with git:**
 
 ```bash
-git clone https://github.com/mdisada/comfy-sprite-studio.git
+git clone https://github.com/mdisada/sprite-studio.git
 ```
 
 ### Step 2 — Install the Python bits
@@ -92,21 +105,67 @@ The studio walks you through 3 steps for each sprite. Follow them in order.
 
 ### 1. Make a reference picture (~1 minute)
 
-- Click **+ Character** (a person/creature) or **+ Effect** (a spell, explosion, aura...).
-- A ready-made description appears. **Only change the part that says `DESCRIBE`** — write what your character looks like.
-  Leave the rest alone; it's what makes the background transparent and the style consistent.
-- Click generate. Don't like it? Generate again — pictures are cheap, try as many times as you want.
+- Click **+ New character** (a person, creature, animal...) or **+ New effect** (a spell, explosion, aura...).
+- A ready-made description appears. **Only replace the parts in CAPITALS that start with `DESCRIBE`.**
+  Leave the rest alone; it's what makes the background transparent and keeps the style consistent.
+- Generate the reference. Don't like it? Click **🎲 6 seed variations** to get 6 more takes and pick the best.
+  Pictures are cheap, so try as many as you want.
+- Already have art? Use **📤 upload a reference image** instead.
+- When you're happy, click **✓ approve this reference**.
 
 ### 2. Animate it (~10 minutes per animation)
 
-- Pick animations from the presets: idle, walk, run, jump, attack, skill, hit, death.
+- Pick animations from the presets: idle, walk, run, jump, attack, skill, hit, death, victory...
+  (**+full kit** adds the whole standard set in one click.)
+- Each animation has a short **action** sentence describing the movement. The preset fills it in; tweak it if you like.
 - Before anything starts, a box pops up telling you **exactly what will render and how long it will take**. Read it, then confirm.
+- Use **test** renders first if you're unsure — they're quick but rough. Switch to final for the real thing.
 - This part is slow. Queue several animations at once and go do something else.
 
 ### 3. Tweak the result (instant, free)
 
 - Adjust sprite size, colors, speed, and trim frames off the start/end.
 - These changes take seconds and **don't re-run the AI**, so experiment freely.
+- Click **Export for Godot** when you're done (see below).
+
+---
+
+## Sample: writing a good description
+
+This is the kind of thing you write in the `DESCRIBE` parts. Be specific about **who they are, their body, face, outfit, colors, and what they're holding**.
+
+**Character** (this made the dog in the examples):
+
+> A single chibi fluffy white Samoyed dog stands happily on all four legs ... large round friendly black eyes,
+> an open mouth smiling with a small pink tongue out ...
+
+**Character** (this made the monk):
+
+> A single chibi monk man with his eyes drawn shut ... stands in a still centered stance with a long-barrelled
+> revolver held low in each hand ... A bald head with a row of small dark incense dots across the crown, a thin
+> dark goatee, and dark brown skin. He wears layered bright orange monk robes with a dark brown sash ...
+> and a long string of large wooden prayer beads hangs around his neck. Bright orange, dark brown, grey and gunmetal colors.
+
+**Effect** (this made the impact burst):
+
+> A radial electric impact burst: a bright cyan-white flash core with jagged lightning sparks radiating outward
+> in all directions and a few small floating embers, centered.
+
+**Animation action** (the monk's attack):
+
+> He begins in his ready stance, then SHOOTS BOTH PISTOLS IN RAPID SUCCESSION, the pistols kicking sharply upward
+> in under half a second, then lowers the arms, bows his head briefly, and settles into the exact ready stance he
+> started in and holds it.
+
+**Tips that make a big difference**
+
+- ✅ **Start and end the action in the same pose** ("settles into the exact ready stance he started in").
+  That makes the animation loop smoothly in your game.
+- ✅ **Write the key move in CAPITALS** so the video model doesn't skip it.
+- ✅ **List colors at the end** ("Bright orange, dark brown, grey"). The model sticks to them better.
+- ❌ **Don't describe a background or scenery.** The template already asks for a green screen, and anything else breaks transparency.
+- ❌ **Don't put huge effects on a character** (giant explosions, long beams). Make those a separate **+ New effect** sprite
+  and layer it on top in your game. Otherwise they get cut off at the edge of the frame.
 
 ### Where are my sprites?
 
@@ -123,6 +182,8 @@ sprites_out/<your sprite>/
 ```
 
 ### Using them in Godot
+
+Click **Export for Godot** in the studio, or run this in the Command Prompt:
 
 ```bash
 python -m sprite_pipeline.export_godot --char YOUR_SPRITE_NAME
@@ -142,7 +203,7 @@ resources. All animations share one size and anchor, so your character doesn't j
 | **'python' is not recognized** | Install Python from [python.org](https://www.python.org/downloads/) and tick **"Add Python to PATH"**. |
 | ComfyUI errors about a **missing model / value not in list** | A model file is missing, in the wrong folder, or renamed. Check the table above, then restart ComfyUI. |
 | **Out of memory** errors | Close other programs using the GPU (games, other AI tools). You need 16 GB VRAM. |
-| Background isn't transparent / green edges | You edited out the green-screen part of the description. Click **+ Character** again to get a fresh template and only change the `DESCRIBE` part. |
+| Background isn't transparent / green edges | You edited out the green-screen part of the description. Click **+ New character** again to get a fresh template and only change the `DESCRIBE` part. |
 | Port 8899 is already in use | Another studio is already open — check your other browser tabs and black windows. |
 | Results look rough in **test** mode | Test mode is a quick plumbing check, not quality. Use **final** mode for real sprites. |
 
