@@ -28,10 +28,18 @@ Read this list first. If you're missing any of these, the studio **will not work
 
 | You need | Why | How to check |
 |---|---|---|
-| **Windows PC with an NVIDIA GPU, 16 GB VRAM or more** | The AI models run on your graphics card | Task Manager → Performance → GPU → "Dedicated GPU memory" |
+| **Windows PC with an NVIDIA GPU** — 16 GB VRAM tested, 12 GB likely works (slower) | The AI models run on your graphics card | Task Manager → Performance → GPU → "Dedicated GPU memory" |
+| **32 GB of system RAM or more** (48 GB tested) | The animation model is bigger than any home GPU, so ComfyUI keeps most of it in normal RAM and streams it to the GPU. **This matters as much as the GPU.** | Task Manager → Performance → Memory → the number at the top right |
 | **[ComfyUI](https://github.com/comfyanonymous/ComfyUI)** installed and working | It's the engine that actually runs the AI models. This studio just tells it what to do. | You can open ComfyUI in your browser and generate an image |
 | **Python 3.9 or newer** | Runs the studio | Open Command Prompt, type `python --version`, press Enter. You should see `Python 3.9` or higher. |
 | **The AI model files** (list below) | Without them ComfyUI has nothing to run | Look in your ComfyUI `models` folder |
+
+> **How much GPU do I really need?** The animation files add up to about 42 GB, far more than any 16 GB card holds.
+> It still runs because ComfyUI keeps the model in system RAM and moves pieces to the GPU as needed.
+> So **less VRAM mostly means slower, not broken**, as long as you have enough RAM.
+> The thing that won't fit on a small card is the video being rendered itself. If you run out of memory, use
+> **test** renders (much smaller) or lower the video size. Only a 16 GB RTX 4060 Ti with 48 GB RAM has been tested;
+> if you get it working on less, please open an issue and say so!
 
 ### The model files
 
@@ -200,7 +208,8 @@ resources. All animations share one size and anchor, so your character doesn't j
 | `studio.bat` flashes and closes / says **No module named ...** | You skipped Step 2 of the install. Do it now. |
 | **'python' is not recognized** | Install Python from [python.org](https://www.python.org/downloads/) and tick **"Add Python to PATH"**. |
 | ComfyUI errors about a **missing model / value not in list** | A model file is missing, in the wrong folder, or renamed. Check the table above, then restart ComfyUI. |
-| **Out of memory** errors | Close other programs using the GPU (games, other AI tools). You need 16 GB VRAM. |
+| **Out of memory** errors | Close other programs using the GPU or RAM (games, browsers with many tabs, other AI tools). Still failing? Try a **test** render first. It uses a much smaller video. If test works but final doesn't, your GPU is too small for full-size clips. |
+| Animating is **extremely slow** or Windows freezes | You're short on system RAM, so Windows is swapping to disk. Close other programs, or add RAM (32 GB minimum, 48 GB+ is comfortable). |
 | Background isn't transparent / green edges | You edited out the green-screen part of the description. Click **+ New character** again to get a fresh template and only change the `DESCRIBE` part. |
 | Port 8899 is already in use | Another studio is already open — check your other browser tabs and black windows. |
 | Results look rough in **test** mode | Test mode is a quick plumbing check, not quality. Use **final** mode for real sprites. |
@@ -255,7 +264,7 @@ Sprite definitions live in `characters.json`, shared by the web UI and the CLI.
 
 Design notes:
 
-- **Model loading**: stages are grouped per model family and ComfyUI's `/free` is called between them, so a 16 GB GPU never holds both models at once.
+- **Model loading**: stages are grouped per model family and ComfyUI's `/free` is called between them, so the drawing and animation models are never loaded at the same time. The H3 weights (~42 GB total) exceed VRAM on consumer cards; ComfyUI's smart memory offloads them to system RAM, so VRAM mainly bounds the activation size (video resolution × frame count).
 - **H3 clip length** must be `5 + 17k` frames at 24 fps. The trained range is ~124–362 frames (5.2s+); test mode's 22-frame clips are only for plumbing checks.
 - **Green screen instead of transparency**: diffusion models can't output alpha, so we prompt a flat green backdrop and key it out.
 - **Palette lock**: one median-cut palette is built from all frames of an animation and every frame is quantized to it — this is what makes it read as hand-pixelled animation instead of smeared video.
