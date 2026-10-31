@@ -23,14 +23,14 @@ import uuid
 import webbrowser
 from contextlib import redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from PIL import Image, UnidentifiedImageError
 
 from . import characters as templates
 from . import export_godot, pipeline, postprocess, store
-from .comfy_client import ComfyClient
+from .comfy_client import ComfyClient, JobCancelled
 
 PORT = int(os.environ.get("SPRITE_UI_PORT", "8899"))
 HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui.html")
@@ -38,7 +38,9 @@ HTML_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui.html
 _QUEUE = queue.Queue()
 _JOBS = {}
 _JOBS_LOCK = threading.Lock()
-_COMFY_CACHE = {"t": 0.0, "ok": False}
+_COMFY_CACHE = {"t": 0.0, "ok": False, "busy": 0}
+_COMFY_WAKE = threading.Event()
+_THUMBS = {}            # (path, mtime, width) -> png bytes, small LRU
 
 
 # Rough wall-clock estimates in seconds, measured on this machine (RTX 4060 Ti).
@@ -231,13 +233,22 @@ def _worker():
     client = ComfyClient(pipeline.COMFY_HOST, output_dir=pipeline.COMFY_OUTPUT_DIR)
     while True:
         job = _QUEUE.get()
+        if job.get("cancel"):          # cancelled while still in the queue
+            continue
         job["status"] = "running"
         job["started"] = time.time()
+        # ComfyUI may have moved port since the client was built
+        client.base = "http://" + pipeline.COMFY_HOST
+        client.should_cancel = lambda j=job: bool(j.get("cancel"))
+        client._submitted = []
         try:
             # worker is the only thread that prints; capture into the job log
             with redirect_stdout(job["_log"]):
                 _run_job(client, job)
             job["status"] = "done"
+        except JobCancelled:
+            job["_log"].write("\nCancelled.\n")
+            job["status"] = "cancelled"
         except (Exception, SystemExit) as exc:  # SystemExit: pipeline guard rails
             job["_log"].write("\nERROR: %s\n%s" % (exc, traceback.format_exc()))
             job["status"] = "error"
@@ -248,35 +259,66 @@ def _worker():
 
 
 # ------------------------------------------------------------------ http layer
-def _comfy_ok():
-    now = time.time()
-    if now - _COMFY_CACHE["t"] > 15:
+def _comfy_probe():
+    """One live check: is ComfyUI up, and how many prompts it holds."""
+    for attempt in range(2):
         try:
-            q = requests.get("http://%s/queue" % pipeline.COMFY_HOST, timeout=2).json()
-            _COMFY_CACHE["ok"] = True
-            _COMFY_CACHE["busy"] = (len(q.get("queue_running", []))
-                                    + len(q.get("queue_pending", [])))
+            q = requests.get("http://%s/queue" % pipeline.COMFY_HOST,
+                             timeout=2).json()
+            return True, (len(q.get("queue_running", []))
+                          + len(q.get("queue_pending", [])))
         except Exception:
+            if attempt:
+                break
             # ComfyUI may simply have moved to another port (it auto-
             # increments past a held 8188) - look for it before declaring
             # it offline, so a healthy server is never reported as down
             found = pipeline.resolve_comfy_host(pipeline.COMFY_HOST)
-            if found != pipeline.COMFY_HOST and pipeline._comfy_alive(found):
-                print("ComfyUI moved to %s" % found)
-                pipeline.COMFY_HOST = found
-                try:
-                    q = requests.get("http://%s/queue" % found, timeout=2).json()
-                    _COMFY_CACHE["ok"] = True
-                    _COMFY_CACHE["busy"] = (len(q.get("queue_running", []))
-                                            + len(q.get("queue_pending", [])))
-                    _COMFY_CACHE["t"] = now
-                    return True
-                except Exception:
-                    pass
-            _COMFY_CACHE["ok"] = False
-            _COMFY_CACHE["busy"] = 0
-        _COMFY_CACHE["t"] = now
+            if found == pipeline.COMFY_HOST:
+                break
+            print("ComfyUI moved to %s" % found)
+            pipeline.COMFY_HOST = found
+    return False, 0
+
+
+def _comfy_monitor():
+    """Keep the ComfyUI status fresh OFF the request path. Checking inline
+    made every /api/state wait out the connect timeouts while ComfyUI was
+    stopped - a 22s blank "Loading..." on first open."""
+    while True:
+        ok, busy = _comfy_probe()
+        _COMFY_CACHE.update(ok=ok, busy=busy, t=time.time())
+        _COMFY_WAKE.wait(15 if ok else 4)   # notice a fresh start quickly
+        _COMFY_WAKE.clear()
+
+
+def _comfy_ok(fresh=False):
+    """Cached status; fresh=True re-checks now when the cache says down
+    (used before queuing GPU work, so a just-started ComfyUI is accepted)."""
+    if fresh and not _COMFY_CACHE["ok"]:
+        ok, busy = _comfy_probe()
+        _COMFY_CACHE.update(ok=ok, busy=busy, t=time.time())
     return _COMFY_CACHE["ok"]
+
+
+def _thumb(full, width):
+    """A downscaled PNG of an image file, cached - grids of 1024px candidates
+    and 640px raw frames load in a blink at card size."""
+    key = (full, os.path.getmtime(full), width)
+    data = _THUMBS.get(key)
+    if data is None:
+        with Image.open(full) as im:
+            im.load()
+            # BOX averages whole source pixels: crisp enough for pixel art at
+            # thumbnail size, and never shimmers like a point sample
+            im.thumbnail((width, width * 4), Image.BOX)
+            buf = io.BytesIO()
+            im.save(buf, "PNG")
+            data = buf.getvalue()
+        if len(_THUMBS) > 800:
+            _THUMBS.pop(next(iter(_THUMBS)))
+        _THUMBS[key] = data
+    return data
 
 
 def _assets():
@@ -417,16 +459,38 @@ class Handler(BaseHTTPRequestHandler):
                 self._send({"dir": "%s/%s/raw_frames" % (cid, anim),
                             "frames": names, "meta": meta})
             elif path.startswith("/api/candidates/"):
+                # newest first, so a batch you just generated is on top
+                # instead of scattered through the pile by its seed number;
+                # "current" = the candidate the reference was picked from
                 cid = store.sanitize_id(path.rsplit("/", 1)[-1])
-                out = {}
+                spec = store.load().get(cid) or {}
+                ref = os.path.join(pipeline.PROJECT_OUT, cid, "ref.png")
+                ref_st = os.stat(ref) if os.path.isfile(ref) else None
+                out = {"current": None,
+                       "ref_time": spec.get("ref_set_at")
+                       or (ref_st.st_mtime if ref_st else 0)}
                 for kind, sub in (("seeds", "ref_candidates"),
                                   ("styles", "style_candidates"),
                                   ("designs", "design_candidates")):
                     d = os.path.join(pipeline.PROJECT_OUT, cid, sub)
-                    out[kind] = sorted(
-                        f for f in os.listdir(d)
-                        if f.endswith(".png") and "sheet" not in f) \
-                        if os.path.isdir(d) else []
+                    files = []
+                    if os.path.isdir(d):
+                        for f in os.listdir(d):
+                            if f.endswith(".png") and "sheet" not in f:
+                                st = os.stat(os.path.join(d, f))
+                                files.append((f, st))
+                    files.sort(key=lambda x: x[1].st_mtime, reverse=True)
+                    out[kind] = [{"file": f, "mtime": st.st_mtime}
+                                 for f, st in files]
+                    for f, st in files:
+                        # pick_ref records its source; older picks were a
+                        # copy2, so size + mtime still identify them
+                        if out["current"] is None and (
+                                spec.get("ref_from") == "%s/%s" % (kind, f)
+                                or (not spec.get("ref_from") and ref_st
+                                    and st.st_size == ref_st.st_size
+                                    and abs(st.st_mtime - ref_st.st_mtime) < 1)):
+                            out["current"] = {"kind": kind, "file": f}
                 self._send(out)
             elif path.startswith("/files/"):
                 rel = path[len("/files/"):].replace("%20", " ")
@@ -436,6 +500,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not os.path.isfile(full):
                     return self._err("not found", 404)
                 ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
+                width = parse_qs(urlparse(self.path).query).get("w", [""])[0]
+                if width.isdigit() and ctype in ("image/png", "image/jpeg"):
+                    return self._send(_thumb(full, max(16, min(1024, int(width)))),
+                                      "image/png")
                 with open(full, "rb") as fh:
                     self._send(fh.read(), ctype)
             else:
@@ -500,13 +568,16 @@ class Handler(BaseHTTPRequestHandler):
                 dst_dir = os.path.join(pipeline.PROJECT_OUT, cid)
                 os.makedirs(dst_dir, exist_ok=True)
                 _sh.copy2(src, os.path.join(dst_dir, "ref.png"))
+                spec["ref_from"] = "%s/%s" % (body.get("kind") if sub != "ref_candidates"
+                                              else "seeds", fname)
+                spec["ref_set_at"] = time.time()
                 try:
                     from . import postprocess
                     postprocess.process_ref_image(
                         os.path.join(dst_dir, "ref.png"),
                         os.path.join(dst_dir, "ref_sprite.png"),
                         sprite_h=256, style=spec.get("style", "pixel"),
-                        outline=spec.get("outline"))
+                        **pipeline.outline_opts(spec))
                 except Exception as exc:
                     print("ref preview failed:", exc)
                 spec.setdefault("approved", {})["ref"] = True
@@ -532,12 +603,14 @@ class Handler(BaseHTTPRequestHandler):
                 dst_dir = os.path.join(pipeline.PROJECT_OUT, cid)
                 os.makedirs(dst_dir, exist_ok=True)
                 img.convert("RGB").save(os.path.join(dst_dir, "ref.png"))
+                spec.pop("ref_from", None)
+                spec["ref_set_at"] = time.time()
                 try:
                     postprocess.process_ref_image(
                         os.path.join(dst_dir, "ref.png"),
                         os.path.join(dst_dir, "ref_sprite.png"),
                         sprite_h=256, style=spec.get("style", "pixel"),
-                        outline=spec.get("outline"))
+                        **pipeline.outline_opts(spec))
                 except Exception as exc:
                     print("ref preview failed:", exc)
                 spec.setdefault("approved", {})["ref"] = True
@@ -752,8 +825,9 @@ class Handler(BaseHTTPRequestHandler):
                                      % ", ".join(unknown))
                 if jtype in ("anim", "post") and not anims:
                     return self._err("select at least one animation")
-                if jtype in ("anim", "all", "ref", "variations") and not _comfy_ok():
-                    return self._err("ComfyUI is not reachable - start it first")
+                if jtype in ("anim", "all", "ref", "variations", "views") \
+                        and not _comfy_ok(fresh=True):
+                    return self._err("ComfyUI isn't running - start it, then try again")
                 with _JOBS_LOCK:
                     for j in _JOBS.values():
                         if (j["status"] in ("queued", "running")
@@ -764,6 +838,21 @@ class Handler(BaseHTTPRequestHandler):
                                 "(job %s) - not queuing a duplicate" % j["id"])
                 job = _new_job(jtype, char, anims, body.get("params"), spec)
                 self._send({"ok": True, "job_id": job["id"]})
+            elif path == "/api/job/cancel":
+                with _JOBS_LOCK:
+                    job = _JOBS.get(body.get("id", ""))
+                    if not job:
+                        return self._err("unknown job")
+                    if job["status"] not in ("queued", "running"):
+                        return self._err("that job has already finished")
+                    job["cancel"] = True
+                    if job["status"] == "queued":
+                        job["status"] = "cancelled"
+                        job["finished"] = time.time()
+                # a running job stops at its next ComfyUI check (~2s); the
+                # worker marks it cancelled
+                _persist_jobs()
+                self._send({"ok": True})
             else:
                 self._err("not found", 404)
         except (KeyError, ValueError) as exc:
@@ -777,6 +866,7 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     store.load()  # seed characters.json on first run
     threading.Thread(target=_worker, daemon=True).start()
+    threading.Thread(target=_comfy_monitor, daemon=True).start()
     _recover_jobs()
     httpd = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     url = "http://127.0.0.1:%d" % PORT

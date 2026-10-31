@@ -46,11 +46,28 @@ def resolve_comfy_host(preferred=None):
     env = os.environ.get("COMFY_HOST")
     if env:
         return env
-    for host in ([preferred] if preferred else []) + \
-            ["127.0.0.1:%d" % p for p in range(8188, 8200)]:
-        if host and _comfy_alive(host):
+    hosts = [h for h in ([preferred] if preferred else []) +
+             ["127.0.0.1:%d" % p for p in range(8188, 8200)] if h]
+    # TCP-probe every port at once with a short timeout first: on Windows a
+    # refused localhost connect takes ~2s (SYN retries), so 13 sequential HTTP
+    # probes made a stopped ComfyUI cost ~20s - at import and on every check
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(len(hosts)) as ex:
+        listening = list(ex.map(_port_open, hosts))
+    for host, up in zip(hosts, listening):
+        if up and _comfy_alive(host):
             return host
     return preferred or "127.0.0.1:8188"
+
+
+def _port_open(host, timeout=0.3):
+    import socket
+    name, _, port = host.rpartition(":")
+    try:
+        with socket.create_connection((name, int(port)), timeout=timeout):
+            return True
+    except (OSError, ValueError):
+        return False
 
 
 COMFY_HOST = resolve_comfy_host()
@@ -199,6 +216,20 @@ def delete_take(char, anim, take_id):
     shutil.rmtree(p)
 
 
+def outline_opts(spec):
+    """Per-character outline settings for post. Painted sprites default to a
+    2px smooth stroke centred on the edge (hides edge shimmer, rounds
+    jaggies); pixel sprites default to none, keeping hard pixel edges.
+    "outline": "smooth" | "black" | "selout" | "none", "outline_px": width."""
+    spec = spec or {}
+    mode = spec.get("outline")
+    if mode is None:
+        mode = "smooth" if spec.get("style") == "painted" else None
+    if mode in ("none", False, ""):
+        mode = None
+    return {"outline": mode, "outline_px": float(spec.get("outline_px", 2.0))}
+
+
 def spec_cfg(spec, cfg):
     """Per-sprite overrides on the mode config: a pixel sprite's density
     preset ("pixel_bits") fixes sprite height and palette size so every
@@ -264,7 +295,7 @@ def stage_ref(client, char, spec, cfg, seed):
     postprocess.process_ref_image(path, ref_sprite, sprite_h=cfg["sprite_h"] * 2,
                                   colors=cfg["colors"],
                                   style=spec.get("style", "pixel"),
-                                  outline=spec.get("outline"))
+                                  **outline_opts(spec))
     print("[ref] pixelized preview %s" % ref_sprite)
     return path
 
@@ -645,7 +676,7 @@ def stage_post(char, cfg, anims, take_every=2, trim_start=0, trim_end=0,
             range_override=aspec.get("range"),
             ends_at_end=bool(aspec.get("end_view")),
             clean=bool((spec or {}).get("cel_clean")),
-            outline=(spec or {}).get("outline"),
+            **outline_opts(spec),
             **pixel_kw)
         print("[post] %s/%s: %d sprites %sx%s @ %.0ffps -> %s"
               % (char, anim, meta["frames"], meta["frame_size"][0],

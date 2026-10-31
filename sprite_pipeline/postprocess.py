@@ -619,14 +619,91 @@ def smooth_resize(frame, target_h, sharpen=True):
     return out
 
 
-def add_outline(sprite, mode="black", thresh=128):
-    """Hard silhouette plus a 1px outline just outside it.
+OUTLINE_COLOR = (16, 12, 20)
 
-    The soft rim, where any leftover keying fringe lives, is replaced rather
-    than shown, so the edge is clean on any background. Generated characters
-    already carry a dark outline, so this thickens it to ~2px - a bolder
-    "sticker" look, opt-in per sprite. mode: "black", or "selout" (darkened
-    neighbouring color, the classic pixel-art selective outline)."""
+
+def silhouette_deflicker(sprites, loop=False, passes=2, max_blob=12,
+                         thresh=128):
+    """Remove one-frame silhouette blips.
+
+    H3 redraws the outline slightly differently every frame, so edge pixels
+    pop in and out - the shimmer around a character that keying can't fix.
+    A pixel solid (or clear) in the frames before and after but not in this
+    one is jitter: it takes its neighbours' state and mean colour. Only
+    specks up to `max_blob` px count - fast real motion (a weapon swing)
+    moves big regions and is left alone. Measured on the monk: idle edge
+    flips 52 -> 2.8 per frame; the attack keeps its swing (<=144 px/frame
+    touched, all specks; uncapped it rewrote up to 10k px)."""
+    try:
+        from scipy import ndimage
+    except ImportError:
+        return sprites
+    arrs = [np.array(s.convert("RGBA")).astype(np.float32) for s in sprites]
+    n = len(arrs)
+    if n < 3:
+        return sprites
+    eight = np.ones((3, 3), bool)
+    for _ in range(passes):
+        solid = [a[..., 3] >= thresh for a in arrs]
+        new = [a.copy() for a in arrs]
+        for t in (range(n) if loop else range(1, n - 1)):
+            p, q = (t - 1) % n, (t + 1) % n
+            blip = (solid[p] == solid[q]) & (solid[t] != solid[p])
+            lab, nb = ndimage.label(blip, structure=eight)
+            if not nb:
+                continue
+            sizes = ndimage.sum(blip, lab, range(1, nb + 1))
+            blip = np.isin(lab, np.nonzero(sizes <= max_blob)[0] + 1)
+            fill = blip & solid[p]
+            new[t][fill] = (arrs[p][fill] + arrs[q][fill]) / 2
+            new[t][fill, 3] = 255
+            new[t][blip & ~solid[p]] = 0
+        arrs = new
+    return [Image.fromarray(np.round(a).clip(0, 255).astype(np.uint8), "RGBA")
+            for a in arrs]
+
+
+def smooth_outline(sprite, width=2.0, color=OUTLINE_COLOR, ss=4,
+                   round_px=0.8):
+    """Anti-aliased stroke CENTRED on the silhouette edge.
+
+    Covers the unstable edge band on both sides with one steady color, which
+    calms edge shimmer, and rounds the stair-stepped silhouette. The alpha is
+    lightly blurred (rounds jaggies), upsampled `ss`x and thresholded; a
+    signed distance field marks |d| <= width/2 as stroke; box-averaging back
+    down turns subpixel coverage into smooth alpha. 2px matches the line
+    weight generated characters already have; 3px+ thickens hands/props."""
+    try:
+        from scipy import ndimage
+    except ImportError:
+        return sprite
+    a = np.array(sprite.convert("RGBA")).astype(np.float32)
+    al = a[..., 3] / 255.0
+    if round_px:
+        al = ndimage.gaussian_filter(al, round_px)
+    h, w = al.shape
+    big = np.asarray(Image.fromarray((al * 255).astype(np.uint8)).resize(
+        (w * ss, h * ss), Image.BILINEAR)) >= 128
+    d = np.where(big, -ndimage.distance_transform_edt(big),
+                 ndimage.distance_transform_edt(~big)) / ss
+    half = width / 2.0
+    down = lambda m: m.astype(np.float32).reshape(h, ss, w, ss).mean(axis=(1, 3))
+    cover = down(d <= half)                  # sprite + stroke
+    keep = down(d <= -half)                  # interior the stroke leaves alone
+    k = np.clip(keep / np.maximum(cover, 1e-6), 0, 1)[..., None]
+    rgb = a[..., :3] * k + np.array(color, np.float32) * (1 - k)
+    out = np.dstack([rgb, cover * 255.0])
+    return Image.fromarray(np.round(out).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def add_outline(sprite, mode="black", thresh=128, width=2.0):
+    """Outline the sprite. mode "smooth": anti-aliased stroke centred on the
+    edge (see smooth_outline; `width` px). "black" / "selout": hard
+    silhouette plus a 1px ring just outside it - pixel-art style, "selout"
+    using the darkened neighbouring color. The soft rim, where any leftover
+    keying fringe lives, is replaced rather than shown."""
+    if mode == "smooth":
+        return smooth_outline(sprite, width=width)
     try:
         from scipy import ndimage
     except ImportError:
@@ -644,7 +721,7 @@ def add_outline(sprite, mode="black", thresh=128):
                          for i in range(3)], axis=-1) / den
         out[ring, :3] = np.clip(near * 0.3, 0, 255)[ring].astype(np.uint8)
     else:
-        out[ring, :3] = (16, 12, 20)
+        out[ring, :3] = OUTLINE_COLOR
     return Image.fromarray(out, "RGBA")
 
 
@@ -654,7 +731,7 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
                       style="pixel", range_override=None, ends_at_end=False,
                       loop=False, pixel_frames=None, pixel_fps=10.0,
                       loop_mode="cycle", quiet=0.35, drop=None, gait=False,
-                      clean=False, outline=None):
+                      clean=False, outline=None, outline_px=2.0):
     """Full post pipeline for one animation. Returns a metadata dict.
 
     take_every: subsample the 24fps video (2 -> 12fps sprite animation).
@@ -666,7 +743,8 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
     calmest `quiet` fraction of the cycle and plays it forward-then-back -
     a subtle idle from an over-animated clip.
     drop: sprite indices (after collapse) to cut from the final sequence.
-    outline: None, "black" or "selout" - see add_outline.
+    outline: None, "smooth", "black" or "selout" - see add_outline;
+    outline_px is the smooth stroke's width.
     """
     frame_paths = sorted(frame_paths)
     if trim_end:
@@ -750,8 +828,10 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
     # keying leaves stray single pixels around any character sprite
     if key_mode != "glow":
         sprites = despeckle(sprites)
+        sprites = silhouette_deflicker(sprites, loop=loop)
         if outline:
-            sprites = [add_outline(s, outline) for s in sprites]
+            sprites = [add_outline(s, outline, width=outline_px)
+                       for s in sprites]
 
     os.makedirs(out_dir, exist_ok=True)
     # Every collapsed frame is written to all_frames/ using its ORIGINAL
@@ -932,7 +1012,7 @@ def pad_reference(path, out_path, margin=0.18):
 
 
 def process_ref_image(path, out_path, sprite_h=192, colors=48, dominance=40,
-                      style="pixel", outline=None):
+                      style="pixel", outline=None, outline_px=2.0):
     """Key (+ pixelize, for pixel style) a single still reference."""
     keyed = chroma_key_green(Image.open(path), dominance=dominance)
     box = union_bbox([keyed])
@@ -949,7 +1029,7 @@ def process_ref_image(path, out_path, sprite_h=192, colors=48, dominance=40,
                                            dither=Image.NONE).convert("RGB")
         sprite = Image.merge("RGBA", (*rgb.split(), down.split()[3]))
     if outline:
-        sprite = add_outline(sprite, outline)
+        sprite = add_outline(sprite, outline, width=outline_px)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     sprite.save(out_path)
     return sprite
