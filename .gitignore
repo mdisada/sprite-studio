@@ -11,6 +11,8 @@ sprites_out/
 
 # Local tooling
 .claude/
+# this PC's engine choice (where ComfyUI lives, start with the studio)
+studio_settings.json
 
 # OS junk
 Thumbs.db

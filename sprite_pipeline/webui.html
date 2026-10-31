@@ -170,6 +170,25 @@
   details.more .muted{margin-top:4px}
   .banner{background:#54401f;color:var(--warn);padding:8px 26px;font-size:13px;
        border-bottom:1px solid var(--line)}
+  .banner.info{background:#13324a;color:var(--accent)}
+  .banner button{margin-left:8px}
+  #comfy{cursor:pointer;color:var(--text)}
+  #comfy.ok{color:var(--ok)}#comfy.err{color:var(--err)}#comfy.mid{color:var(--accent)}
+  /* system check */
+  .verdict{padding:14px 18px;border-radius:10px;margin:12px 0 6px;font-size:16px;font-weight:600;
+       border:1px solid var(--line)}
+  .verdict.ok{background:#1e4230;color:var(--ok)}.verdict.warn{background:#54401f;color:var(--warn)}
+  .verdict.bad{background:#57272f;color:var(--err)}
+  .sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px}
+  .syscard{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);
+       border-radius:10px;padding:12px 14px}
+  .syscard.ok{border-left-color:var(--ok)}.syscard.warn{border-left-color:var(--warn)}
+  .syscard.bad{border-left-color:var(--err)}
+  .syscard .lab{color:var(--dim);font-size:12px}
+  .syscard .val{font-size:15px;font-weight:600;margin:2px 0}
+  .syscard .ico{float:right;font-size:18px}
+  .syscard pre{background:#101116;border:1px solid var(--line);border-radius:6px;padding:8px;
+       font-size:11px;max-height:220px;overflow:auto;white-space:pre-wrap}
   /* image tiles: status badge + selection box sit ON the picture */
   .tile{position:relative}
   .badge{position:absolute;top:8px;right:8px;padding:2px 9px;border-radius:10px;font-size:11.5px;
@@ -205,9 +224,9 @@
   <h1><a onclick="location.hash='#/'">Sprite Studio</a></h1>
   <span id="crumb" class="muted"></span>
   <span style="flex:1"></span>
-  <span id="comfy" class="chip">…</span>
+  <a id="comfy" class="chip" onclick="location.hash='#/system'" title="System check">…</a>
 </header>
-<div id="offline" class="banner" hidden>⚠ ComfyUI is off — start it to generate images and animations.</div>
+<div id="offline" class="banner" hidden></div>
 <div class="wrap" id="main"><div class="muted">Loading…</div></div>
 
 <div id="jobs"><header onclick="this.parentElement.classList.toggle('open');if(STATE)renderJobs()">
@@ -218,6 +237,7 @@
 
 <script>
 "use strict";
+let SYSVIEW=false, SYS=null, SYS_T=0;
 let STATE=null, cur=null, curProj=null, spec=null, CANDS=null, tab='ref',
     imgV=Date.now(), lastFin=0, pendingJob=null, dirty=false;
 
@@ -363,18 +383,32 @@ function dk(k,force){return `data-k="${esc(k)}" ${force||OPEN.has(k)?'open':''}`
 
 // ---- ComfyUI status: a labelled chip, a banner, and GPU buttons that can't
 // be pressed while it is off (instead of failing after a confirm dialog)
+// The studio starts ComfyUI itself ("the engine"); one word from the server
+// says where it is: ready | starting | off | failed | missing
+const ENGINE_UI={
+  ready:   ['ok', '● Engine ready',    '', ''],
+  starting:['mid','◌ Engine starting…','info','⏳ Starting the engine — about a minute the first time.'],
+  off:     ['err','● Engine off',      '', '⚠ The engine is off.<button class="small primary" onclick="engineStart()">▶ Start engine</button>'],
+  failed:  ['err','● Engine stopped',  '', '⚠ The engine couldn\'t start.<button class="small" onclick="location.hash=\'#/system\'">See why</button>'],
+  missing: ['err','● Engine not found','', '⚠ ComfyUI wasn\'t found on this PC.<button class="small primary" onclick="location.hash=\'#/system\'">Set it up</button>'],
+};
+function engineState(){return STATE?(STATE.engine||(STATE.comfy_ok?'ready':'off')):'off';}
 function applyComfy(lost){
-  const ok=!lost&&!!(STATE&&STATE.comfy_ok);
+  const st=lost?'lost':engineState(), ok=st==='ready';
+  const u=ENGINE_UI[st]||['err','● Studio not responding','',''];
   const c=document.getElementById('comfy');
-  c.className='chip '+(ok?'ok':'err');
-  c.textContent=lost?'● Studio not responding':(ok?'● ComfyUI ready':'● ComfyUI off');
-  document.getElementById('offline').hidden=ok||lost;
+  c.className='chip '+u[0]; c.textContent=u[1];
+  const b=document.getElementById('offline');
+  // rebuild only on a change, so a button is never swapped out mid-click
+  if(b.dataset.st!==st){b.dataset.st=st;b.className='banner '+u[2];b.innerHTML=u[3];}
+  b.hidden=!u[3]||(st!=='ready'&&location.hash==='#/system'&&st!=='starting');
+  const why=st==='starting'?'The engine is still starting':'Start the engine first';
   document.querySelectorAll('button.gpu').forEach(b=>{
     if(b.dataset.tip==null)b.dataset.tip=b.title||'';
     // data-none / data-busy: disabled for its own reason (nothing selected,
-    // already rendering) - ComfyUI coming back must not re-enable it
+    // already rendering) - the engine coming back must not re-enable it
     b.disabled=!ok||b.dataset.none==='1'||b.dataset.busy==='1';
-    b.title=ok?b.dataset.tip:'Start ComfyUI first';
+    b.title=ok?b.dataset.tip:why;
   });
 }
 function minutes(s){return Math.max(1,Math.round(s/60));}
@@ -390,7 +424,9 @@ function route(){
   const h=location.hash||'#/';
   const m=h.match(/^#\/char\/([a-z0-9_-]+)(?:\/(\w+))?/);
   const mp=h.match(/^#\/proj\/([a-z0-9_-]+)/);
-  if(m){if(cur!==m[1]){flushPending();window.LIVE_TUNE=null;cur=m[1];spec=null;CANDS=null;dirty=false;
+  SYSVIEW=h==='#/system';
+  if(SYSVIEW){flushPending();window.LIVE_TUNE=null;cur=null;curProj=null;spec=null;CANDS=null;loadSys();}
+  else if(m){if(cur!==m[1]){flushPending();window.LIVE_TUNE=null;cur=m[1];spec=null;CANDS=null;dirty=false;
           labMode='play';labAnim=null;plStop();_plLoadSeq++;SEL=new Set();CAND_ALL=false;
           if(COMPARE_WITH===cur)COMPARE_WITH=null;}
         tab=m[2]||tab||'ref';}
@@ -409,11 +445,18 @@ async function loadCands(){
   catch(e){if(cur===id)CANDS={seeds:[],styles:[],designs:[]};}
 }
 
+let firstPoll=true;
 async function poll(){
   try{
     STATE=await api('/api/state');
     applyComfy();
     renderJobs();
+    if(firstPoll){firstPoll=false;
+      // the very first visit opens the System check: what this PC can do,
+      // before anyone spends an hour on a render it can't finish
+      let seen=true; try{seen=!!localStorage.getItem('sys_seen');localStorage.setItem('sys_seen','1');}catch(e){}
+      if(!seen&&(location.hash||'#/')==='#/')location.hash='#/system';}
+    if(SYSVIEW&&Date.now()-SYS_T>5000)loadSys();
     const fin=Math.max(0,...STATE.jobs.filter(j=>j.finished).map(j=>j.finished));
     if(fin>lastFin){lastFin=fin;imgV=Date.now();
       // a tune that is still debouncing or in flight is NEWER than this
@@ -458,10 +501,11 @@ function render(){
   const m=document.getElementById('main');
   if(!STATE){return;}
   m.dataset.rendered='1';
-  document.getElementById('crumb').textContent=cur?('› '+(STATE.characters[cur]?
+  document.getElementById('crumb').textContent=SYSVIEW?'› System check':cur?('› '+(STATE.characters[cur]?
     STATE.characters[cur].display_name||cur:cur))
     :(curProj?('› '+(((STATE.projects||{})[curProj]||{}).display_name||curProj)):'');
-  if(cur){if(!STATE.characters[cur]){m.innerHTML='<div class="muted">Unknown sprite.</div>';}
+  if(SYSVIEW){renderSystem(m);}
+  else if(cur){if(!STATE.characters[cur]){m.innerHTML='<div class="muted">Unknown sprite.</div>';}
           else renderChar(m);}
   else if(curProj){renderRoster(m);}
   else renderProjects(m);
@@ -1177,6 +1221,86 @@ function createSprite(kind){
   }
   api('/api/char/save',{id,spec:s}).then(()=>{closeModal();location.hash='#/char/'+id+'/ref';
     toast('Created ✓ — now generate a look');});
+}
+
+// ------------------------------------------------------------ system check
+// One screen that answers "can this PC run it?" - GPU, memory, model files,
+// disk, and the engine - each as a coloured card with one line of advice.
+async function loadSys(){
+  SYS_T=Date.now();
+  try{SYS=await api('/api/system');}catch(e){return;}
+  if(SYSVIEW&&!modalOpen()&&!(document.activeElement&&document.activeElement.id==='eng_folder'))render();
+}
+const SYS_LABEL={gpu:'Graphics card',ram:'Memory (RAM)',models:'AI model files',disk:'Disk space',engine:'Engine (ComfyUI)'};
+const SYS_ICON={ok:'✓',warn:'⚠',bad:'✕',unknown:'…'};
+function renderSystem(m){
+  if(!SYS){m.innerHTML='<div class="muted">Checking your PC…</div>';return;}
+  const v=SYS.verdict, e=SYS.engine;
+  const head={ok:'✓ Ready to go',warn:'⚠ Should work, but slower',bad:'✕ Not ready yet — fix the red items'}[v];
+  const card=r=>{
+    let extra='';
+    if(r.id==='models'){
+      const miss=SYS.models.filter(x=>x.found===false&&!x.optional);
+      const optMiss=SYS.models.filter(x=>x.found===false&&x.optional);
+      if(miss.length)extra=`<div style="margin-top:6px;font-size:12px">${miss.map(x=>
+        `<div><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.file)}</a>
+         <span class="muted">→ ${esc(x.folder)} · ${x.gb} GB</span></div>`).join('')}</div>`;
+      if(optMiss.length)extra+=`<details class="more"><summary>See more</summary><div class="muted">Optional, only for
+        “New pose”: ${optMiss.map(x=>esc(x.file)).join(', ')}.</div></details>`;
+    }
+    if(r.id==='engine'){
+      const st=e.state;
+      extra=`<div class="row" style="margin-top:8px;gap:8px">
+        ${st==='off'||st==='failed'?'<button class="small primary" onclick="engineStart()">▶ Start</button>':''}
+        ${st==='ready'&&e.managed?'<button class="small" onclick="engineStop()">■ Stop</button>':''}
+        <label class="tog" title="Start the engine whenever the studio opens"><input type="checkbox" ${e.autostart?'checked':''}
+          onchange="engineAuto(this.checked)"> Start with the studio</label></div>
+      ${e.install?`<div class="muted" style="margin-top:6px" title="${esc(e.install.folder)}">${esc(e.install.kind)}${st==='ready'&&!e.managed?' · opened outside the studio':''}</div>`:''}
+      ${st==='missing'||st==='failed'?`
+        <div class="row" style="margin-top:8px;gap:6px">
+          <input id="eng_folder" placeholder="ComfyUI folder" style="flex:1;min-width:140px" value="${esc(e.install?e.install.folder:'')}">
+          <button class="small" onclick="engineBrowse()">Browse…</button>
+          <button class="small primary" onclick="engineUse()">Use</button></div>`:''}
+      ${e.log?`<details class="more" ${dk('englog')}><summary>Log</summary><pre>${esc(e.log)}</pre></details>`:''}`;
+    }
+    return `<div class="syscard ${r.status}">
+      <span class="ico">${SYS_ICON[r.status]||''}</span>
+      <div class="lab">${SYS_LABEL[r.id]||r.id}</div>
+      <div class="val">${esc(r.value)}</div>
+      ${r.note?`<div class="muted">${esc(r.note)}</div>`:''}${extra}</div>`;
+  };
+  const E=STATE.estimates||{};
+  m.innerHTML=`
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">System check</h2>
+      <button class="small" onclick="loadSys()">↻ Check again</button>
+    </div>
+    <div class="verdict ${v}">${head}</div>
+    <div class="muted">On the tested PC (16 GB graphics card, 48 GB RAM): about ${minutes(E.ref_final||100)} min per image ·
+      ${minutes(E.clip_test||130)} min per Draft clip · ${minutes(E.clip_final||600)} min per High-quality clip.${v==='warn'?' Expect yours to be slower.':''}</div>
+    <div class="sysgrid">${SYS.rows.map(card).join('')}</div>
+    <div style="margin-top:16px"><button class="primary" onclick="location.hash='#/'">Go to my projects →</button></div>`;
+}
+async function engineStart(){
+  try{await api('/api/engine/start',{});toast('Starting the engine…');}catch(e){return;}
+  await refresh(); loadSys();
+}
+async function engineStop(){
+  if(STATE.jobs.some(j=>j.status==='running')&&!confirm('A job is running. Stop the engine anyway?'))return;
+  try{await api('/api/engine/stop',{});toast('Engine stopped');}catch(e){return;}
+  await refresh(); loadSys();
+}
+async function engineAuto(on){try{await api('/api/engine/settings',{autostart:on});}catch(e){}}
+async function engineBrowse(){
+  toast('Choose the folder in the window that opened (it may be behind the browser)');
+  let r; try{r=await api('/api/engine/browse',{});}catch(e){return;}
+  if(r.folder){document.getElementById('eng_folder').value=r.folder;engineUse();}
+}
+async function engineUse(){
+  const f=(document.getElementById('eng_folder')||{}).value||'';
+  if(!f.trim())return toast('Choose your ComfyUI folder',true);
+  try{const r=await api('/api/engine/use',{folder:f.trim()});toast('Using '+r.kind+' ✓ — starting…');}catch(e){return;}
+  await refresh(); loadSys();
 }
 
 // ------------------------------------------------------------------ export

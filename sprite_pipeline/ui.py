@@ -8,6 +8,7 @@ Zero extra dependencies: stdlib http.server plus one worker thread that runs
 GPU jobs sequentially (ComfyUI executes serially anyway). Sprite definitions
 live in characters.json (shared with the CLI); job state is in-memory.
 """
+import atexit
 import base64
 import io
 import json
@@ -29,7 +30,7 @@ import requests
 from PIL import Image, UnidentifiedImageError
 
 from . import characters as templates
-from . import export_godot, pipeline, postprocess, store
+from . import engine, export_godot, pipeline, postprocess, store, syscheck
 from .comfy_client import ComfyClient, JobCancelled
 
 PORT = int(os.environ.get("SPRITE_UI_PORT", "8899"))
@@ -418,11 +419,15 @@ class Handler(BaseHTTPRequestHandler):
                         "game_kits": templates.GAME_KITS,
                     },
                     "comfy_ok": _comfy_ok(),
+                    "engine": engine.state(_COMFY_CACHE["ok"]),
                     "comfy_busy": _COMFY_CACHE.get("busy", 0),
                     "out_root": pipeline.PROJECT_OUT,
                     "assets": _assets(),
                     "estimates": ESTIMATES,
                 })
+            elif path == "/api/system":
+                # GPU / memory / disk / model files / engine, judged
+                self._send(syscheck.report(_COMFY_CACHE["ok"]))
             elif path.startswith("/api/takes/"):
                 # /api/takes/<char>/<anim> - every render of that animation
                 parts = path[len("/api/takes/"):].split("/")
@@ -827,7 +832,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self._err("select at least one animation")
                 if jtype in ("anim", "all", "ref", "variations", "views") \
                         and not _comfy_ok(fresh=True):
-                    return self._err("ComfyUI isn't running - start it, then try again")
+                    return self._err(
+                        "The engine is still starting - try again in a minute"
+                        if engine.state(False) == "starting"
+                        else "The engine is off - start it, then try again")
                 with _JOBS_LOCK:
                     for j in _JOBS.values():
                         if (j["status"] in ("queued", "running")
@@ -853,6 +861,37 @@ class Handler(BaseHTTPRequestHandler):
                 # worker marks it cancelled
                 _persist_jobs()
                 self._send({"ok": True})
+            elif path == "/api/engine/start":
+                err = engine.start(engine.find(refresh=True))
+                if err:
+                    return self._err(err)
+                _COMFY_WAKE.set()
+                self._send({"ok": True})
+            elif path == "/api/engine/stop":
+                if not engine.stop():
+                    return self._err("this engine wasn't started by the studio - "
+                                     "close it where you opened it")
+                _COMFY_CACHE.update(ok=False, busy=0)
+                _COMFY_WAKE.set()
+                self._send({"ok": True})
+            elif path == "/api/engine/settings":
+                if "autostart" in body:
+                    engine.save_settings(autostart=bool(body["autostart"]))
+                self._send({"ok": True})
+            elif path == "/api/engine/browse":
+                self._send({"folder": engine.pick_folder()})
+            elif path == "/api/engine/use":
+                inst = engine.folder_install(body.get("folder", ""))
+                if not inst:
+                    return self._err("No ComfyUI in that folder. Pick the folder "
+                                     "that contains main.py or ComfyUI\\main.py.")
+                engine.remember(inst)
+                if not _comfy_ok(fresh=True):
+                    err = engine.start(inst)
+                    if err:
+                        return self._err(err)
+                _COMFY_WAKE.set()
+                self._send({"ok": True, "kind": inst["kind"]})
             else:
                 self._err("not found", 404)
         except (KeyError, ValueError) as exc:
@@ -867,6 +906,11 @@ def main():
     store.load()  # seed characters.json on first run
     threading.Thread(target=_worker, daemon=True).start()
     threading.Thread(target=_comfy_monitor, daemon=True).start()
+    # start ComfyUI ourselves if it isn't running (or learn how it was
+    # started, if it is) - the user never has to launch it first
+    threading.Thread(target=engine.boot, args=(lambda: _comfy_ok(fresh=True),),
+                     daemon=True).start()
+    atexit.register(engine.stop)
     _recover_jobs()
     httpd = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     url = "http://127.0.0.1:%d" % PORT

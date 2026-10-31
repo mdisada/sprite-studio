@@ -44,7 +44,8 @@ Read this list first. If you're missing any of these, the studio **will not work
 ### The model files
 
 Put each file in the ComfyUI folder shown. **The file names must match exactly** — don't rename them.
-Search each file name on [Hugging Face](https://huggingface.co) to find and download it.
+They're all free downloads from Hugging Face, mostly [Comfy-Org](https://huggingface.co/Comfy-Org) (no account needed).
+The studio's **System check** shows which ones you're missing, with a direct link to each.
 
 | File | Goes in `ComfyUI/models/...` | Used for |
 |---|---|---|
@@ -97,11 +98,14 @@ Wait until it finishes and you see the prompt again. That's it — you never hav
 
 ## Every time you use it
 
-1. **Start ComfyUI first** and leave it running. (The studio finds it automatically.)
-2. **Double-click `studio.bat`.**
-3. Your browser opens **http://127.0.0.1:8899** — that's the studio.
+1. **Double-click `studio.bat`.** The studio finds your ComfyUI (Comfy Desktop, the portable build or a
+   ComfyUI folder) and starts it in the background. You don't open ComfyUI yourself. The first start takes about a minute.
+2. Your browser opens **http://127.0.0.1:8899** — that's the studio.
    If it doesn't open by itself, type that address into your browser.
-4. **Leave the black window open** while you work. Closing it closes the studio.
+3. The first time, the studio shows a **System check**: your graphics card, memory, disk space and model files,
+   each marked ✓ / ⚠ / ✕, so you know whether your PC can run it. Open it again any time from the
+   engine status at the top right.
+4. **Leave the black window open** while you work. Closing it closes the studio and the ComfyUI it started.
 
 ---
 
@@ -204,13 +208,13 @@ resources. All animations share one size and anchor, so your character doesn't j
 
 | Problem | Fix |
 |---|---|
-| Studio says **ComfyUI not reachable** | ComfyUI isn't running. Start it, wait until it's fully loaded, then refresh the studio page. |
+| Top right says **Engine off / not found / stopped** | Click it to open the **System check**. *Off*: press **Start**. *Not found*: choose your ComfyUI folder there. *Stopped*: open **Log** to see why. |
 | `studio.bat` flashes and closes / says **No module named ...** | You skipped Step 2 of the install. Do it now. |
 | **'python' is not recognized** | Install Python from [python.org](https://www.python.org/downloads/) and tick **"Add Python to PATH"**. |
-| ComfyUI errors about a **missing model / value not in list** | A model file is missing, in the wrong folder, or renamed. Check the table above, then restart ComfyUI. |
-| **Out of memory** errors | Close other programs using the GPU or RAM (games, browsers with many tabs, other AI tools). Still failing? Try a **test** render first. It uses a much smaller video. If test works but final doesn't, your GPU is too small for full-size clips. |
+| ComfyUI errors about a **missing model / value not in list** | A model file is missing, in the wrong folder, or renamed. The **System check** lists every missing file with a download link. |
+| **Out of memory** errors | Close other programs using the GPU or RAM (games, browsers with many tabs, other AI tools). Still failing? Render a **Draft** first. It uses a much smaller video. If Draft works but High quality doesn't, your GPU is too small for full-size clips. |
 | Animating is **extremely slow** or Windows freezes | You're short on system RAM, so Windows is swapping to disk. Close other programs, or add RAM (32 GB minimum, 48 GB+ is comfortable). |
-| Background isn't transparent / green edges | You edited out the green-screen part of the description. Click **+ New character** again to get a fresh template and only change the `DESCRIBE` part. |
+| Background isn't transparent / green edges | You edited out the green-screen sentence in **Edit description**. Put it back, or make a fresh **+ New character**. |
 | Port 8899 is already in use | Another studio is already open — check your other browser tabs and black windows. |
 | Results look rough in **test** mode | Test mode is a quick plumbing check, not quality. Use **final** mode for real sprites. |
 
