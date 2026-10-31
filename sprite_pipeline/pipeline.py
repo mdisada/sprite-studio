@@ -46,28 +46,11 @@ def resolve_comfy_host(preferred=None):
     env = os.environ.get("COMFY_HOST")
     if env:
         return env
-    hosts = [h for h in ([preferred] if preferred else []) +
-             ["127.0.0.1:%d" % p for p in range(8188, 8200)] if h]
-    # TCP-probe every port at once with a short timeout first: on Windows a
-    # refused localhost connect takes ~2s (SYN retries), so 13 sequential HTTP
-    # probes made a stopped ComfyUI cost ~20s - at import and on every check
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(len(hosts)) as ex:
-        listening = list(ex.map(_port_open, hosts))
-    for host, up in zip(hosts, listening):
-        if up and _comfy_alive(host):
+    for host in ([preferred] if preferred else []) + \
+            ["127.0.0.1:%d" % p for p in range(8188, 8200)]:
+        if host and _comfy_alive(host):
             return host
     return preferred or "127.0.0.1:8188"
-
-
-def _port_open(host, timeout=0.3):
-    import socket
-    name, _, port = host.rpartition(":")
-    try:
-        with socket.create_connection((name, int(port)), timeout=timeout):
-            return True
-    except (OSError, ValueError):
-        return False
 
 
 COMFY_HOST = resolve_comfy_host()
