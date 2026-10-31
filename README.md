@@ -13,12 +13,10 @@ cleans it up into real pixel-art sprite frames you can drop straight into a game
 
 Every one of these started as a paragraph of text. No drawing, no animating by hand.
 
-| | | | | |
-|:-:|:-:|:-:|:-:|:-:|
-| ![Monk idle](docs/examples/monk_idle.gif) | ![Monk attack](docs/examples/monk_attack.gif) | ![Surgeon run](docs/examples/surgeon_run.gif) | ![Ninja leap](docs/examples/ninja_leap.gif) | ![Sorcerer walk](docs/examples/sorcerer_walk.gif) |
-| Monk · idle | Monk · attack | Surgeon · run | Ninja · leap | Sorcerer · walk |
-| ![Dog run](docs/examples/dog_run.gif) | ![Paladin idle](docs/examples/sunshield_idle.gif) | ![Businesswoman attack](docs/examples/businesswoman_attack.gif) | ![Scientist idle](docs/examples/scientist_idle.gif) | ![Impact burst effect](docs/examples/vfx_impact_burst.gif) |
-| Dog · run | Paladin · idle | Businesswoman · attack | Scientist · idle | Effect · impact burst |
+<table>
+<tr><td align="center"><img src="docs/examples/monk_idle.gif" height="150" alt="Monk · idle"><br><sub>Monk · idle</sub></td><td align="center"><img src="docs/examples/monk_attack.gif" height="150" alt="Monk · attack"><br><sub>Monk · attack</sub></td><td align="center"><img src="docs/examples/surgeon_run.gif" height="150" alt="Surgeon · run"><br><sub>Surgeon · run</sub></td><td align="center"><img src="docs/examples/ninja_leap.gif" height="150" alt="Ninja · leap"><br><sub>Ninja · leap</sub></td><td align="center"><img src="docs/examples/sorcerer_walk.gif" height="150" alt="Sorcerer · walk"><br><sub>Sorcerer · walk</sub></td></tr>
+<tr><td align="center"><img src="docs/examples/dog_run.gif" height="150" alt="Dog · run"><br><sub>Dog · run</sub></td><td align="center"><img src="docs/examples/sunshield_idle.gif" height="150" alt="Paladin · idle"><br><sub>Paladin · idle</sub></td><td align="center"><img src="docs/examples/businesswoman_attack.gif" height="150" alt="Businesswoman · attack"><br><sub>Businesswoman · attack</sub></td><td align="center"><img src="docs/examples/scientist_idle.gif" height="150" alt="Scientist · idle"><br><sub>Scientist · idle</sub></td><td align="center"><img src="docs/examples/vfx_impact_burst.gif" height="150" alt="Effect · impact burst"><br><sub>Effect · impact burst</sub></td></tr>
+</table>
 
 *(The previews have a dark background so you can see them. The real frames are transparent PNGs.)*
 
