@@ -258,7 +258,7 @@ Sprite definitions live in `characters.json`, shared by the web UI and the CLI.
 1. **ref** — Krea-2 Turbo (8-step text-to-image) draws the character on a flat `#00FF00` green screen in pixel-art style.
 2. **anim** — MiniMax H3 reference-to-video animates that exact character, using the 4-step turbo LoRA for speed.
    Frames are saved as lossless PNGs plus an mp4 preview.
-3. **post** — pure Python (PIL/numpy): keys out the green screen with despill, crops to a stable bounding box,
+3. **post** — pure Python (PIL/numpy): keys out the green screen (hard matte + 1px edge unmix, see below), crops to a stable bounding box,
    downscales to sprite resolution, locks every frame to one shared palette (no color flicker), and writes
    frames, a sprite sheet, a GIF, a transparent APNG and `meta.json`.
 
@@ -267,6 +267,8 @@ Design notes:
 - **Model loading**: stages are grouped per model family and ComfyUI's `/free` is called between them, so the drawing and animation models are never loaded at the same time. The H3 weights (~42 GB total) exceed VRAM on consumer cards; ComfyUI's smart memory offloads them to system RAM, so VRAM mainly bounds the activation size (video resolution × frame count).
 - **H3 clip length** must be `5 + 17k` frames at 24 fps. The trained range is ~124–362 frames (5.2s+); test mode's 22-frame clips are only for plumbing checks.
 - **Green screen instead of transparency**: diffusion models can't output alpha, so we prompt a flat green backdrop and key it out.
+- **Clean edges**: H3 clips arrive as compressed video, which leaves light, washed-green ringing just outside each outline and bleeds green ~2px into it. A soft key turns that into a grey halo on dark backgrounds. The keyer instead makes a hard backdrop/character split, gives each 1px edge pixel the *neighbouring character colour* (alpha from projecting onto the backdrop→character line), only despills the outer 3px (so green eyes and costumes stay green), drops flat green floor shadows, and keeps enclosed non-backdrop pockets solid. Painted sprites are then downscaled with an area filter and sharpened only inside the silhouette, since Lanczos and edge sharpening both re-create a light rim.
+- **Optional outline**: set `"outline": "black"` or `"outline": "selout"` (darkened neighbour colour) on a character in `characters.json` to wrap every frame and the ref sprite in a hard 1px outline. Edges are then perfectly clean on any background, but lines get bolder because generated characters already have a dark outline, so it's off by default.
 - **Palette lock**: one median-cut palette is built from all frames of an animation and every frame is quantized to it — this is what makes it read as hand-pixelled animation instead of smeared video.
 
 </details>

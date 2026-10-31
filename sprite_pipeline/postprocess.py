@@ -16,16 +16,87 @@ from PIL import Image, ImageFilter
 
 
 # ----------------------------------------------------------------- chroma key
-def chroma_key_green(img, dominance=40, despill=True, lo=32, hi=88):
+def chroma_key_green(img, dominance=40, despill=True, lo=36):
     """Return RGBA with the backdrop keyed to transparency.
 
-    The actual backdrop color is sampled per frame (median of a 4px border),
-    so it survives the video model drifting the green screen toward cyan or
-    tinting it with effect glow. Alpha ramps with the color distance from the
-    backdrop (lo -> fully transparent, hi -> fully opaque), which keys soft
-    glow gradients cleanly. When the backdrop is green-dominant, kept pixels
-    are despilled by clamping green so edges don't glow.
+    The backdrop color is sampled per frame (median of a 4px border), so it
+    survives the video model drifting the green toward cyan. Then:
+
+    - hard bg/fg split at color distance `lo`: H.264 ringing (light, washed
+      green just outside the outline) falls below it. A soft distance ramp
+      used to keep those pixels half-opaque and despill them grey - the grey
+      halo visible on dark backgrounds;
+    - enclosed islands only count as backdrop when they LOOK like backdrop
+      (gaps between arm and body) - teal lenses, green eyes stay solid;
+    - flat green contact shadows touching the backdrop are dropped;
+    - the 1px boundary gets alpha from projecting the pixel onto the line
+      backdrop -> local foreground color, and takes that foreground color,
+      so no backdrop is ever carried into the sprite;
+    - only the outer 3px shell is despilled (yuv420 chroma bleed), so
+      genuinely green costume colors survive inside.
+
+    Falls back to the plain distance key when scipy is unavailable.
     """
+    try:
+        from scipy import ndimage
+    except ImportError:
+        return _distance_key(img, dominance, despill)
+    c = np.asarray(img.convert("RGB")).astype(np.float32)
+    border = np.concatenate([c[:4].reshape(-1, 3), c[-4:].reshape(-1, 3),
+                             c[:, :4].reshape(-1, 3), c[:, -4:].reshape(-1, 3)])
+    bg = np.median(border, axis=0)
+    dist = np.sqrt(((c - bg) ** 2).sum(axis=-1))
+    mask = dist > lo
+
+    # contact shadows: flat, wide, darker green-dominant floor patches
+    lum = c.mean(axis=-1)
+    gdom = c[..., 1] - np.maximum(c[..., 0], c[..., 2])
+    shadow = mask & (gdom > 18) & (lum < bg.mean() - 8) & (lum > 25)
+    lab, _ = ndimage.label(shadow)
+    touch = ndimage.binary_dilation(~mask)
+    for i, sl in enumerate(ndimage.find_objects(lab), 1):
+        h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
+        m = lab[sl] == i
+        if h <= 0.06 * c.shape[0] and w >= 2.5 * h and (touch[sl] & m).any():
+            mask[sl][m] = False
+
+    # enclosed "holes" that aren't backdrop-colored are mis-keyed foreground
+    lab, n = ndimage.label(~mask)
+    edge_ids = set(np.unique(np.concatenate(
+        [lab[0], lab[-1], lab[:, 0], lab[:, -1]])).tolist())
+    for i, sl in enumerate(ndimage.find_objects(lab), 1):
+        if i in edge_ids or sl is None:
+            continue
+        m = lab[sl] == i
+        if (dist[sl][m] < 30).mean() < 0.6:
+            mask[sl][m] = True
+
+    # 1px boundary: projection unmix against the local foreground color
+    core = ndimage.binary_erosion(mask)
+    band = mask & ~core
+    w = core.astype(np.float32)
+    den = ndimage.uniform_filter(w, 7)
+    fg = np.stack([ndimage.uniform_filter(c[..., i] * w, 7) for i in range(3)],
+                  axis=-1) / np.maximum(den, 1e-6)[..., None]
+    known = den > 1e-6
+    d = fg - bg
+    proj = np.clip(((c - bg) * d).sum(-1) / np.maximum((d * d).sum(-1), 1.0), 0, 1)
+    proj[proj < 0.2] = 0.0
+    alpha = core.astype(np.float32)
+    alpha = np.where(band & known, proj, alpha)
+    alpha = np.where(band & ~known, 1.0, alpha)     # 1px strands stay solid
+    out = np.where((band & known)[..., None], fg, c)
+    if despill and bg[1] > max(bg[0], bg[2]) + dominance // 2:
+        shell = mask & ~ndimage.binary_erosion(mask, iterations=3)
+        cap = np.maximum(out[..., 0], out[..., 2])
+        out[..., 1] = np.where(shell, np.minimum(out[..., 1], cap), out[..., 1])
+    rgba = np.dstack([out, alpha * 255.0])
+    return Image.fromarray(np.round(rgba).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+def _distance_key(img, dominance=40, despill=True, lo=32, hi=88):
+    """Soft distance-ramp key (no-scipy fallback). Leaves a light rim of
+    despilled codec ringing around dark outlines - prefer chroma_key_green."""
     arr = np.asarray(img.convert("RGB")).astype(np.int16)
     border = np.concatenate([arr[:4].reshape(-1, 3), arr[-4:].reshape(-1, 3),
                              arr[:, :4].reshape(-1, 3), arr[:, -4:].reshape(-1, 3)])
@@ -524,15 +595,57 @@ def save_apng(frames, path, fps, scale=None):
 def smooth_resize(frame, target_h, sharpen=True):
     """Painted-style path: high-quality downscale, continuous alpha, no
     palette. A light unsharp mask restores the painted linework that video
-    generation + downscaling softens."""
+    generation + downscaling softens.
+
+    BOX (area) filter, not Lanczos: Lanczos' negative lobes ring at the
+    sprite's dark outline and paint a light rim outside it. The sharpen
+    likewise only touches the opaque interior - sharpening the rim brightens
+    it against the transparent side (measured: doubled the halo)."""
     scale = target_h / float(frame.height)
     target_w = max(1, int(round(frame.width * scale)))
-    out = frame.resize((target_w, target_h), Image.LANCZOS)
+    out = frame.resize((target_w, target_h), Image.BOX)
     if sharpen:
-        rgb = out.convert("RGB").filter(
-            ImageFilter.UnsharpMask(radius=1.6, percent=80, threshold=2))
-        out = Image.merge("RGBA", (*rgb.split(), out.split()[3]))
+        rgb = np.asarray(edge_bleed([out], passes=6)[0].convert("RGB").filter(
+            ImageFilter.UnsharpMask(radius=1.6, percent=80, threshold=2)))
+        arr = np.array(out)
+        inner = arr[..., 3] == 255
+        try:
+            from scipy import ndimage
+            inner = ndimage.binary_erosion(inner, iterations=2)
+        except ImportError:
+            pass
+        arr[..., :3] = np.where(inner[..., None], rgb, arr[..., :3])
+        out = Image.fromarray(arr, "RGBA")
     return out
+
+
+def add_outline(sprite, mode="black", thresh=128):
+    """Hard silhouette plus a 1px outline just outside it.
+
+    The soft rim, where any leftover keying fringe lives, is replaced rather
+    than shown, so the edge is clean on any background. Generated characters
+    already carry a dark outline, so this thickens it to ~2px - a bolder
+    "sticker" look, opt-in per sprite. mode: "black", or "selout" (darkened
+    neighbouring color, the classic pixel-art selective outline)."""
+    try:
+        from scipy import ndimage
+    except ImportError:
+        return sprite
+    a = np.array(sprite.convert("RGBA"))
+    solid = a[..., 3] >= thresh
+    ring = ndimage.binary_dilation(solid) & ~solid
+    out = a.copy()
+    out[..., 3] = np.where(solid | ring, 255, 0).astype(np.uint8)
+    if mode == "selout":
+        w = solid.astype(np.float32)
+        rgb = a[..., :3].astype(np.float32)
+        den = np.maximum(ndimage.uniform_filter(w, 3), 1e-6)[..., None]
+        near = np.stack([ndimage.uniform_filter(rgb[..., i] * w, 3)
+                         for i in range(3)], axis=-1) / den
+        out[ring, :3] = np.clip(near * 0.3, 0, 255)[ring].astype(np.uint8)
+    else:
+        out[ring, :3] = (16, 12, 20)
+    return Image.fromarray(out, "RGBA")
 
 
 def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
@@ -541,7 +654,7 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
                       style="pixel", range_override=None, ends_at_end=False,
                       loop=False, pixel_frames=None, pixel_fps=10.0,
                       loop_mode="cycle", quiet=0.35, drop=None, gait=False,
-                      clean=False):
+                      clean=False, outline=None):
     """Full post pipeline for one animation. Returns a metadata dict.
 
     take_every: subsample the 24fps video (2 -> 12fps sprite animation).
@@ -553,6 +666,7 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
     calmest `quiet` fraction of the cycle and plays it forward-then-back -
     a subtle idle from an over-animated clip.
     drop: sprite indices (after collapse) to cut from the final sequence.
+    outline: None, "black" or "selout" - see add_outline.
     """
     frame_paths = sorted(frame_paths)
     if trim_end:
@@ -636,6 +750,8 @@ def process_animation(frame_paths, out_dir, sprite_h=96, colors=48,
     # keying leaves stray single pixels around any character sprite
     if key_mode != "glow":
         sprites = despeckle(sprites)
+        if outline:
+            sprites = [add_outline(s, outline) for s in sprites]
 
     os.makedirs(out_dir, exist_ok=True)
     # Every collapsed frame is written to all_frames/ using its ORIGINAL
@@ -816,7 +932,7 @@ def pad_reference(path, out_path, margin=0.18):
 
 
 def process_ref_image(path, out_path, sprite_h=192, colors=48, dominance=40,
-                      style="pixel"):
+                      style="pixel", outline=None):
     """Key (+ pixelize, for pixel style) a single still reference."""
     keyed = chroma_key_green(Image.open(path), dominance=dominance)
     box = union_bbox([keyed])
@@ -832,6 +948,8 @@ def process_ref_image(path, out_path, sprite_h=192, colors=48, dominance=40,
         rgb = down.convert("RGB").quantize(palette=palette,
                                            dither=Image.NONE).convert("RGB")
         sprite = Image.merge("RGBA", (*rgb.split(), down.split()[3]))
+    if outline:
+        sprite = add_outline(sprite, outline)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     sprite.save(out_path)
     return sprite

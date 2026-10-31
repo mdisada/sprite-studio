@@ -263,7 +263,8 @@ def stage_ref(client, char, spec, cfg, seed):
     print("[ref] saved %s" % path)
     postprocess.process_ref_image(path, ref_sprite, sprite_h=cfg["sprite_h"] * 2,
                                   colors=cfg["colors"],
-                                  style=spec.get("style", "pixel"))
+                                  style=spec.get("style", "pixel"),
+                                  outline=spec.get("outline"))
     print("[ref] pixelized preview %s" % ref_sprite)
     return path
 
@@ -644,6 +645,7 @@ def stage_post(char, cfg, anims, take_every=2, trim_start=0, trim_end=0,
             range_override=aspec.get("range"),
             ends_at_end=bool(aspec.get("end_view")),
             clean=bool((spec or {}).get("cel_clean")),
+            outline=(spec or {}).get("outline"),
             **pixel_kw)
         print("[post] %s/%s: %d sprites %sx%s @ %.0ffps -> %s"
               % (char, anim, meta["frames"], meta["frame_size"][0],

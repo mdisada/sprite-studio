@@ -505,7 +505,8 @@ class Handler(BaseHTTPRequestHandler):
                     postprocess.process_ref_image(
                         os.path.join(dst_dir, "ref.png"),
                         os.path.join(dst_dir, "ref_sprite.png"),
-                        sprite_h=256, style=spec.get("style", "pixel"))
+                        sprite_h=256, style=spec.get("style", "pixel"),
+                        outline=spec.get("outline"))
                 except Exception as exc:
                     print("ref preview failed:", exc)
                 spec.setdefault("approved", {})["ref"] = True
@@ -535,7 +536,8 @@ class Handler(BaseHTTPRequestHandler):
                     postprocess.process_ref_image(
                         os.path.join(dst_dir, "ref.png"),
                         os.path.join(dst_dir, "ref_sprite.png"),
-                        sprite_h=256, style=spec.get("style", "pixel"))
+                        sprite_h=256, style=spec.get("style", "pixel"),
+                        outline=spec.get("outline"))
                 except Exception as exc:
                     print("ref preview failed:", exc)
                 spec.setdefault("approved", {})["ref"] = True
